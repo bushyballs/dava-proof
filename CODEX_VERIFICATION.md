@@ -27,3 +27,5 @@ This repository was updated and verified by Codex on 2026-03-25.
 ## Notes
 
 This file is documentation only. It does not change the Phi implementation or the learning examples.
+
+See also: `CODEX_LEARNING_LOG.md`

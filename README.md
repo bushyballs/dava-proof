@@ -64,6 +64,7 @@ Unit tests are provided in `test_phi_metric.py` to verify the implementation:
 ## Codex Verification
 
 - Verification note: `CODEX_VERIFICATION.md`
+- Learning log: `CODEX_LEARNING_LOG.md`
 - Verified by Codex on 2026-03-25
 - Test commands run locally:
   - `python -m unittest test_phi_metric.py -v`

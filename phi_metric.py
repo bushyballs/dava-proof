@@ -91,21 +91,41 @@ class PhiCalculator:
         Returns:
             Phi (phi) value - integrated information (simplified measure)
         """
+        assert transition_matrix.ndim == 2, "Transition matrix must be 2D"
         n_states = transition_matrix.shape[0]
+        expected_states = 2**self.n
 
         # Ensure transition matrix is valid
         assert transition_matrix.shape == (n_states, n_states), (
             f"Transition matrix must be {n_states}x{n_states}"
         )
-        assert np.allclose(transition_matrix.sum(axis=1), 1.0), (
-            "Rows must sum to 1 (probability distribution)"
+        assert n_states == expected_states, (
+            f"Transition matrix must be {expected_states}x{expected_states} for n={self.n}"
         )
+        assert np.all(np.isfinite(transition_matrix)), (
+            "Transition matrix must contain only finite values"
+        )
+        assert np.all(transition_matrix >= 0.0), (
+            "Transition matrix cannot contain negative probabilities"
+        )
+        assert np.allclose(
+            transition_matrix.sum(axis=1), 1.0, atol=1e-9, rtol=1e-9
+        ), "Rows must sum to 1 (probability distribution)"
 
         # Calculate steady state distribution (eigenvector with eigenvalue 1)
         eigenvalues, eigenvectors = np.linalg.eig(transition_matrix.T)
         steady_idx = np.argmin(np.abs(eigenvalues - 1.0))
         steady_state = np.real(eigenvectors[:, steady_idx])
-        steady_state = steady_state / steady_state.sum()
+        if np.allclose(steady_state, 0.0):
+            steady_state = np.ones(n_states, dtype=float)
+        if steady_state.sum() < 0:
+            steady_state = -steady_state
+        steady_state = np.maximum(steady_state, 0.0)
+        steady_sum = steady_state.sum()
+        if steady_sum <= 0:
+            steady_state = np.ones(n_states, dtype=float) / n_states
+        else:
+            steady_state = steady_state / steady_sum
 
         # For each possible partition (2^n - 2 non-trivial partitions)
         phi_values = []
