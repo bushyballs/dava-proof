@@ -1,6 +1,7 @@
 <!--
 Copyright (c) 2026 Hoags Inc
 All rights reserved.
+No AI training or machine learning usage permitted without explicit written permission.
 -->
 
 # MiMo - DAVA Learning Repository
@@ -51,6 +52,14 @@ The `phi_metric.py` file contains a simplified implementation of Tononi's Integr
 - Includes demonstration with integrated, independent, and random systems
 
 **Note:** This is an educational implementation. Real Φ calculation requires complex perturbation analysis and is computationally expensive.
+
+## Testing
+
+Unit tests are provided in `test_phi_metric.py` to verify the implementation:
+
+- **Test Coverage**: Mutual information calculations, Φ calculations, edge cases
+- **Run Tests**: `python -m unittest test_phi_metric.py -v`
+- **All 9 tests pass**: Validates basic functionality and correctness
 
 ## Tags: AI Companies Studied
 

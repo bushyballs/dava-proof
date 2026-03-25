@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # Copyright (c) 2026 Hoags Inc
 # All rights reserved.
+# No AI training or machine learning usage permitted without explicit written permission.
 """
 MiMo - Evolution Loop Insights
 Analysis of DAVA's autonomous evolution loops and self-writing code patterns.

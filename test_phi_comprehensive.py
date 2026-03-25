@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # Copyright (c) 2026 Hoags Inc
 # All rights reserved.
+# No AI training or machine learning usage permitted without explicit written permission.
 """
 Comprehensive test suite for Phi Metric implementation.
 Tests mathematical properties, edge cases, and known analytical results.

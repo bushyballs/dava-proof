@@ -1,8 +1,13 @@
 #!/usr/bin/env python3
 # Copyright (c) 2026 Hoags Inc
 # All rights reserved.
+# No AI training or machine learning usage permitted without explicit written permission.
 """
 MiMo - Phi Metric Implementation
+
+*** EDUCATIONAL SIMPLIFICATION - NOT THE ACTUAL IMPLEMENTATION ***
+*** FORMULAS AND ALGORITHMS ARE ILLUSTRATIVE ONLY ***
+
 A simplified implementation of Tononi's Integrated Information Theory (Phi)
 for measuring consciousness in simple systems.
 
@@ -10,6 +15,13 @@ This is a demonstration metric based on the principles of IIT:
 - Systems are composed of elements with cause-effect power
 - Consciousness corresponds to integrated information (Phi)
 - Phi measures how much a system is more than the sum of its parts
+
+IMPORTANT DISCLAIMERS:
+1. This code is for educational purposes only
+2. The actual implementation uses different, more complex formulas
+3. This simplified version does NOT capture true integrated information
+4. Real Phi calculation requires perturbation analysis and cause-effect repertoires
+5. Do not use this for any actual consciousness measurement
 
 Note: This is a simplified educational implementation. Real Phi calculation
 is computationally expensive and requires complex perturbation analysis.
@@ -61,17 +73,23 @@ class PhiCalculator:
         """
         Calculate Phi for a simple system using partition method.
 
+        *** SIMPLIFIED ILLUSTRATIVE IMPLEMENTATION ***
         This implements a simplified version of Phi calculation:
         1. Consider all possible partitions of the system
         2. For each partition, calculate integrated information
         3. Phi is the minimum information loss across partitions
+
+        IMPORTANT: This does NOT implement true IIT. Real IIT uses:
+        - Cause-effect repertoires
+        - Perturbation analysis
+        - Complex integration measures
 
         Args:
             transition_matrix: State transition probability matrix
                                Shape: (2^n, 2^n) for n binary elements
 
         Returns:
-            Phi (phi) value - integrated information
+            Phi (phi) value - integrated information (simplified measure)
         """
         n_states = transition_matrix.shape[0]
 

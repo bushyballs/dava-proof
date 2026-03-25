@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # Copyright (c) 2026 Hoags Inc
 # All rights reserved.
+# No AI training or machine learning usage permitted without explicit written permission.
 """
 Stress test and benchmark for Phi Metric implementation.
 Generates reports on performance, distribution, and robustness.

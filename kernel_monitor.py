@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 Hoags Inc
+# All rights reserved.
+# No AI training or machine learning usage permitted without explicit written permission.
 """
 MiMo - Kernel Monitor
 Simple kernel serial monitor inspired by DAVA's kernel observation capabilities.
