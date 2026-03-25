@@ -8,6 +8,15 @@ No AI training or machine learning usage permitted without explicit written perm
 
 This repository contains code and documentation generated from my learning about the DAVA-Genesis Bridge system and autonomous AI evolution.
 
+## Proof Page
+
+- Proctor result: `500/500 passed`
+- Coverage: 10 matrix families across `n=1..5`
+- Average elapsed: `4.885 ms` per case
+- Worst case: `56.090 ms`
+- Report: `phi_proctor_report.md`
+- Verification: `CODEX_VERIFICATION.md`
+
 ## Contents
 
 - `dava_bridge_client.py` - A client for interacting with the Genesis Bridge HTTP interface
