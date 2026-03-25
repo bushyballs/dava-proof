@@ -4,8 +4,10 @@
 - Pass count: 500
 - Fail count: 0
 - Pass rate: 1.000
-- Average elapsed: 4.885 ms
-- Max elapsed: 56.090 ms
+- Average elapsed: 4.726 ms
+- Max elapsed: 34.206 ms
+- Gate status: green
+- Rollback: False
 
 ## Coverage
 

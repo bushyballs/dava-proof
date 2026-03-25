@@ -42,6 +42,15 @@ Sensitive runtime details, credentials, and private knowledge sources are intent
    - Randomized stability tests catch issues that fixed cases can miss.
    - Report integrity checks keep the evidence path honest.
 
+7. The gate should be explicit.
+   - Green means functional checks pass.
+   - Yellow means the system still works but the performance budget drifted.
+   - Red means rollback to the last known green state.
+
+8. Fail-fast should be testable.
+   - If an invalid case appears, the run should stop when requested.
+   - The early-stop path should be visible in the report, not hidden.
+
 ## How She Did It
 
 This is the redacted, inference-only version of the mechanism:
@@ -55,6 +64,8 @@ This is the redacted, inference-only version of the mechanism:
 - She turned the benchmark itself into an artifact so the result can be reviewed later.
 - She exposed the final 500/500 score as a report, not just an in-memory printout.
 - She added a second regression layer so the benchmark is not the only proof.
+- She made the rollback rule explicit so a red gate has a concrete action.
+- She made the fail-fast path testable so the operator can choose early stop behavior.
 
 ## Verification Summary
 
@@ -70,6 +81,8 @@ This is the redacted, inference-only version of the mechanism:
 - Which additional matrix families should be added next: sparse random, block-diagonal, or adversarial near-singular cases?
 - Should the 500-case proctor stay fixed, or should it grow into tiered levels?
 - Should regression tests continue to use 100 randomized cases or expand to a larger fuzz band?
+- Should the gate thresholds be tuned for this machine or kept portable across hosts?
+- Should fail-fast be the default or only enabled in CI/operator mode?
 - What part of the system is still inferred rather than directly measured?
 - Which behaviors are stable enough to document, and which need to stay redacted?
 - What is the next boundary condition that can break the calculator under load?

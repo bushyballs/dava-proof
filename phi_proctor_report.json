@@ -1,0 +1,5025 @@
+{
+  "case_count": 500,
+  "pass_count": 500,
+  "fail_count": 0,
+  "pass_rate": 1.0,
+  "avg_elapsed_ms": 4.7264146000670735,
+  "max_elapsed_ms": 34.205500000098255,
+  "results": [
+    {
+      "case_id": 1,
+      "n_elements": 1,
+      "pattern": "identity",
+      "seed": 0,
+      "phi": 0.0,
+      "elapsed_ms": 0.3564999969967175,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 2,
+      "n_elements": 1,
+      "pattern": "identity",
+      "seed": 1,
+      "phi": 0.0,
+      "elapsed_ms": 0.0911999995878432,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 3,
+      "n_elements": 1,
+      "pattern": "identity",
+      "seed": 2,
+      "phi": 0.0,
+      "elapsed_ms": 0.07310000000870787,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 4,
+      "n_elements": 1,
+      "pattern": "identity",
+      "seed": 3,
+      "phi": 0.0,
+      "elapsed_ms": 0.06550000034621917,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 5,
+      "n_elements": 1,
+      "pattern": "identity",
+      "seed": 4,
+      "phi": 0.0,
+      "elapsed_ms": 0.06159999975352548,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 6,
+      "n_elements": 1,
+      "pattern": "identity",
+      "seed": 5,
+      "phi": 0.0,
+      "elapsed_ms": 0.056799999583745375,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 7,
+      "n_elements": 1,
+      "pattern": "identity",
+      "seed": 6,
+      "phi": 0.0,
+      "elapsed_ms": 0.05579999924520962,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 8,
+      "n_elements": 1,
+      "pattern": "identity",
+      "seed": 7,
+      "phi": 0.0,
+      "elapsed_ms": 0.05310000051395036,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 9,
+      "n_elements": 1,
+      "pattern": "identity",
+      "seed": 8,
+      "phi": 0.0,
+      "elapsed_ms": 0.05059999966761097,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 10,
+      "n_elements": 1,
+      "pattern": "identity",
+      "seed": 9,
+      "phi": 0.0,
+      "elapsed_ms": 0.06000000212225132,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 11,
+      "n_elements": 1,
+      "pattern": "uniform",
+      "seed": 0,
+      "phi": 0.0,
+      "elapsed_ms": 0.07239999831654131,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 12,
+      "n_elements": 1,
+      "pattern": "uniform",
+      "seed": 1,
+      "phi": 0.0,
+      "elapsed_ms": 0.055500000598840415,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 13,
+      "n_elements": 1,
+      "pattern": "uniform",
+      "seed": 2,
+      "phi": 0.0,
+      "elapsed_ms": 0.05189999865251593,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 14,
+      "n_elements": 1,
+      "pattern": "uniform",
+      "seed": 3,
+      "phi": 0.0,
+      "elapsed_ms": 0.05360000068321824,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 15,
+      "n_elements": 1,
+      "pattern": "uniform",
+      "seed": 4,
+      "phi": 0.0,
+      "elapsed_ms": 0.051300001359777525,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 16,
+      "n_elements": 1,
+      "pattern": "uniform",
+      "seed": 5,
+      "phi": 0.0,
+      "elapsed_ms": 0.05189999865251593,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 17,
+      "n_elements": 1,
+      "pattern": "uniform",
+      "seed": 6,
+      "phi": 0.0,
+      "elapsed_ms": 0.050400001782691106,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 18,
+      "n_elements": 1,
+      "pattern": "uniform",
+      "seed": 7,
+      "phi": 0.0,
+      "elapsed_ms": 0.05160000000614673,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 19,
+      "n_elements": 1,
+      "pattern": "uniform",
+      "seed": 8,
+      "phi": 0.0,
+      "elapsed_ms": 0.05319999763742089,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 20,
+      "n_elements": 1,
+      "pattern": "uniform",
+      "seed": 9,
+      "phi": 0.0,
+      "elapsed_ms": 0.052699997468153015,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 21,
+      "n_elements": 1,
+      "pattern": "random",
+      "seed": 0,
+      "phi": 0.0,
+      "elapsed_ms": 0.06299999949987978,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 22,
+      "n_elements": 1,
+      "pattern": "random",
+      "seed": 1,
+      "phi": 0.0,
+      "elapsed_ms": 0.05669999882229604,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 23,
+      "n_elements": 1,
+      "pattern": "random",
+      "seed": 2,
+      "phi": 0.0,
+      "elapsed_ms": 0.05609999789157882,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 24,
+      "n_elements": 1,
+      "pattern": "random",
+      "seed": 3,
+      "phi": 0.0,
+      "elapsed_ms": 0.0548999996681232,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 25,
+      "n_elements": 1,
+      "pattern": "random",
+      "seed": 4,
+      "phi": 0.0,
+      "elapsed_ms": 0.05400000009103678,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 26,
+      "n_elements": 1,
+      "pattern": "random",
+      "seed": 5,
+      "phi": 0.0,
+      "elapsed_ms": 0.05160000000614673,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 27,
+      "n_elements": 1,
+      "pattern": "random",
+      "seed": 6,
+      "phi": 0.0,
+      "elapsed_ms": 0.05430000237538479,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 28,
+      "n_elements": 1,
+      "pattern": "random",
+      "seed": 7,
+      "phi": 0.0,
+      "elapsed_ms": 0.05300000339047983,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 29,
+      "n_elements": 1,
+      "pattern": "random",
+      "seed": 8,
+      "phi": 0.0,
+      "elapsed_ms": 0.05439999949885532,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 30,
+      "n_elements": 1,
+      "pattern": "random",
+      "seed": 9,
+      "phi": 0.0,
+      "elapsed_ms": 0.054200001613935456,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 31,
+      "n_elements": 1,
+      "pattern": "integrated",
+      "seed": 0,
+      "phi": 0.0,
+      "elapsed_ms": 0.053899999329587445,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 32,
+      "n_elements": 1,
+      "pattern": "integrated",
+      "seed": 1,
+      "phi": 0.0,
+      "elapsed_ms": 0.05500000042957254,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 33,
+      "n_elements": 1,
+      "pattern": "integrated",
+      "seed": 2,
+      "phi": 0.0,
+      "elapsed_ms": 0.054699998145224527,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 34,
+      "n_elements": 1,
+      "pattern": "integrated",
+      "seed": 3,
+      "phi": 0.0,
+      "elapsed_ms": 0.05239999882178381,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 35,
+      "n_elements": 1,
+      "pattern": "integrated",
+      "seed": 4,
+      "phi": 0.0,
+      "elapsed_ms": 0.052299998060334474,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 36,
+      "n_elements": 1,
+      "pattern": "integrated",
+      "seed": 5,
+      "phi": 0.0,
+      "elapsed_ms": 0.05190000229049474,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 37,
+      "n_elements": 1,
+      "pattern": "integrated",
+      "seed": 6,
+      "phi": 0.0,
+      "elapsed_ms": 0.05919999966863543,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 38,
+      "n_elements": 1,
+      "pattern": "integrated",
+      "seed": 7,
+      "phi": 0.0,
+      "elapsed_ms": 0.0515000028826762,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 39,
+      "n_elements": 1,
+      "pattern": "integrated",
+      "seed": 8,
+      "phi": 0.0,
+      "elapsed_ms": 0.05289999899105169,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 40,
+      "n_elements": 1,
+      "pattern": "integrated",
+      "seed": 9,
+      "phi": 0.0,
+      "elapsed_ms": 0.052500003221211955,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 41,
+      "n_elements": 1,
+      "pattern": "independent",
+      "seed": 0,
+      "phi": 0.0,
+      "elapsed_ms": 0.05239999882178381,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 42,
+      "n_elements": 1,
+      "pattern": "independent",
+      "seed": 1,
+      "phi": 0.0,
+      "elapsed_ms": 0.0520999965374358,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 43,
+      "n_elements": 1,
+      "pattern": "independent",
+      "seed": 2,
+      "phi": 0.0,
+      "elapsed_ms": 0.051399998483248055,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 44,
+      "n_elements": 1,
+      "pattern": "independent",
+      "seed": 3,
+      "phi": 0.0,
+      "elapsed_ms": 0.05279999822960235,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 45,
+      "n_elements": 1,
+      "pattern": "independent",
+      "seed": 4,
+      "phi": 0.0,
+      "elapsed_ms": 0.05249999958323315,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 46,
+      "n_elements": 1,
+      "pattern": "independent",
+      "seed": 5,
+      "phi": 0.0,
+      "elapsed_ms": 0.05199999941396527,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 47,
+      "n_elements": 1,
+      "pattern": "independent",
+      "seed": 6,
+      "phi": 0.0,
+      "elapsed_ms": 0.05270000110613182,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 48,
+      "n_elements": 1,
+      "pattern": "independent",
+      "seed": 7,
+      "phi": 0.0,
+      "elapsed_ms": 0.05160000000614673,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 49,
+      "n_elements": 1,
+      "pattern": "independent",
+      "seed": 8,
+      "phi": 0.0,
+      "elapsed_ms": 0.05109999983687885,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 50,
+      "n_elements": 1,
+      "pattern": "independent",
+      "seed": 9,
+      "phi": 0.0,
+      "elapsed_ms": 0.05149999924469739,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 51,
+      "n_elements": 1,
+      "pattern": "cycle",
+      "seed": 0,
+      "phi": 0.0,
+      "elapsed_ms": 0.05140000212122686,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 52,
+      "n_elements": 1,
+      "pattern": "cycle",
+      "seed": 1,
+      "phi": 0.0,
+      "elapsed_ms": 0.05089999831398018,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 53,
+      "n_elements": 1,
+      "pattern": "cycle",
+      "seed": 2,
+      "phi": 0.0,
+      "elapsed_ms": 0.050499998906161636,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 54,
+      "n_elements": 1,
+      "pattern": "cycle",
+      "seed": 3,
+      "phi": 0.0,
+      "elapsed_ms": 0.049199999921256676,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 55,
+      "n_elements": 1,
+      "pattern": "cycle",
+      "seed": 4,
+      "phi": 0.0,
+      "elapsed_ms": 0.04959999932907522,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 56,
+      "n_elements": 1,
+      "pattern": "cycle",
+      "seed": 5,
+      "phi": 0.0,
+      "elapsed_ms": 0.05230000169831328,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 57,
+      "n_elements": 1,
+      "pattern": "cycle",
+      "seed": 6,
+      "phi": 0.0,
+      "elapsed_ms": 0.05030000102124177,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 58,
+      "n_elements": 1,
+      "pattern": "cycle",
+      "seed": 7,
+      "phi": 0.0,
+      "elapsed_ms": 0.09040000077220611,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 59,
+      "n_elements": 1,
+      "pattern": "cycle",
+      "seed": 8,
+      "phi": 0.0,
+      "elapsed_ms": 0.06310000026132911,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 60,
+      "n_elements": 1,
+      "pattern": "cycle",
+      "seed": 9,
+      "phi": 0.0,
+      "elapsed_ms": 0.05239999882178381,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 61,
+      "n_elements": 1,
+      "pattern": "near_identity",
+      "seed": 0,
+      "phi": 0.0,
+      "elapsed_ms": 0.07469999763998203,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 62,
+      "n_elements": 1,
+      "pattern": "near_identity",
+      "seed": 1,
+      "phi": 0.0,
+      "elapsed_ms": 0.059300000430084765,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 63,
+      "n_elements": 1,
+      "pattern": "near_identity",
+      "seed": 2,
+      "phi": 0.0,
+      "elapsed_ms": 0.05600000076810829,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 64,
+      "n_elements": 1,
+      "pattern": "near_identity",
+      "seed": 3,
+      "phi": 0.0,
+      "elapsed_ms": 0.06270000085351057,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 65,
+      "n_elements": 1,
+      "pattern": "near_identity",
+      "seed": 4,
+      "phi": 0.0,
+      "elapsed_ms": 0.056799999583745375,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 66,
+      "n_elements": 1,
+      "pattern": "near_identity",
+      "seed": 5,
+      "phi": 0.0,
+      "elapsed_ms": 0.05370000144466758,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 67,
+      "n_elements": 1,
+      "pattern": "near_identity",
+      "seed": 6,
+      "phi": 0.0,
+      "elapsed_ms": 0.05319999763742089,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 68,
+      "n_elements": 1,
+      "pattern": "near_identity",
+      "seed": 7,
+      "phi": 0.0,
+      "elapsed_ms": 0.05339999916031957,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 69,
+      "n_elements": 1,
+      "pattern": "near_identity",
+      "seed": 8,
+      "phi": 0.0,
+      "elapsed_ms": 0.05149999924469739,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 70,
+      "n_elements": 1,
+      "pattern": "near_identity",
+      "seed": 9,
+      "phi": 0.0,
+      "elapsed_ms": 0.0532000012753997,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 71,
+      "n_elements": 1,
+      "pattern": "sparse",
+      "seed": 0,
+      "phi": 0.0,
+      "elapsed_ms": 0.05430000237538479,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 72,
+      "n_elements": 1,
+      "pattern": "sparse",
+      "seed": 1,
+      "phi": 0.0,
+      "elapsed_ms": 0.05249999958323315,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 73,
+      "n_elements": 1,
+      "pattern": "sparse",
+      "seed": 2,
+      "phi": 0.0,
+      "elapsed_ms": 0.05189999865251593,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 74,
+      "n_elements": 1,
+      "pattern": "sparse",
+      "seed": 3,
+      "phi": 0.0,
+      "elapsed_ms": 0.05160000000614673,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 75,
+      "n_elements": 1,
+      "pattern": "sparse",
+      "seed": 4,
+      "phi": 0.0,
+      "elapsed_ms": 0.05189999865251593,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 76,
+      "n_elements": 1,
+      "pattern": "sparse",
+      "seed": 5,
+      "phi": 0.0,
+      "elapsed_ms": 0.051399998483248055,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 77,
+      "n_elements": 1,
+      "pattern": "sparse",
+      "seed": 6,
+      "phi": 0.0,
+      "elapsed_ms": 0.05079999755253084,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 78,
+      "n_elements": 1,
+      "pattern": "sparse",
+      "seed": 7,
+      "phi": 0.0,
+      "elapsed_ms": 0.05329999839887023,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 79,
+      "n_elements": 1,
+      "pattern": "sparse",
+      "seed": 8,
+      "phi": 0.0,
+      "elapsed_ms": 0.05249999958323315,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 80,
+      "n_elements": 1,
+      "pattern": "sparse",
+      "seed": 9,
+      "phi": 0.0,
+      "elapsed_ms": 0.05270000110613182,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 81,
+      "n_elements": 1,
+      "pattern": "tiny",
+      "seed": 0,
+      "phi": 0.0,
+      "elapsed_ms": 0.05409999721450731,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 82,
+      "n_elements": 1,
+      "pattern": "tiny",
+      "seed": 1,
+      "phi": 0.0,
+      "elapsed_ms": 0.05439999949885532,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 83,
+      "n_elements": 1,
+      "pattern": "tiny",
+      "seed": 2,
+      "phi": 0.0,
+      "elapsed_ms": 0.05210000017541461,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 84,
+      "n_elements": 1,
+      "pattern": "tiny",
+      "seed": 3,
+      "phi": 0.0,
+      "elapsed_ms": 0.05109999983687885,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 85,
+      "n_elements": 1,
+      "pattern": "tiny",
+      "seed": 4,
+      "phi": 0.0,
+      "elapsed_ms": 0.05129999772179872,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 86,
+      "n_elements": 1,
+      "pattern": "tiny",
+      "seed": 5,
+      "phi": 0.0,
+      "elapsed_ms": 0.05199999941396527,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 87,
+      "n_elements": 1,
+      "pattern": "tiny",
+      "seed": 6,
+      "phi": 0.0,
+      "elapsed_ms": 0.05149999924469739,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 88,
+      "n_elements": 1,
+      "pattern": "tiny",
+      "seed": 7,
+      "phi": 0.0,
+      "elapsed_ms": 0.05109999983687885,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 89,
+      "n_elements": 1,
+      "pattern": "tiny",
+      "seed": 8,
+      "phi": 0.0,
+      "elapsed_ms": 0.05270000110613182,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 90,
+      "n_elements": 1,
+      "pattern": "tiny",
+      "seed": 9,
+      "phi": 0.0,
+      "elapsed_ms": 0.05109999983687885,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 91,
+      "n_elements": 1,
+      "pattern": "singular",
+      "seed": 0,
+      "phi": 0.0,
+      "elapsed_ms": 0.06380000195349567,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 92,
+      "n_elements": 1,
+      "pattern": "singular",
+      "seed": 1,
+      "phi": 0.0,
+      "elapsed_ms": 0.05669999882229604,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 93,
+      "n_elements": 1,
+      "pattern": "singular",
+      "seed": 2,
+      "phi": 0.0,
+      "elapsed_ms": 0.05270000110613182,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 94,
+      "n_elements": 1,
+      "pattern": "singular",
+      "seed": 3,
+      "phi": 0.0,
+      "elapsed_ms": 0.0532000012753997,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 95,
+      "n_elements": 1,
+      "pattern": "singular",
+      "seed": 4,
+      "phi": 0.0,
+      "elapsed_ms": 0.05410000085248612,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 96,
+      "n_elements": 1,
+      "pattern": "singular",
+      "seed": 5,
+      "phi": 0.0,
+      "elapsed_ms": 0.0532000012753997,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 97,
+      "n_elements": 1,
+      "pattern": "singular",
+      "seed": 6,
+      "phi": 0.0,
+      "elapsed_ms": 0.053800002206116915,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 98,
+      "n_elements": 1,
+      "pattern": "singular",
+      "seed": 7,
+      "phi": 0.0,
+      "elapsed_ms": 0.05600000076810829,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 99,
+      "n_elements": 1,
+      "pattern": "singular",
+      "seed": 8,
+      "phi": 0.0,
+      "elapsed_ms": 0.05410000085248612,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 100,
+      "n_elements": 1,
+      "pattern": "singular",
+      "seed": 9,
+      "phi": 0.0,
+      "elapsed_ms": 0.054799998906673864,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 101,
+      "n_elements": 2,
+      "pattern": "identity",
+      "seed": 0,
+      "phi": 0.0,
+      "elapsed_ms": 0.1005000012810342,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 102,
+      "n_elements": 2,
+      "pattern": "identity",
+      "seed": 1,
+      "phi": 0.0,
+      "elapsed_ms": 0.0808000004326459,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 103,
+      "n_elements": 2,
+      "pattern": "identity",
+      "seed": 2,
+      "phi": 0.0,
+      "elapsed_ms": 0.07730000288574956,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 104,
+      "n_elements": 2,
+      "pattern": "identity",
+      "seed": 3,
+      "phi": 0.0,
+      "elapsed_ms": 0.10029999975813553,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 105,
+      "n_elements": 2,
+      "pattern": "identity",
+      "seed": 4,
+      "phi": 0.0,
+      "elapsed_ms": 0.07709999772487208,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 106,
+      "n_elements": 2,
+      "pattern": "identity",
+      "seed": 5,
+      "phi": 0.0,
+      "elapsed_ms": 0.07570000161649659,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 107,
+      "n_elements": 2,
+      "pattern": "identity",
+      "seed": 6,
+      "phi": 0.0,
+      "elapsed_ms": 0.07080000068526715,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 108,
+      "n_elements": 2,
+      "pattern": "identity",
+      "seed": 7,
+      "phi": 0.0,
+      "elapsed_ms": 0.07090000144671649,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 109,
+      "n_elements": 2,
+      "pattern": "identity",
+      "seed": 8,
+      "phi": 0.0,
+      "elapsed_ms": 0.0698000003467314,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 110,
+      "n_elements": 2,
+      "pattern": "identity",
+      "seed": 9,
+      "phi": 0.0,
+      "elapsed_ms": 0.06939999730093405,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 111,
+      "n_elements": 2,
+      "pattern": "uniform",
+      "seed": 0,
+      "phi": 8.008566259537297e-17,
+      "elapsed_ms": 0.10580000162008218,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 112,
+      "n_elements": 2,
+      "pattern": "uniform",
+      "seed": 1,
+      "phi": 8.008566259537297e-17,
+      "elapsed_ms": 0.09159999899566174,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 113,
+      "n_elements": 2,
+      "pattern": "uniform",
+      "seed": 2,
+      "phi": 8.008566259537297e-17,
+      "elapsed_ms": 0.08940000043367036,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 114,
+      "n_elements": 2,
+      "pattern": "uniform",
+      "seed": 3,
+      "phi": 8.008566259537297e-17,
+      "elapsed_ms": 0.08900000102585182,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 115,
+      "n_elements": 2,
+      "pattern": "uniform",
+      "seed": 4,
+      "phi": 8.008566259537297e-17,
+      "elapsed_ms": 0.11079999967478216,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 116,
+      "n_elements": 2,
+      "pattern": "uniform",
+      "seed": 5,
+      "phi": 8.008566259537297e-17,
+      "elapsed_ms": 0.103599999420112,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 117,
+      "n_elements": 2,
+      "pattern": "uniform",
+      "seed": 6,
+      "phi": 8.008566259537297e-17,
+      "elapsed_ms": 0.0928999979805667,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 118,
+      "n_elements": 2,
+      "pattern": "uniform",
+      "seed": 7,
+      "phi": 8.008566259537297e-17,
+      "elapsed_ms": 0.08940000043367036,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 119,
+      "n_elements": 2,
+      "pattern": "uniform",
+      "seed": 8,
+      "phi": 8.008566259537297e-17,
+      "elapsed_ms": 0.08989999696495943,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 120,
+      "n_elements": 2,
+      "pattern": "uniform",
+      "seed": 9,
+      "phi": 8.008566259537297e-17,
+      "elapsed_ms": 0.08769999840296805,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 121,
+      "n_elements": 2,
+      "pattern": "random",
+      "seed": 0,
+      "phi": 0.1477438913618844,
+      "elapsed_ms": 0.12000000060652383,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 122,
+      "n_elements": 2,
+      "pattern": "random",
+      "seed": 1,
+      "phi": 0.15903785432611295,
+      "elapsed_ms": 0.09550000322633423,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 123,
+      "n_elements": 2,
+      "pattern": "random",
+      "seed": 2,
+      "phi": 0.18939202501940733,
+      "elapsed_ms": 0.09239999781129882,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 124,
+      "n_elements": 2,
+      "pattern": "random",
+      "seed": 3,
+      "phi": 0.16524225306116266,
+      "elapsed_ms": 0.09389999831910245,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 125,
+      "n_elements": 2,
+      "pattern": "random",
+      "seed": 4,
+      "phi": 0.22885818934687954,
+      "elapsed_ms": 0.09200000204145908,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 126,
+      "n_elements": 2,
+      "pattern": "random",
+      "seed": 5,
+      "phi": 0.15929110340748384,
+      "elapsed_ms": 0.09239999781129882,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 127,
+      "n_elements": 2,
+      "pattern": "random",
+      "seed": 6,
+      "phi": 0.15222646250084146,
+      "elapsed_ms": 0.09109999882639386,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 128,
+      "n_elements": 2,
+      "pattern": "random",
+      "seed": 7,
+      "phi": 0.26789420619459997,
+      "elapsed_ms": 0.09069999941857532,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 129,
+      "n_elements": 2,
+      "pattern": "random",
+      "seed": 8,
+      "phi": 0.1742120176059926,
+      "elapsed_ms": 0.0897999998414889,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 130,
+      "n_elements": 2,
+      "pattern": "random",
+      "seed": 9,
+      "phi": 0.18548660341798326,
+      "elapsed_ms": 0.09030000001075678,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 131,
+      "n_elements": 2,
+      "pattern": "integrated",
+      "seed": 0,
+      "phi": 0.08742692123854204,
+      "elapsed_ms": 0.09000000136438757,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 132,
+      "n_elements": 2,
+      "pattern": "integrated",
+      "seed": 1,
+      "phi": 0.08742692123854204,
+      "elapsed_ms": 0.09140000111074187,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 133,
+      "n_elements": 2,
+      "pattern": "integrated",
+      "seed": 2,
+      "phi": 0.08742692123854204,
+      "elapsed_ms": 0.08819999857223593,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 134,
+      "n_elements": 2,
+      "pattern": "integrated",
+      "seed": 3,
+      "phi": 0.08742692123854204,
+      "elapsed_ms": 0.0884000000951346,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 135,
+      "n_elements": 2,
+      "pattern": "integrated",
+      "seed": 4,
+      "phi": 0.08742692123854204,
+      "elapsed_ms": 0.08729999899514951,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 136,
+      "n_elements": 2,
+      "pattern": "integrated",
+      "seed": 5,
+      "phi": 0.08742692123854204,
+      "elapsed_ms": 0.08870000237948261,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 137,
+      "n_elements": 2,
+      "pattern": "integrated",
+      "seed": 6,
+      "phi": 0.08742692123854204,
+      "elapsed_ms": 0.08890000026440248,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 138,
+      "n_elements": 2,
+      "pattern": "integrated",
+      "seed": 7,
+      "phi": 0.08742692123854204,
+      "elapsed_ms": 0.08849999721860513,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 139,
+      "n_elements": 2,
+      "pattern": "integrated",
+      "seed": 8,
+      "phi": 0.08742692123854204,
+      "elapsed_ms": 0.08919999891077168,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 140,
+      "n_elements": 2,
+      "pattern": "integrated",
+      "seed": 9,
+      "phi": 0.08742692123854204,
+      "elapsed_ms": 0.08799999704933725,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 141,
+      "n_elements": 2,
+      "pattern": "independent",
+      "seed": 0,
+      "phi": 0.23741820153861481,
+      "elapsed_ms": 0.08820000221021473,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 142,
+      "n_elements": 2,
+      "pattern": "independent",
+      "seed": 1,
+      "phi": 0.23741820153861481,
+      "elapsed_ms": 0.0886999987415038,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 143,
+      "n_elements": 2,
+      "pattern": "independent",
+      "seed": 2,
+      "phi": 0.23741820153861481,
+      "elapsed_ms": 0.08710000111022964,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 144,
+      "n_elements": 2,
+      "pattern": "independent",
+      "seed": 3,
+      "phi": 0.23741820153861481,
+      "elapsed_ms": 0.08850000085658394,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 145,
+      "n_elements": 2,
+      "pattern": "independent",
+      "seed": 4,
+      "phi": 0.23741820153861481,
+      "elapsed_ms": 0.08929999967222102,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 146,
+      "n_elements": 2,
+      "pattern": "independent",
+      "seed": 5,
+      "phi": 0.23741820153861481,
+      "elapsed_ms": 0.08929999967222102,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 147,
+      "n_elements": 2,
+      "pattern": "independent",
+      "seed": 6,
+      "phi": 0.23741820153861481,
+      "elapsed_ms": 0.09409999984200113,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 148,
+      "n_elements": 2,
+      "pattern": "independent",
+      "seed": 7,
+      "phi": 0.23741820153861481,
+      "elapsed_ms": 0.0886999987415038,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 149,
+      "n_elements": 2,
+      "pattern": "independent",
+      "seed": 8,
+      "phi": 0.23741820153861481,
+      "elapsed_ms": 0.08890000026440248,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 150,
+      "n_elements": 2,
+      "pattern": "independent",
+      "seed": 9,
+      "phi": 0.23741820153861481,
+      "elapsed_ms": 0.08760000127949752,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 151,
+      "n_elements": 2,
+      "pattern": "cycle",
+      "seed": 0,
+      "phi": 1.9999999999999998,
+      "elapsed_ms": 0.0824999988253694,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 152,
+      "n_elements": 2,
+      "pattern": "cycle",
+      "seed": 1,
+      "phi": 1.9999999999999998,
+      "elapsed_ms": 0.0808000004326459,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 153,
+      "n_elements": 2,
+      "pattern": "cycle",
+      "seed": 2,
+      "phi": 1.9999999999999998,
+      "elapsed_ms": 0.07729999924777076,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 154,
+      "n_elements": 2,
+      "pattern": "cycle",
+      "seed": 3,
+      "phi": 1.9999999999999998,
+      "elapsed_ms": 0.07829999958630651,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 155,
+      "n_elements": 2,
+      "pattern": "cycle",
+      "seed": 4,
+      "phi": 1.9999999999999998,
+      "elapsed_ms": 0.07790000017848797,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 156,
+      "n_elements": 2,
+      "pattern": "cycle",
+      "seed": 5,
+      "phi": 1.9999999999999998,
+      "elapsed_ms": 0.07619999814778566,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 157,
+      "n_elements": 2,
+      "pattern": "cycle",
+      "seed": 6,
+      "phi": 1.9999999999999998,
+      "elapsed_ms": 0.07709999772487208,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 158,
+      "n_elements": 2,
+      "pattern": "cycle",
+      "seed": 7,
+      "phi": 1.9999999999999998,
+      "elapsed_ms": 0.07650000043213367,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 159,
+      "n_elements": 2,
+      "pattern": "cycle",
+      "seed": 8,
+      "phi": 1.9999999999999998,
+      "elapsed_ms": 0.08549999984097667,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 160,
+      "n_elements": 2,
+      "pattern": "cycle",
+      "seed": 9,
+      "phi": 1.9999999999999998,
+      "elapsed_ms": 0.07900000127847306,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 161,
+      "n_elements": 2,
+      "pattern": "near_identity",
+      "seed": 0,
+      "phi": 1.954585307666206,
+      "elapsed_ms": 0.08499999967170879,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 162,
+      "n_elements": 2,
+      "pattern": "near_identity",
+      "seed": 1,
+      "phi": 1.954585307666206,
+      "elapsed_ms": 0.08510000043315813,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 163,
+      "n_elements": 2,
+      "pattern": "near_identity",
+      "seed": 2,
+      "phi": 1.954585307666206,
+      "elapsed_ms": 0.08370000068680383,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 164,
+      "n_elements": 2,
+      "pattern": "near_identity",
+      "seed": 3,
+      "phi": 1.954585307666206,
+      "elapsed_ms": 0.08349999916390516,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 165,
+      "n_elements": 2,
+      "pattern": "near_identity",
+      "seed": 4,
+      "phi": 1.954585307666206,
+      "elapsed_ms": 0.08270000034826808,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 166,
+      "n_elements": 2,
+      "pattern": "near_identity",
+      "seed": 5,
+      "phi": 1.954585307666206,
+      "elapsed_ms": 0.08140000136336312,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 167,
+      "n_elements": 2,
+      "pattern": "near_identity",
+      "seed": 6,
+      "phi": 1.954585307666206,
+      "elapsed_ms": 0.08179999713320285,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 168,
+      "n_elements": 2,
+      "pattern": "near_identity",
+      "seed": 7,
+      "phi": 1.954585307666206,
+      "elapsed_ms": 0.08159999924828298,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 169,
+      "n_elements": 2,
+      "pattern": "near_identity",
+      "seed": 8,
+      "phi": 1.954585307666206,
+      "elapsed_ms": 0.08270000034826808,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 170,
+      "n_elements": 2,
+      "pattern": "near_identity",
+      "seed": 9,
+      "phi": 1.954585307666206,
+      "elapsed_ms": 0.08240000170189887,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 171,
+      "n_elements": 2,
+      "pattern": "sparse",
+      "seed": 0,
+      "phi": 0.9999999999999999,
+      "elapsed_ms": 0.08370000068680383,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 172,
+      "n_elements": 2,
+      "pattern": "sparse",
+      "seed": 1,
+      "phi": 0.9999999999999999,
+      "elapsed_ms": 0.0822000001790002,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 173,
+      "n_elements": 2,
+      "pattern": "sparse",
+      "seed": 2,
+      "phi": 0.9999999999999999,
+      "elapsed_ms": 0.0810999990790151,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 174,
+      "n_elements": 2,
+      "pattern": "sparse",
+      "seed": 3,
+      "phi": 0.9999999999999999,
+      "elapsed_ms": 0.0808000004326459,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 175,
+      "n_elements": 2,
+      "pattern": "sparse",
+      "seed": 4,
+      "phi": 0.9999999999999999,
+      "elapsed_ms": 0.08030000026337802,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 176,
+      "n_elements": 2,
+      "pattern": "sparse",
+      "seed": 5,
+      "phi": 0.9999999999999999,
+      "elapsed_ms": 0.07990000085555948,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 177,
+      "n_elements": 2,
+      "pattern": "sparse",
+      "seed": 6,
+      "phi": 0.9999999999999999,
+      "elapsed_ms": 0.07990000085555948,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 178,
+      "n_elements": 2,
+      "pattern": "sparse",
+      "seed": 7,
+      "phi": 0.9999999999999999,
+      "elapsed_ms": 0.07890000051702373,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 179,
+      "n_elements": 2,
+      "pattern": "sparse",
+      "seed": 8,
+      "phi": 0.9999999999999999,
+      "elapsed_ms": 0.0790999984019436,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 180,
+      "n_elements": 2,
+      "pattern": "sparse",
+      "seed": 9,
+      "phi": 0.9999999999999999,
+      "elapsed_ms": 0.08010000237845816,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 181,
+      "n_elements": 2,
+      "pattern": "tiny",
+      "seed": 0,
+      "phi": 0.14774389136188465,
+      "elapsed_ms": 0.0897999998414889,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 182,
+      "n_elements": 2,
+      "pattern": "tiny",
+      "seed": 1,
+      "phi": 0.15903785432611303,
+      "elapsed_ms": 0.09010000212583691,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 183,
+      "n_elements": 2,
+      "pattern": "tiny",
+      "seed": 2,
+      "phi": 0.1893920250194071,
+      "elapsed_ms": 0.09109999882639386,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 184,
+      "n_elements": 2,
+      "pattern": "tiny",
+      "seed": 3,
+      "phi": 0.16524225306116255,
+      "elapsed_ms": 0.08879999950295314,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 185,
+      "n_elements": 2,
+      "pattern": "tiny",
+      "seed": 4,
+      "phi": 0.2288581893468796,
+      "elapsed_ms": 0.08830000297166407,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 186,
+      "n_elements": 2,
+      "pattern": "tiny",
+      "seed": 5,
+      "phi": 0.15929110340748356,
+      "elapsed_ms": 0.08880000314093195,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 187,
+      "n_elements": 2,
+      "pattern": "tiny",
+      "seed": 6,
+      "phi": 0.15222646250084132,
+      "elapsed_ms": 0.08920000254875049,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 188,
+      "n_elements": 2,
+      "pattern": "tiny",
+      "seed": 7,
+      "phi": 0.26789420619459986,
+      "elapsed_ms": 0.08890000026440248,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 189,
+      "n_elements": 2,
+      "pattern": "tiny",
+      "seed": 8,
+      "phi": 0.17421201760599286,
+      "elapsed_ms": 0.08750000051804818,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 190,
+      "n_elements": 2,
+      "pattern": "tiny",
+      "seed": 9,
+      "phi": 0.18548660341798318,
+      "elapsed_ms": 0.08970000271801837,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 191,
+      "n_elements": 2,
+      "pattern": "singular",
+      "seed": 0,
+      "phi": 2.2030882929942334e-16,
+      "elapsed_ms": 0.09399999908055179,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 192,
+      "n_elements": 2,
+      "pattern": "singular",
+      "seed": 1,
+      "phi": 4.0080963097440197e-17,
+      "elapsed_ms": 0.09130000034929253,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 193,
+      "n_elements": 2,
+      "pattern": "singular",
+      "seed": 2,
+      "phi": 6.227921758076553e-17,
+      "elapsed_ms": 0.09409999984200113,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 194,
+      "n_elements": 2,
+      "pattern": "singular",
+      "seed": 3,
+      "phi": 9.260356309191965e-17,
+      "elapsed_ms": 0.09329999738838524,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 195,
+      "n_elements": 2,
+      "pattern": "singular",
+      "seed": 4,
+      "phi": 2.9038792132902026e-17,
+      "elapsed_ms": 0.09080000018002465,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 196,
+      "n_elements": 2,
+      "pattern": "singular",
+      "seed": 5,
+      "phi": 1.2257939584693282e-16,
+      "elapsed_ms": 0.08879999950295314,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 197,
+      "n_elements": 2,
+      "pattern": "singular",
+      "seed": 6,
+      "phi": 3.1520379957392647e-17,
+      "elapsed_ms": 0.08710000111022964,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 198,
+      "n_elements": 2,
+      "pattern": "singular",
+      "seed": 7,
+      "phi": 1.2684998878249552e-17,
+      "elapsed_ms": 0.08819999857223593,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 199,
+      "n_elements": 2,
+      "pattern": "singular",
+      "seed": 8,
+      "phi": 1.9515598006124586e-17,
+      "elapsed_ms": 0.08789999992586672,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 200,
+      "n_elements": 2,
+      "pattern": "singular",
+      "seed": 9,
+      "phi": 4.039783726909307e-17,
+      "elapsed_ms": 0.0903999971342273,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 201,
+      "n_elements": 3,
+      "pattern": "identity",
+      "seed": 0,
+      "phi": 0.0,
+      "elapsed_ms": 0.1886000027297996,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 202,
+      "n_elements": 3,
+      "pattern": "identity",
+      "seed": 1,
+      "phi": 0.0,
+      "elapsed_ms": 0.18849999833037145,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 203,
+      "n_elements": 3,
+      "pattern": "identity",
+      "seed": 2,
+      "phi": 0.0,
+      "elapsed_ms": 0.18529999942984432,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 204,
+      "n_elements": 3,
+      "pattern": "identity",
+      "seed": 3,
+      "phi": 0.0,
+      "elapsed_ms": 0.18119999731425196,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 205,
+      "n_elements": 3,
+      "pattern": "identity",
+      "seed": 4,
+      "phi": 0.0,
+      "elapsed_ms": 0.1768000001902692,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 206,
+      "n_elements": 3,
+      "pattern": "identity",
+      "seed": 5,
+      "phi": 0.0,
+      "elapsed_ms": 0.17759999900590628,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 207,
+      "n_elements": 3,
+      "pattern": "identity",
+      "seed": 6,
+      "phi": 0.0,
+      "elapsed_ms": 0.20460000087041408,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 208,
+      "n_elements": 3,
+      "pattern": "identity",
+      "seed": 7,
+      "phi": 0.0,
+      "elapsed_ms": 0.18540000019129366,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 209,
+      "n_elements": 3,
+      "pattern": "identity",
+      "seed": 8,
+      "phi": 0.0,
+      "elapsed_ms": 0.17950000255950727,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 210,
+      "n_elements": 3,
+      "pattern": "identity",
+      "seed": 9,
+      "phi": 0.0,
+      "elapsed_ms": 0.2009999989240896,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 211,
+      "n_elements": 3,
+      "pattern": "uniform",
+      "seed": 0,
+      "phi": 2.502676956105392e-18,
+      "elapsed_ms": 0.40160000207833946,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 212,
+      "n_elements": 3,
+      "pattern": "uniform",
+      "seed": 1,
+      "phi": 2.502676956105392e-18,
+      "elapsed_ms": 0.39480000123148784,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 213,
+      "n_elements": 3,
+      "pattern": "uniform",
+      "seed": 2,
+      "phi": 2.502676956105392e-18,
+      "elapsed_ms": 0.39429999742424116,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 214,
+      "n_elements": 3,
+      "pattern": "uniform",
+      "seed": 3,
+      "phi": 2.502676956105392e-18,
+      "elapsed_ms": 0.4067999980179593,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 215,
+      "n_elements": 3,
+      "pattern": "uniform",
+      "seed": 4,
+      "phi": 2.502676956105392e-18,
+      "elapsed_ms": 0.3885000005539041,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 216,
+      "n_elements": 3,
+      "pattern": "uniform",
+      "seed": 5,
+      "phi": 2.502676956105392e-18,
+      "elapsed_ms": 0.39290000131586567,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 217,
+      "n_elements": 3,
+      "pattern": "uniform",
+      "seed": 6,
+      "phi": 2.502676956105392e-18,
+      "elapsed_ms": 0.38859999767737463,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 218,
+      "n_elements": 3,
+      "pattern": "uniform",
+      "seed": 7,
+      "phi": 2.502676956105392e-18,
+      "elapsed_ms": 0.4006000017398037,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 219,
+      "n_elements": 3,
+      "pattern": "uniform",
+      "seed": 8,
+      "phi": 2.502676956105392e-18,
+      "elapsed_ms": 0.39230000038514845,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 220,
+      "n_elements": 3,
+      "pattern": "uniform",
+      "seed": 9,
+      "phi": 2.502676956105392e-18,
+      "elapsed_ms": 0.3901999989466276,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 221,
+      "n_elements": 3,
+      "pattern": "random",
+      "seed": 0,
+      "phi": 0.1511966783274237,
+      "elapsed_ms": 0.4059999992023222,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 222,
+      "n_elements": 3,
+      "pattern": "random",
+      "seed": 1,
+      "phi": 0.17559800436018583,
+      "elapsed_ms": 0.4076999975950457,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 223,
+      "n_elements": 3,
+      "pattern": "random",
+      "seed": 2,
+      "phi": 0.18307582974978323,
+      "elapsed_ms": 0.400400000216905,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 224,
+      "n_elements": 3,
+      "pattern": "random",
+      "seed": 3,
+      "phi": 0.1826998058851382,
+      "elapsed_ms": 0.400400000216905,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 225,
+      "n_elements": 3,
+      "pattern": "random",
+      "seed": 4,
+      "phi": 0.18658532498945718,
+      "elapsed_ms": 0.4025999987788964,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 226,
+      "n_elements": 3,
+      "pattern": "random",
+      "seed": 5,
+      "phi": 0.2001734859064311,
+      "elapsed_ms": 0.4085000000486616,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 227,
+      "n_elements": 3,
+      "pattern": "random",
+      "seed": 6,
+      "phi": 0.16437075484608846,
+      "elapsed_ms": 0.39619999733986333,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 228,
+      "n_elements": 3,
+      "pattern": "random",
+      "seed": 7,
+      "phi": 0.1975930474317109,
+      "elapsed_ms": 0.39670000114711,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 229,
+      "n_elements": 3,
+      "pattern": "random",
+      "seed": 8,
+      "phi": 0.21157226230845227,
+      "elapsed_ms": 0.3969000026700087,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 230,
+      "n_elements": 3,
+      "pattern": "random",
+      "seed": 9,
+      "phi": 0.20217420758103424,
+      "elapsed_ms": 0.40050000097835436,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 231,
+      "n_elements": 3,
+      "pattern": "integrated",
+      "seed": 0,
+      "phi": 0.13114038185781293,
+      "elapsed_ms": 0.3851000001304783,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 232,
+      "n_elements": 3,
+      "pattern": "integrated",
+      "seed": 1,
+      "phi": 0.13114038185781293,
+      "elapsed_ms": 0.3858999989461154,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 233,
+      "n_elements": 3,
+      "pattern": "integrated",
+      "seed": 2,
+      "phi": 0.13114038185781293,
+      "elapsed_ms": 0.3882999990310054,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 234,
+      "n_elements": 3,
+      "pattern": "integrated",
+      "seed": 3,
+      "phi": 0.13114038185781293,
+      "elapsed_ms": 0.3845999999612104,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 235,
+      "n_elements": 3,
+      "pattern": "integrated",
+      "seed": 4,
+      "phi": 0.13114038185781293,
+      "elapsed_ms": 0.38210000275284983,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 236,
+      "n_elements": 3,
+      "pattern": "integrated",
+      "seed": 5,
+      "phi": 0.13114038185781293,
+      "elapsed_ms": 0.3842000005533919,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 237,
+      "n_elements": 3,
+      "pattern": "integrated",
+      "seed": 6,
+      "phi": 0.13114038185781293,
+      "elapsed_ms": 0.3866000006382819,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 238,
+      "n_elements": 3,
+      "pattern": "integrated",
+      "seed": 7,
+      "phi": 0.13114038185781293,
+      "elapsed_ms": 0.38499999936902896,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 239,
+      "n_elements": 3,
+      "pattern": "integrated",
+      "seed": 8,
+      "phi": 0.13114038185781293,
+      "elapsed_ms": 0.3811999995377846,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 240,
+      "n_elements": 3,
+      "pattern": "integrated",
+      "seed": 9,
+      "phi": 0.13114038185781293,
+      "elapsed_ms": 0.38380000114557333,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 241,
+      "n_elements": 3,
+      "pattern": "independent",
+      "seed": 0,
+      "phi": 0.356127302307922,
+      "elapsed_ms": 0.3830999994534068,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 242,
+      "n_elements": 3,
+      "pattern": "independent",
+      "seed": 1,
+      "phi": 0.356127302307922,
+      "elapsed_ms": 0.3868000021611806,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 243,
+      "n_elements": 3,
+      "pattern": "independent",
+      "seed": 2,
+      "phi": 0.356127302307922,
+      "elapsed_ms": 0.40330000047106296,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 244,
+      "n_elements": 3,
+      "pattern": "independent",
+      "seed": 3,
+      "phi": 0.356127302307922,
+      "elapsed_ms": 0.38549999953829683,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 245,
+      "n_elements": 3,
+      "pattern": "independent",
+      "seed": 4,
+      "phi": 0.356127302307922,
+      "elapsed_ms": 0.3842000005533919,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 246,
+      "n_elements": 3,
+      "pattern": "independent",
+      "seed": 5,
+      "phi": 0.356127302307922,
+      "elapsed_ms": 0.3866000006382819,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 247,
+      "n_elements": 3,
+      "pattern": "independent",
+      "seed": 6,
+      "phi": 0.356127302307922,
+      "elapsed_ms": 0.3887999992002733,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 248,
+      "n_elements": 3,
+      "pattern": "independent",
+      "seed": 7,
+      "phi": 0.356127302307922,
+      "elapsed_ms": 0.38549999953829683,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 249,
+      "n_elements": 3,
+      "pattern": "independent",
+      "seed": 8,
+      "phi": 0.356127302307922,
+      "elapsed_ms": 0.3829000015684869,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 250,
+      "n_elements": 3,
+      "pattern": "independent",
+      "seed": 9,
+      "phi": 0.356127302307922,
+      "elapsed_ms": 0.3851000001304783,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 251,
+      "n_elements": 3,
+      "pattern": "cycle",
+      "seed": 0,
+      "phi": 3.0000000000000004,
+      "elapsed_ms": 0.22019999960321002,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 252,
+      "n_elements": 3,
+      "pattern": "cycle",
+      "seed": 1,
+      "phi": 3.0000000000000004,
+      "elapsed_ms": 0.21909999850322492,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 253,
+      "n_elements": 3,
+      "pattern": "cycle",
+      "seed": 2,
+      "phi": 3.0000000000000004,
+      "elapsed_ms": 0.2147999985027127,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 254,
+      "n_elements": 3,
+      "pattern": "cycle",
+      "seed": 3,
+      "phi": 3.0000000000000004,
+      "elapsed_ms": 0.21080000078654848,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 255,
+      "n_elements": 3,
+      "pattern": "cycle",
+      "seed": 4,
+      "phi": 3.0000000000000004,
+      "elapsed_ms": 0.21149999884073623,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 256,
+      "n_elements": 3,
+      "pattern": "cycle",
+      "seed": 5,
+      "phi": 3.0000000000000004,
+      "elapsed_ms": 0.2172999993490521,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 257,
+      "n_elements": 3,
+      "pattern": "cycle",
+      "seed": 6,
+      "phi": 3.0000000000000004,
+      "elapsed_ms": 0.21080000078654848,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 258,
+      "n_elements": 3,
+      "pattern": "cycle",
+      "seed": 7,
+      "phi": 3.0000000000000004,
+      "elapsed_ms": 0.21080000078654848,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 259,
+      "n_elements": 3,
+      "pattern": "cycle",
+      "seed": 8,
+      "phi": 3.0000000000000004,
+      "elapsed_ms": 0.20880000010947697,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 260,
+      "n_elements": 3,
+      "pattern": "cycle",
+      "seed": 9,
+      "phi": 3.0000000000000004,
+      "elapsed_ms": 0.21850000121048652,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 261,
+      "n_elements": 3,
+      "pattern": "near_identity",
+      "seed": 0,
+      "phi": 2.9545853076662056,
+      "elapsed_ms": 0.23979999969014898,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 262,
+      "n_elements": 3,
+      "pattern": "near_identity",
+      "seed": 1,
+      "phi": 2.9545853076662056,
+      "elapsed_ms": 0.2432000001135748,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 263,
+      "n_elements": 3,
+      "pattern": "near_identity",
+      "seed": 2,
+      "phi": 2.9545853076662056,
+      "elapsed_ms": 0.24479999774484895,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 264,
+      "n_elements": 3,
+      "pattern": "near_identity",
+      "seed": 3,
+      "phi": 2.9545853076662056,
+      "elapsed_ms": 0.23979999969014898,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 265,
+      "n_elements": 3,
+      "pattern": "near_identity",
+      "seed": 4,
+      "phi": 2.9545853076662056,
+      "elapsed_ms": 0.24019999909796752,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 266,
+      "n_elements": 3,
+      "pattern": "near_identity",
+      "seed": 5,
+      "phi": 2.9545853076662056,
+      "elapsed_ms": 0.24449999909847975,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 267,
+      "n_elements": 3,
+      "pattern": "near_identity",
+      "seed": 6,
+      "phi": 2.9545853076662056,
+      "elapsed_ms": 0.24990000019897707,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 268,
+      "n_elements": 3,
+      "pattern": "near_identity",
+      "seed": 7,
+      "phi": 2.9545853076662056,
+      "elapsed_ms": 0.23850000070524402,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 269,
+      "n_elements": 3,
+      "pattern": "near_identity",
+      "seed": 8,
+      "phi": 2.9545853076662056,
+      "elapsed_ms": 0.23570000121253543,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 270,
+      "n_elements": 3,
+      "pattern": "near_identity",
+      "seed": 9,
+      "phi": 2.9545853076662056,
+      "elapsed_ms": 0.24340000163647346,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 271,
+      "n_elements": 3,
+      "pattern": "sparse",
+      "seed": 0,
+      "phi": 2.0000000000000004,
+      "elapsed_ms": 0.23940000028233044,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 272,
+      "n_elements": 3,
+      "pattern": "sparse",
+      "seed": 1,
+      "phi": 2.0000000000000004,
+      "elapsed_ms": 0.23689999943599105,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 273,
+      "n_elements": 3,
+      "pattern": "sparse",
+      "seed": 2,
+      "phi": 2.0000000000000004,
+      "elapsed_ms": 0.2449000021442771,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 274,
+      "n_elements": 3,
+      "pattern": "sparse",
+      "seed": 3,
+      "phi": 2.0000000000000004,
+      "elapsed_ms": 0.23910000163596123,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 275,
+      "n_elements": 3,
+      "pattern": "sparse",
+      "seed": 4,
+      "phi": 2.0000000000000004,
+      "elapsed_ms": 0.23440000222763047,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 276,
+      "n_elements": 3,
+      "pattern": "sparse",
+      "seed": 5,
+      "phi": 2.0000000000000004,
+      "elapsed_ms": 0.23330000112764537,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 277,
+      "n_elements": 3,
+      "pattern": "sparse",
+      "seed": 6,
+      "phi": 2.0000000000000004,
+      "elapsed_ms": 0.23940000028233044,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 278,
+      "n_elements": 3,
+      "pattern": "sparse",
+      "seed": 7,
+      "phi": 2.0000000000000004,
+      "elapsed_ms": 0.23839999994379468,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 279,
+      "n_elements": 3,
+      "pattern": "sparse",
+      "seed": 8,
+      "phi": 2.0000000000000004,
+      "elapsed_ms": 0.24109999867505394,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 280,
+      "n_elements": 3,
+      "pattern": "sparse",
+      "seed": 9,
+      "phi": 2.0000000000000004,
+      "elapsed_ms": 0.28219999876455404,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 281,
+      "n_elements": 3,
+      "pattern": "tiny",
+      "seed": 0,
+      "phi": 0.1511966783274238,
+      "elapsed_ms": 0.49420000141253695,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 282,
+      "n_elements": 3,
+      "pattern": "tiny",
+      "seed": 1,
+      "phi": 0.17559800436018583,
+      "elapsed_ms": 0.4139000011491589,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 283,
+      "n_elements": 3,
+      "pattern": "tiny",
+      "seed": 2,
+      "phi": 0.18307582974978331,
+      "elapsed_ms": 0.40609999996377155,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 284,
+      "n_elements": 3,
+      "pattern": "tiny",
+      "seed": 3,
+      "phi": 0.18269980588513834,
+      "elapsed_ms": 0.405700000555953,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 285,
+      "n_elements": 3,
+      "pattern": "tiny",
+      "seed": 4,
+      "phi": 0.18658532498945718,
+      "elapsed_ms": 0.4050999996252358,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 286,
+      "n_elements": 3,
+      "pattern": "tiny",
+      "seed": 5,
+      "phi": 0.20017348590643128,
+      "elapsed_ms": 0.4014000005554408,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 287,
+      "n_elements": 3,
+      "pattern": "tiny",
+      "seed": 6,
+      "phi": 0.16437075484608846,
+      "elapsed_ms": 0.4096000011486467,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 288,
+      "n_elements": 3,
+      "pattern": "tiny",
+      "seed": 7,
+      "phi": 0.19759304743171094,
+      "elapsed_ms": 0.39900000047055073,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 289,
+      "n_elements": 3,
+      "pattern": "tiny",
+      "seed": 8,
+      "phi": 0.21157226230845202,
+      "elapsed_ms": 0.38749999657738954,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 290,
+      "n_elements": 3,
+      "pattern": "tiny",
+      "seed": 9,
+      "phi": 0.20217420758103422,
+      "elapsed_ms": 0.3851000001304783,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 291,
+      "n_elements": 3,
+      "pattern": "singular",
+      "seed": 0,
+      "phi": 6.864553456200443e-17,
+      "elapsed_ms": 0.389000000723172,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 292,
+      "n_elements": 3,
+      "pattern": "singular",
+      "seed": 1,
+      "phi": 1.7947557977312083e-17,
+      "elapsed_ms": 0.3997999992861878,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 293,
+      "n_elements": 3,
+      "pattern": "singular",
+      "seed": 2,
+      "phi": 4.068709070965515e-17,
+      "elapsed_ms": 0.40970000191009603,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 294,
+      "n_elements": 3,
+      "pattern": "singular",
+      "seed": 3,
+      "phi": 6.064144893674397e-17,
+      "elapsed_ms": 0.3913999971700832,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 295,
+      "n_elements": 3,
+      "pattern": "singular",
+      "seed": 4,
+      "phi": 1.6038213257889791e-16,
+      "elapsed_ms": 0.3907999998773448,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 296,
+      "n_elements": 3,
+      "pattern": "singular",
+      "seed": 5,
+      "phi": 1.6938796178800023e-16,
+      "elapsed_ms": 0.3935999993700534,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 297,
+      "n_elements": 3,
+      "pattern": "singular",
+      "seed": 6,
+      "phi": 1.1798760196144965e-16,
+      "elapsed_ms": 0.4017999999632593,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 298,
+      "n_elements": 3,
+      "pattern": "singular",
+      "seed": 7,
+      "phi": 1.364305505992515e-16,
+      "elapsed_ms": 0.38549999953829683,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 299,
+      "n_elements": 3,
+      "pattern": "singular",
+      "seed": 8,
+      "phi": 5.083856921461367e-17,
+      "elapsed_ms": 0.3921999996236991,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 300,
+      "n_elements": 3,
+      "pattern": "singular",
+      "seed": 9,
+      "phi": 2.9502858249510684e-16,
+      "elapsed_ms": 0.3823000006377697,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 301,
+      "n_elements": 4,
+      "pattern": "identity",
+      "seed": 0,
+      "phi": 0.0,
+      "elapsed_ms": 1.0653999997884966,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 302,
+      "n_elements": 4,
+      "pattern": "identity",
+      "seed": 1,
+      "phi": 0.0,
+      "elapsed_ms": 1.0431000009702984,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 303,
+      "n_elements": 4,
+      "pattern": "identity",
+      "seed": 2,
+      "phi": 0.0,
+      "elapsed_ms": 1.0437999990244862,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 304,
+      "n_elements": 4,
+      "pattern": "identity",
+      "seed": 3,
+      "phi": 0.0,
+      "elapsed_ms": 1.0465999985171948,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 305,
+      "n_elements": 4,
+      "pattern": "identity",
+      "seed": 4,
+      "phi": 0.0,
+      "elapsed_ms": 1.0470999986864626,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 306,
+      "n_elements": 4,
+      "pattern": "identity",
+      "seed": 5,
+      "phi": 0.0,
+      "elapsed_ms": 1.1147000004712027,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 307,
+      "n_elements": 4,
+      "pattern": "identity",
+      "seed": 6,
+      "phi": 0.0,
+      "elapsed_ms": 1.1521000014909077,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 308,
+      "n_elements": 4,
+      "pattern": "identity",
+      "seed": 7,
+      "phi": 0.0,
+      "elapsed_ms": 1.0812000000441913,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 309,
+      "n_elements": 4,
+      "pattern": "identity",
+      "seed": 8,
+      "phi": 0.0,
+      "elapsed_ms": 1.0697000034269877,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 310,
+      "n_elements": 4,
+      "pattern": "identity",
+      "seed": 9,
+      "phi": 0.0,
+      "elapsed_ms": 1.0672000025806483,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 311,
+      "n_elements": 4,
+      "pattern": "uniform",
+      "seed": 0,
+      "phi": 4.004283129768648e-17,
+      "elapsed_ms": 3.0619999997725245,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 312,
+      "n_elements": 4,
+      "pattern": "uniform",
+      "seed": 1,
+      "phi": 4.004283129768648e-17,
+      "elapsed_ms": 2.9598999972222373,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 313,
+      "n_elements": 4,
+      "pattern": "uniform",
+      "seed": 2,
+      "phi": 4.004283129768648e-17,
+      "elapsed_ms": 2.9154999974707607,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 314,
+      "n_elements": 4,
+      "pattern": "uniform",
+      "seed": 3,
+      "phi": 4.004283129768648e-17,
+      "elapsed_ms": 3.006800001458032,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 315,
+      "n_elements": 4,
+      "pattern": "uniform",
+      "seed": 4,
+      "phi": 4.004283129768648e-17,
+      "elapsed_ms": 2.967500000522705,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 316,
+      "n_elements": 4,
+      "pattern": "uniform",
+      "seed": 5,
+      "phi": 4.004283129768648e-17,
+      "elapsed_ms": 3.004099999088794,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 317,
+      "n_elements": 4,
+      "pattern": "uniform",
+      "seed": 6,
+      "phi": 4.004283129768648e-17,
+      "elapsed_ms": 2.920099999755621,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 318,
+      "n_elements": 4,
+      "pattern": "uniform",
+      "seed": 7,
+      "phi": 4.004283129768648e-17,
+      "elapsed_ms": 2.8708000027108938,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 319,
+      "n_elements": 4,
+      "pattern": "uniform",
+      "seed": 8,
+      "phi": 4.004283129768648e-17,
+      "elapsed_ms": 2.8765000024577603,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 320,
+      "n_elements": 4,
+      "pattern": "uniform",
+      "seed": 9,
+      "phi": 4.004283129768648e-17,
+      "elapsed_ms": 2.961199999845121,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 321,
+      "n_elements": 4,
+      "pattern": "random",
+      "seed": 0,
+      "phi": 0.250751019849258,
+      "elapsed_ms": 3.0103999997663777,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 322,
+      "n_elements": 4,
+      "pattern": "random",
+      "seed": 1,
+      "phi": 0.2464746683501712,
+      "elapsed_ms": 2.935800002887845,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 323,
+      "n_elements": 4,
+      "pattern": "random",
+      "seed": 2,
+      "phi": 0.23147139775386488,
+      "elapsed_ms": 2.9374999976425897,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 324,
+      "n_elements": 4,
+      "pattern": "random",
+      "seed": 3,
+      "phi": 0.2982301546633145,
+      "elapsed_ms": 2.9448999994201586,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 325,
+      "n_elements": 4,
+      "pattern": "random",
+      "seed": 4,
+      "phi": 0.22951935007325633,
+      "elapsed_ms": 3.0017999997653533,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 326,
+      "n_elements": 4,
+      "pattern": "random",
+      "seed": 5,
+      "phi": 0.23822537472417113,
+      "elapsed_ms": 3.149299998767674,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 327,
+      "n_elements": 4,
+      "pattern": "random",
+      "seed": 6,
+      "phi": 0.21269529397475836,
+      "elapsed_ms": 5.158700001629768,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 328,
+      "n_elements": 4,
+      "pattern": "random",
+      "seed": 7,
+      "phi": 0.2426710558848569,
+      "elapsed_ms": 4.220200000418117,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 329,
+      "n_elements": 4,
+      "pattern": "random",
+      "seed": 8,
+      "phi": 0.252845757923569,
+      "elapsed_ms": 4.999000000680098,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 330,
+      "n_elements": 4,
+      "pattern": "random",
+      "seed": 9,
+      "phi": 0.26856910664674344,
+      "elapsed_ms": 3.962499999033753,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 331,
+      "n_elements": 4,
+      "pattern": "integrated",
+      "seed": 0,
+      "phi": 0.1748538424770838,
+      "elapsed_ms": 4.051400002936134,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 332,
+      "n_elements": 4,
+      "pattern": "integrated",
+      "seed": 1,
+      "phi": 0.1748538424770838,
+      "elapsed_ms": 4.551899997750297,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 333,
+      "n_elements": 4,
+      "pattern": "integrated",
+      "seed": 2,
+      "phi": 0.1748538424770838,
+      "elapsed_ms": 4.116700001759455,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 334,
+      "n_elements": 4,
+      "pattern": "integrated",
+      "seed": 3,
+      "phi": 0.1748538424770838,
+      "elapsed_ms": 3.316499998618383,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 335,
+      "n_elements": 4,
+      "pattern": "integrated",
+      "seed": 4,
+      "phi": 0.1748538424770838,
+      "elapsed_ms": 3.243099999963306,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 336,
+      "n_elements": 4,
+      "pattern": "integrated",
+      "seed": 5,
+      "phi": 0.1748538424770838,
+      "elapsed_ms": 3.5483000028762035,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 337,
+      "n_elements": 4,
+      "pattern": "integrated",
+      "seed": 6,
+      "phi": 0.1748538424770838,
+      "elapsed_ms": 4.024000001663808,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 338,
+      "n_elements": 4,
+      "pattern": "integrated",
+      "seed": 7,
+      "phi": 0.1748538424770838,
+      "elapsed_ms": 3.4630000009201467,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 339,
+      "n_elements": 4,
+      "pattern": "integrated",
+      "seed": 8,
+      "phi": 0.1748538424770838,
+      "elapsed_ms": 3.2399999981862493,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 340,
+      "n_elements": 4,
+      "pattern": "integrated",
+      "seed": 9,
+      "phi": 0.1748538424770838,
+      "elapsed_ms": 3.2819000007293653,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 341,
+      "n_elements": 4,
+      "pattern": "independent",
+      "seed": 0,
+      "phi": 0.47483640307723024,
+      "elapsed_ms": 3.710600001795683,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 342,
+      "n_elements": 4,
+      "pattern": "independent",
+      "seed": 1,
+      "phi": 0.47483640307723024,
+      "elapsed_ms": 3.294000001915265,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 343,
+      "n_elements": 4,
+      "pattern": "independent",
+      "seed": 2,
+      "phi": 0.47483640307723024,
+      "elapsed_ms": 3.253800001402851,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 344,
+      "n_elements": 4,
+      "pattern": "independent",
+      "seed": 3,
+      "phi": 0.47483640307723024,
+      "elapsed_ms": 3.3177000004798174,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 345,
+      "n_elements": 4,
+      "pattern": "independent",
+      "seed": 4,
+      "phi": 0.47483640307723024,
+      "elapsed_ms": 3.91719999970519,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 346,
+      "n_elements": 4,
+      "pattern": "independent",
+      "seed": 5,
+      "phi": 0.47483640307723024,
+      "elapsed_ms": 3.37990000116406,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 347,
+      "n_elements": 4,
+      "pattern": "independent",
+      "seed": 6,
+      "phi": 0.47483640307723024,
+      "elapsed_ms": 3.3029000005626585,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 348,
+      "n_elements": 4,
+      "pattern": "independent",
+      "seed": 7,
+      "phi": 0.47483640307723024,
+      "elapsed_ms": 3.283400001237169,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 349,
+      "n_elements": 4,
+      "pattern": "independent",
+      "seed": 8,
+      "phi": 0.47483640307723024,
+      "elapsed_ms": 3.2056000018201303,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 350,
+      "n_elements": 4,
+      "pattern": "independent",
+      "seed": 9,
+      "phi": 0.47483640307723024,
+      "elapsed_ms": 3.186199999618111,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 351,
+      "n_elements": 4,
+      "pattern": "cycle",
+      "seed": 0,
+      "phi": 4.0,
+      "elapsed_ms": 1.3292000003275461,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 352,
+      "n_elements": 4,
+      "pattern": "cycle",
+      "seed": 1,
+      "phi": 4.0,
+      "elapsed_ms": 1.3437000015983358,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 353,
+      "n_elements": 4,
+      "pattern": "cycle",
+      "seed": 2,
+      "phi": 4.0,
+      "elapsed_ms": 1.2557999980344903,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 354,
+      "n_elements": 4,
+      "pattern": "cycle",
+      "seed": 3,
+      "phi": 4.0,
+      "elapsed_ms": 1.2764000020979438,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 355,
+      "n_elements": 4,
+      "pattern": "cycle",
+      "seed": 4,
+      "phi": 4.0,
+      "elapsed_ms": 1.3365000013436656,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 356,
+      "n_elements": 4,
+      "pattern": "cycle",
+      "seed": 5,
+      "phi": 4.0,
+      "elapsed_ms": 1.2830000014218967,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 357,
+      "n_elements": 4,
+      "pattern": "cycle",
+      "seed": 6,
+      "phi": 4.0,
+      "elapsed_ms": 1.2677999984589405,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 358,
+      "n_elements": 4,
+      "pattern": "cycle",
+      "seed": 7,
+      "phi": 4.0,
+      "elapsed_ms": 1.6651999976602383,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 359,
+      "n_elements": 4,
+      "pattern": "cycle",
+      "seed": 8,
+      "phi": 4.0,
+      "elapsed_ms": 1.6002000011212658,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 360,
+      "n_elements": 4,
+      "pattern": "cycle",
+      "seed": 9,
+      "phi": 4.0,
+      "elapsed_ms": 1.6080999994301237,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 361,
+      "n_elements": 4,
+      "pattern": "near_identity",
+      "seed": 0,
+      "phi": 3.954585307666206,
+      "elapsed_ms": 1.8006999998760875,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 362,
+      "n_elements": 4,
+      "pattern": "near_identity",
+      "seed": 1,
+      "phi": 3.954585307666206,
+      "elapsed_ms": 1.8387999989499804,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 363,
+      "n_elements": 4,
+      "pattern": "near_identity",
+      "seed": 2,
+      "phi": 3.954585307666206,
+      "elapsed_ms": 1.813799997762544,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 364,
+      "n_elements": 4,
+      "pattern": "near_identity",
+      "seed": 3,
+      "phi": 3.954585307666206,
+      "elapsed_ms": 1.5179000001808163,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 365,
+      "n_elements": 4,
+      "pattern": "near_identity",
+      "seed": 4,
+      "phi": 3.954585307666206,
+      "elapsed_ms": 1.4784999984840397,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 366,
+      "n_elements": 4,
+      "pattern": "near_identity",
+      "seed": 5,
+      "phi": 3.954585307666206,
+      "elapsed_ms": 1.657500000874279,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 367,
+      "n_elements": 4,
+      "pattern": "near_identity",
+      "seed": 6,
+      "phi": 3.954585307666206,
+      "elapsed_ms": 1.85070000225096,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 368,
+      "n_elements": 4,
+      "pattern": "near_identity",
+      "seed": 7,
+      "phi": 3.954585307666206,
+      "elapsed_ms": 1.805600000807317,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 369,
+      "n_elements": 4,
+      "pattern": "near_identity",
+      "seed": 8,
+      "phi": 3.954585307666206,
+      "elapsed_ms": 1.7914000018208753,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 370,
+      "n_elements": 4,
+      "pattern": "near_identity",
+      "seed": 9,
+      "phi": 3.954585307666206,
+      "elapsed_ms": 1.827600000979146,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 371,
+      "n_elements": 4,
+      "pattern": "sparse",
+      "seed": 0,
+      "phi": 2.999999999999999,
+      "elapsed_ms": 1.9400000019231811,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 372,
+      "n_elements": 4,
+      "pattern": "sparse",
+      "seed": 1,
+      "phi": 2.999999999999999,
+      "elapsed_ms": 1.8108999975083862,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 373,
+      "n_elements": 4,
+      "pattern": "sparse",
+      "seed": 2,
+      "phi": 2.999999999999999,
+      "elapsed_ms": 1.6815000017231796,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 374,
+      "n_elements": 4,
+      "pattern": "sparse",
+      "seed": 3,
+      "phi": 2.999999999999999,
+      "elapsed_ms": 1.4566999998351093,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 375,
+      "n_elements": 4,
+      "pattern": "sparse",
+      "seed": 4,
+      "phi": 2.999999999999999,
+      "elapsed_ms": 1.4717999983986374,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 376,
+      "n_elements": 4,
+      "pattern": "sparse",
+      "seed": 5,
+      "phi": 2.999999999999999,
+      "elapsed_ms": 1.4650999983132351,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 377,
+      "n_elements": 4,
+      "pattern": "sparse",
+      "seed": 6,
+      "phi": 2.999999999999999,
+      "elapsed_ms": 1.4700000028824434,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 378,
+      "n_elements": 4,
+      "pattern": "sparse",
+      "seed": 7,
+      "phi": 2.999999999999999,
+      "elapsed_ms": 1.4349999983096495,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 379,
+      "n_elements": 4,
+      "pattern": "sparse",
+      "seed": 8,
+      "phi": 2.999999999999999,
+      "elapsed_ms": 1.4583000011043623,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 380,
+      "n_elements": 4,
+      "pattern": "sparse",
+      "seed": 9,
+      "phi": 2.999999999999999,
+      "elapsed_ms": 1.4799999989918433,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 381,
+      "n_elements": 4,
+      "pattern": "tiny",
+      "seed": 0,
+      "phi": 0.25075101984925785,
+      "elapsed_ms": 3.1970999989425763,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 382,
+      "n_elements": 4,
+      "pattern": "tiny",
+      "seed": 1,
+      "phi": 0.24647466835017132,
+      "elapsed_ms": 3.19840000156546,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 383,
+      "n_elements": 4,
+      "pattern": "tiny",
+      "seed": 2,
+      "phi": 0.23147139775386466,
+      "elapsed_ms": 3.2131000007211696,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 384,
+      "n_elements": 4,
+      "pattern": "tiny",
+      "seed": 3,
+      "phi": 0.2982301546633143,
+      "elapsed_ms": 3.207400000974303,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 385,
+      "n_elements": 4,
+      "pattern": "tiny",
+      "seed": 4,
+      "phi": 0.22951935007325658,
+      "elapsed_ms": 3.3497999975224957,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 386,
+      "n_elements": 4,
+      "pattern": "tiny",
+      "seed": 5,
+      "phi": 0.2382253747241713,
+      "elapsed_ms": 3.1334999985119794,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 387,
+      "n_elements": 4,
+      "pattern": "tiny",
+      "seed": 6,
+      "phi": 0.2126952939747584,
+      "elapsed_ms": 3.105899999354733,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 388,
+      "n_elements": 4,
+      "pattern": "tiny",
+      "seed": 7,
+      "phi": 0.24267105588485702,
+      "elapsed_ms": 3.1014999985927716,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 389,
+      "n_elements": 4,
+      "pattern": "tiny",
+      "seed": 8,
+      "phi": 0.25284575792356906,
+      "elapsed_ms": 3.1178999997791834,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 390,
+      "n_elements": 4,
+      "pattern": "tiny",
+      "seed": 9,
+      "phi": 0.26856910664674344,
+      "elapsed_ms": 4.449600000953069,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 391,
+      "n_elements": 4,
+      "pattern": "singular",
+      "seed": 0,
+      "phi": 1.3524448678190865e-16,
+      "elapsed_ms": 3.614400000515161,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 392,
+      "n_elements": 4,
+      "pattern": "singular",
+      "seed": 1,
+      "phi": 3.4001410029088004e-17,
+      "elapsed_ms": 3.3106000009865966,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 393,
+      "n_elements": 4,
+      "pattern": "singular",
+      "seed": 2,
+      "phi": 3.7975185202547304e-17,
+      "elapsed_ms": 3.279200001998106,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 394,
+      "n_elements": 4,
+      "pattern": "singular",
+      "seed": 3,
+      "phi": 6.819594612464873e-17,
+      "elapsed_ms": 3.108000000793254,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 395,
+      "n_elements": 4,
+      "pattern": "singular",
+      "seed": 4,
+      "phi": 1.1606839300283495e-16,
+      "elapsed_ms": 3.1140000028244685,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 396,
+      "n_elements": 4,
+      "pattern": "singular",
+      "seed": 5,
+      "phi": 8.786098278072765e-17,
+      "elapsed_ms": 3.1314000007114373,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 397,
+      "n_elements": 4,
+      "pattern": "singular",
+      "seed": 6,
+      "phi": 1.0967114223809499e-16,
+      "elapsed_ms": 3.1553000007988885,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 398,
+      "n_elements": 4,
+      "pattern": "singular",
+      "seed": 7,
+      "phi": 7.073666628308479e-17,
+      "elapsed_ms": 3.1082000023161527,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 399,
+      "n_elements": 4,
+      "pattern": "singular",
+      "seed": 8,
+      "phi": 1.7268290284169335e-16,
+      "elapsed_ms": 3.1751999995321967,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 400,
+      "n_elements": 4,
+      "pattern": "singular",
+      "seed": 9,
+      "phi": 1.0317253253736726e-16,
+      "elapsed_ms": 3.133400001388509,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 401,
+      "n_elements": 5,
+      "pattern": "identity",
+      "seed": 0,
+      "phi": 0.0,
+      "elapsed_ms": 8.679099999426398,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 402,
+      "n_elements": 5,
+      "pattern": "identity",
+      "seed": 1,
+      "phi": 0.0,
+      "elapsed_ms": 8.391899998969166,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 403,
+      "n_elements": 5,
+      "pattern": "identity",
+      "seed": 2,
+      "phi": 0.0,
+      "elapsed_ms": 8.343999998032814,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 404,
+      "n_elements": 5,
+      "pattern": "identity",
+      "seed": 3,
+      "phi": 0.0,
+      "elapsed_ms": 8.246100001997547,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 405,
+      "n_elements": 5,
+      "pattern": "identity",
+      "seed": 4,
+      "phi": 0.0,
+      "elapsed_ms": 8.281000002170913,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 406,
+      "n_elements": 5,
+      "pattern": "identity",
+      "seed": 5,
+      "phi": 0.0,
+      "elapsed_ms": 8.215899997594533,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 407,
+      "n_elements": 5,
+      "pattern": "identity",
+      "seed": 6,
+      "phi": 0.0,
+      "elapsed_ms": 8.00359999993816,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 408,
+      "n_elements": 5,
+      "pattern": "identity",
+      "seed": 7,
+      "phi": 0.0,
+      "elapsed_ms": 7.965199998579919,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 409,
+      "n_elements": 5,
+      "pattern": "identity",
+      "seed": 8,
+      "phi": 0.0,
+      "elapsed_ms": 7.972400002472568,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 410,
+      "n_elements": 5,
+      "pattern": "identity",
+      "seed": 9,
+      "phi": 0.0,
+      "elapsed_ms": 7.8027999988989905,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 411,
+      "n_elements": 5,
+      "pattern": "uniform",
+      "seed": 0,
+      "phi": 6.006424694652967e-17,
+      "elapsed_ms": 26.0286000011547,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 412,
+      "n_elements": 5,
+      "pattern": "uniform",
+      "seed": 1,
+      "phi": 6.006424694652967e-17,
+      "elapsed_ms": 32.10709999984829,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 413,
+      "n_elements": 5,
+      "pattern": "uniform",
+      "seed": 2,
+      "phi": 6.006424694652967e-17,
+      "elapsed_ms": 33.58750000188593,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 414,
+      "n_elements": 5,
+      "pattern": "uniform",
+      "seed": 3,
+      "phi": 6.006424694652967e-17,
+      "elapsed_ms": 26.272099999914644,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 415,
+      "n_elements": 5,
+      "pattern": "uniform",
+      "seed": 4,
+      "phi": 6.006424694652967e-17,
+      "elapsed_ms": 29.685100002097897,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 416,
+      "n_elements": 5,
+      "pattern": "uniform",
+      "seed": 5,
+      "phi": 6.006424694652967e-17,
+      "elapsed_ms": 27.152800001204014,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 417,
+      "n_elements": 5,
+      "pattern": "uniform",
+      "seed": 6,
+      "phi": 6.006424694652967e-17,
+      "elapsed_ms": 25.993799998104805,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 418,
+      "n_elements": 5,
+      "pattern": "uniform",
+      "seed": 7,
+      "phi": 6.006424694652967e-17,
+      "elapsed_ms": 25.424500003282446,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 419,
+      "n_elements": 5,
+      "pattern": "uniform",
+      "seed": 8,
+      "phi": 6.006424694652967e-17,
+      "elapsed_ms": 24.698600002011517,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 420,
+      "n_elements": 5,
+      "pattern": "uniform",
+      "seed": 9,
+      "phi": 6.006424694652967e-17,
+      "elapsed_ms": 24.08869999999297,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 421,
+      "n_elements": 5,
+      "pattern": "random",
+      "seed": 0,
+      "phi": 0.26546222630982635,
+      "elapsed_ms": 23.7784000019019,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 422,
+      "n_elements": 5,
+      "pattern": "random",
+      "seed": 1,
+      "phi": 0.25157721442546116,
+      "elapsed_ms": 23.293199999898206,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 423,
+      "n_elements": 5,
+      "pattern": "random",
+      "seed": 2,
+      "phi": 0.2554841739670213,
+      "elapsed_ms": 34.156800000346266,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 424,
+      "n_elements": 5,
+      "pattern": "random",
+      "seed": 3,
+      "phi": 0.2627793824855829,
+      "elapsed_ms": 31.746900000143796,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 425,
+      "n_elements": 5,
+      "pattern": "random",
+      "seed": 4,
+      "phi": 0.26484860958739315,
+      "elapsed_ms": 27.495799997268477,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 426,
+      "n_elements": 5,
+      "pattern": "random",
+      "seed": 5,
+      "phi": 0.255530926039737,
+      "elapsed_ms": 31.03969999938272,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 427,
+      "n_elements": 5,
+      "pattern": "random",
+      "seed": 6,
+      "phi": 0.25049671924518024,
+      "elapsed_ms": 28.384799999912502,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 428,
+      "n_elements": 5,
+      "pattern": "random",
+      "seed": 7,
+      "phi": 0.2713125452997371,
+      "elapsed_ms": 26.22509999855538,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 429,
+      "n_elements": 5,
+      "pattern": "random",
+      "seed": 8,
+      "phi": 0.2582736219030832,
+      "elapsed_ms": 25.35139999963576,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 430,
+      "n_elements": 5,
+      "pattern": "random",
+      "seed": 9,
+      "phi": 0.2531382766467818,
+      "elapsed_ms": 24.69050000217976,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 431,
+      "n_elements": 5,
+      "pattern": "integrated",
+      "seed": 0,
+      "phi": 0.21856730309635464,
+      "elapsed_ms": 24.25060000314261,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 432,
+      "n_elements": 5,
+      "pattern": "integrated",
+      "seed": 1,
+      "phi": 0.21856730309635464,
+      "elapsed_ms": 24.003099999390543,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 433,
+      "n_elements": 5,
+      "pattern": "integrated",
+      "seed": 2,
+      "phi": 0.21856730309635464,
+      "elapsed_ms": 26.99419999771635,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 434,
+      "n_elements": 5,
+      "pattern": "integrated",
+      "seed": 3,
+      "phi": 0.21856730309635464,
+      "elapsed_ms": 32.27109999716049,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 435,
+      "n_elements": 5,
+      "pattern": "integrated",
+      "seed": 4,
+      "phi": 0.21856730309635464,
+      "elapsed_ms": 30.976099998952122,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 436,
+      "n_elements": 5,
+      "pattern": "integrated",
+      "seed": 5,
+      "phi": 0.21856730309635464,
+      "elapsed_ms": 26.440500001626788,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 437,
+      "n_elements": 5,
+      "pattern": "integrated",
+      "seed": 6,
+      "phi": 0.21856730309635464,
+      "elapsed_ms": 30.392000000574626,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 438,
+      "n_elements": 5,
+      "pattern": "integrated",
+      "seed": 7,
+      "phi": 0.21856730309635464,
+      "elapsed_ms": 26.45230000052834,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 439,
+      "n_elements": 5,
+      "pattern": "integrated",
+      "seed": 8,
+      "phi": 0.21856730309635464,
+      "elapsed_ms": 25.891699999192497,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 440,
+      "n_elements": 5,
+      "pattern": "integrated",
+      "seed": 9,
+      "phi": 0.21856730309635464,
+      "elapsed_ms": 25.28159999928903,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 441,
+      "n_elements": 5,
+      "pattern": "independent",
+      "seed": 0,
+      "phi": 0.5935455038465377,
+      "elapsed_ms": 24.813200001517544,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 442,
+      "n_elements": 5,
+      "pattern": "independent",
+      "seed": 1,
+      "phi": 0.5935455038465377,
+      "elapsed_ms": 24.317600000358652,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 443,
+      "n_elements": 5,
+      "pattern": "independent",
+      "seed": 2,
+      "phi": 0.5935455038465377,
+      "elapsed_ms": 33.997200000158045,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 444,
+      "n_elements": 5,
+      "pattern": "independent",
+      "seed": 3,
+      "phi": 0.5935455038465377,
+      "elapsed_ms": 30.612499998824205,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 445,
+      "n_elements": 5,
+      "pattern": "independent",
+      "seed": 4,
+      "phi": 0.5935455038465377,
+      "elapsed_ms": 29.145600001356797,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 446,
+      "n_elements": 5,
+      "pattern": "independent",
+      "seed": 5,
+      "phi": 0.5935455038465377,
+      "elapsed_ms": 26.359499999671243,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 447,
+      "n_elements": 5,
+      "pattern": "independent",
+      "seed": 6,
+      "phi": 0.5935455038465377,
+      "elapsed_ms": 33.64220000003115,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 448,
+      "n_elements": 5,
+      "pattern": "independent",
+      "seed": 7,
+      "phi": 0.5935455038465377,
+      "elapsed_ms": 26.85090000159107,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 449,
+      "n_elements": 5,
+      "pattern": "independent",
+      "seed": 8,
+      "phi": 0.5935455038465377,
+      "elapsed_ms": 25.68999999857624,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 450,
+      "n_elements": 5,
+      "pattern": "independent",
+      "seed": 9,
+      "phi": 0.5935455038465377,
+      "elapsed_ms": 25.130399997578934,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 451,
+      "n_elements": 5,
+      "pattern": "cycle",
+      "seed": 0,
+      "phi": 4.999999999999999,
+      "elapsed_ms": 8.9086000007228,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 452,
+      "n_elements": 5,
+      "pattern": "cycle",
+      "seed": 1,
+      "phi": 4.999999999999999,
+      "elapsed_ms": 8.843499999784399,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 453,
+      "n_elements": 5,
+      "pattern": "cycle",
+      "seed": 2,
+      "phi": 4.999999999999999,
+      "elapsed_ms": 8.78039999952307,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 454,
+      "n_elements": 5,
+      "pattern": "cycle",
+      "seed": 3,
+      "phi": 4.999999999999999,
+      "elapsed_ms": 9.00520000141114,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 455,
+      "n_elements": 5,
+      "pattern": "cycle",
+      "seed": 4,
+      "phi": 4.999999999999999,
+      "elapsed_ms": 9.31510000009439,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 456,
+      "n_elements": 5,
+      "pattern": "cycle",
+      "seed": 5,
+      "phi": 4.999999999999999,
+      "elapsed_ms": 8.979300000646617,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 457,
+      "n_elements": 5,
+      "pattern": "cycle",
+      "seed": 6,
+      "phi": 4.999999999999999,
+      "elapsed_ms": 9.112499999901047,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 458,
+      "n_elements": 5,
+      "pattern": "cycle",
+      "seed": 7,
+      "phi": 4.999999999999999,
+      "elapsed_ms": 12.066600000252947,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 459,
+      "n_elements": 5,
+      "pattern": "cycle",
+      "seed": 8,
+      "phi": 4.999999999999999,
+      "elapsed_ms": 13.924799997766968,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 460,
+      "n_elements": 5,
+      "pattern": "cycle",
+      "seed": 9,
+      "phi": 4.999999999999999,
+      "elapsed_ms": 11.94509999913862,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 461,
+      "n_elements": 5,
+      "pattern": "near_identity",
+      "seed": 0,
+      "phi": 4.954585307666208,
+      "elapsed_ms": 12.916400002723094,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 462,
+      "n_elements": 5,
+      "pattern": "near_identity",
+      "seed": 1,
+      "phi": 4.954585307666208,
+      "elapsed_ms": 12.155899999925168,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 463,
+      "n_elements": 5,
+      "pattern": "near_identity",
+      "seed": 2,
+      "phi": 4.954585307666208,
+      "elapsed_ms": 12.236799997481285,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 464,
+      "n_elements": 5,
+      "pattern": "near_identity",
+      "seed": 3,
+      "phi": 4.954585307666208,
+      "elapsed_ms": 11.026300002413336,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 465,
+      "n_elements": 5,
+      "pattern": "near_identity",
+      "seed": 4,
+      "phi": 4.954585307666208,
+      "elapsed_ms": 10.380399999121437,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 466,
+      "n_elements": 5,
+      "pattern": "near_identity",
+      "seed": 5,
+      "phi": 4.954585307666208,
+      "elapsed_ms": 10.153900002478622,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 467,
+      "n_elements": 5,
+      "pattern": "near_identity",
+      "seed": 6,
+      "phi": 4.954585307666208,
+      "elapsed_ms": 11.830999999801861,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 468,
+      "n_elements": 5,
+      "pattern": "near_identity",
+      "seed": 7,
+      "phi": 4.954585307666208,
+      "elapsed_ms": 11.546000001544598,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 469,
+      "n_elements": 5,
+      "pattern": "near_identity",
+      "seed": 8,
+      "phi": 4.954585307666208,
+      "elapsed_ms": 13.21280000047409,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 470,
+      "n_elements": 5,
+      "pattern": "near_identity",
+      "seed": 9,
+      "phi": 4.954585307666208,
+      "elapsed_ms": 10.359300002164673,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 471,
+      "n_elements": 5,
+      "pattern": "sparse",
+      "seed": 0,
+      "phi": 4.000000000000003,
+      "elapsed_ms": 10.089700001117308,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 472,
+      "n_elements": 5,
+      "pattern": "sparse",
+      "seed": 1,
+      "phi": 4.000000000000003,
+      "elapsed_ms": 10.047799998574192,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 473,
+      "n_elements": 5,
+      "pattern": "sparse",
+      "seed": 2,
+      "phi": 4.000000000000003,
+      "elapsed_ms": 10.090300002048025,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 474,
+      "n_elements": 5,
+      "pattern": "sparse",
+      "seed": 3,
+      "phi": 4.000000000000003,
+      "elapsed_ms": 9.84249999964959,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 475,
+      "n_elements": 5,
+      "pattern": "sparse",
+      "seed": 4,
+      "phi": 4.000000000000003,
+      "elapsed_ms": 9.7940000014205,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 476,
+      "n_elements": 5,
+      "pattern": "sparse",
+      "seed": 5,
+      "phi": 4.000000000000003,
+      "elapsed_ms": 9.746199997607619,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 477,
+      "n_elements": 5,
+      "pattern": "sparse",
+      "seed": 6,
+      "phi": 4.000000000000003,
+      "elapsed_ms": 9.78170000234968,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 478,
+      "n_elements": 5,
+      "pattern": "sparse",
+      "seed": 7,
+      "phi": 4.000000000000003,
+      "elapsed_ms": 9.50369999918621,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 479,
+      "n_elements": 5,
+      "pattern": "sparse",
+      "seed": 8,
+      "phi": 4.000000000000003,
+      "elapsed_ms": 9.651400003349409,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 480,
+      "n_elements": 5,
+      "pattern": "sparse",
+      "seed": 9,
+      "phi": 4.000000000000003,
+      "elapsed_ms": 9.749200002261205,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 481,
+      "n_elements": 5,
+      "pattern": "tiny",
+      "seed": 0,
+      "phi": 0.26546222630982663,
+      "elapsed_ms": 25.137299999187235,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 482,
+      "n_elements": 5,
+      "pattern": "tiny",
+      "seed": 1,
+      "phi": 0.2515772144254611,
+      "elapsed_ms": 25.378599999385187,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 483,
+      "n_elements": 5,
+      "pattern": "tiny",
+      "seed": 2,
+      "phi": 0.25548417396702144,
+      "elapsed_ms": 25.299699998868164,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 484,
+      "n_elements": 5,
+      "pattern": "tiny",
+      "seed": 3,
+      "phi": 0.26277938248558275,
+      "elapsed_ms": 34.028899997792905,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 485,
+      "n_elements": 5,
+      "pattern": "tiny",
+      "seed": 4,
+      "phi": 0.2648486095873933,
+      "elapsed_ms": 34.205500000098255,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 486,
+      "n_elements": 5,
+      "pattern": "tiny",
+      "seed": 5,
+      "phi": 0.2555309260397369,
+      "elapsed_ms": 29.7497999999905,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 487,
+      "n_elements": 5,
+      "pattern": "tiny",
+      "seed": 6,
+      "phi": 0.2504967192451801,
+      "elapsed_ms": 29.054900001938222,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 488,
+      "n_elements": 5,
+      "pattern": "tiny",
+      "seed": 7,
+      "phi": 0.27131254529973714,
+      "elapsed_ms": 30.346399998961715,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 489,
+      "n_elements": 5,
+      "pattern": "tiny",
+      "seed": 8,
+      "phi": 0.2582736219030832,
+      "elapsed_ms": 26.363499997387407,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 490,
+      "n_elements": 5,
+      "pattern": "tiny",
+      "seed": 9,
+      "phi": 0.25313827664678196,
+      "elapsed_ms": 25.737500000104774,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 491,
+      "n_elements": 5,
+      "pattern": "singular",
+      "seed": 0,
+      "phi": 7.744252991989762e-17,
+      "elapsed_ms": 25.079099999857135,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 492,
+      "n_elements": 5,
+      "pattern": "singular",
+      "seed": 1,
+      "phi": 2.103014419338928e-17,
+      "elapsed_ms": 24.665600001753774,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 493,
+      "n_elements": 5,
+      "pattern": "singular",
+      "seed": 2,
+      "phi": 1.965784522426667e-16,
+      "elapsed_ms": 24.103499999910127,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 494,
+      "n_elements": 5,
+      "pattern": "singular",
+      "seed": 3,
+      "phi": 8.543671145382495e-17,
+      "elapsed_ms": 23.94339999955264,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 495,
+      "n_elements": 5,
+      "pattern": "singular",
+      "seed": 4,
+      "phi": 2.4168424158159332e-17,
+      "elapsed_ms": 27.698999998392537,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 496,
+      "n_elements": 5,
+      "pattern": "singular",
+      "seed": 5,
+      "phi": 3.694459646424445e-16,
+      "elapsed_ms": 30.213400001230184,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 497,
+      "n_elements": 5,
+      "pattern": "singular",
+      "seed": 6,
+      "phi": 1.779044249446655e-17,
+      "elapsed_ms": 32.68899999966379,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 498,
+      "n_elements": 5,
+      "pattern": "singular",
+      "seed": 7,
+      "phi": 2.2822154502535873e-16,
+      "elapsed_ms": 26.320699998905184,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 499,
+      "n_elements": 5,
+      "pattern": "singular",
+      "seed": 8,
+      "phi": 1.17351650736633e-16,
+      "elapsed_ms": 26.603599999361904,
+      "passed": true,
+      "note": "ok"
+    },
+    {
+      "case_id": 500,
+      "n_elements": 5,
+      "pattern": "singular",
+      "seed": 9,
+      "phi": 1.515113589978264e-16,
+      "elapsed_ms": 28.378400002111448,
+      "passed": true,
+      "note": "ok"
+    }
+  ],
+  "stopped_early": false,
+  "stop_reason": "",
+  "generated_at": 1774465620.8688047,
+  "gate": {
+    "status": "green",
+    "rollback_recommended": false,
+    "reason": "within gate",
+    "thresholds": {
+      "max_failures": 0,
+      "green_max_avg_ms": 10.0,
+      "green_max_max_ms": 100.0,
+      "yellow_max_avg_ms": 25.0,
+      "yellow_max_max_ms": 250.0
+    }
+  }
+}

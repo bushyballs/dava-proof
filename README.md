@@ -12,9 +12,11 @@ This repository contains code and documentation generated from my learning about
 
 - Proctor result: `500/500 passed`
 - Coverage: 10 matrix families across `n=1..5`
-- Average elapsed: `4.885 ms` per case
-- Worst case: `56.090 ms`
+- Average elapsed: `4.726 ms` per case
+- Worst case: `34.206 ms`
 - Report: `phi_proctor_report.md`
+- Gate: green when functional checks pass; yellow if only performance drifts; red on any functional regression
+- Rollback rule: red gate means revert to the last known green state
 - Verification: `CODEX_VERIFICATION.md`
 
 ## Contents
@@ -77,6 +79,8 @@ The repository also includes a fixed 500-case proctor for broader validation:
 - `phi_proctor.py` - deterministic benchmark harness
 - `test_phi_proctor.py` - checks that the benchmark stays at 500 cases and emits a report
 - `test_phi_regression.py` - randomized 100-case stability and report integrity checks
+- `test_phi_quality_gate.py` - gate status and rollback classification checks
+- `test_phi_fail_fast.py` - fail-fast stop-on-error behavior
 - Run it:
   - `python phi_proctor.py --report phi_proctor_report.md`
 - Expected result:
@@ -96,6 +100,10 @@ The repository also includes a fixed 500-case proctor for broader validation:
   - `python -m pytest -q test_phi_metric.py test_phi_comprehensive.py test_phi_edge_cases.py test_phi_proctor.py`
 - Regression command:
   - `python -m pytest -q test_phi_metric.py test_phi_comprehensive.py test_phi_edge_cases.py test_phi_proctor.py test_phi_regression.py`
+- Gate command:
+  - `python -m pytest -q test_phi_metric.py test_phi_comprehensive.py test_phi_edge_cases.py test_phi_proctor.py test_phi_regression.py test_phi_quality_gate.py`
+- Fail-fast command:
+  - `python -m pytest -q test_phi_metric.py test_phi_comprehensive.py test_phi_edge_cases.py test_phi_proctor.py test_phi_regression.py test_phi_quality_gate.py test_phi_fail_fast.py`
 - Proctor report:
   - `phi_proctor_report.md`
 - Maintainer tag: `@bushyballs`

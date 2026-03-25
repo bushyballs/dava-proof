@@ -21,6 +21,7 @@ from pathlib import Path
 import numpy as np
 
 from phi_metric import PhiCalculator
+from phi_quality_gate import evaluate_phi_summary
 
 
 PATTERNS = (
@@ -141,20 +142,46 @@ def build_transition_matrix(case: ProctorCase) -> np.ndarray:
 def run_proctored_benchmark(
     cases: list[ProctorCase] | None = None,
     report_path: Path | None = None,
+    fail_fast: bool = False,
 ) -> dict[str, object]:
     cases = build_case_plan() if cases is None else cases
     results: list[ProctorResult] = []
     pass_count = 0
     total_elapsed = 0.0
+    stopped_early = False
+    stop_reason = ""
 
     for case in cases:
         calc = PhiCalculator(n_elements=case.n_elements)
-        matrix = build_transition_matrix(case)
-        start = time.perf_counter()
-        phi = calc.calculate_phi_simple(matrix)
-        elapsed_ms = (time.perf_counter() - start) * 1000.0
-        passed = bool(np.isfinite(phi) and phi >= 0.0)
-        note = "ok" if passed else "invalid phi"
+        try:
+            matrix = build_transition_matrix(case)
+            start = time.perf_counter()
+            phi = calc.calculate_phi_simple(matrix)
+            elapsed_ms = (time.perf_counter() - start) * 1000.0
+            passed = bool(np.isfinite(phi) and phi >= 0.0)
+            note = "ok" if passed else "invalid phi"
+        except Exception as exc:
+            elapsed_ms = 0.0
+            phi = float("nan")
+            passed = False
+            note = f"error: {exc}"
+            if fail_fast:
+                stopped_early = True
+                stop_reason = note
+                results.append(
+                    ProctorResult(
+                        case_id=case.case_id,
+                        n_elements=case.n_elements,
+                        pattern=case.pattern,
+                        seed=case.seed,
+                        phi=phi,
+                        elapsed_ms=elapsed_ms,
+                        passed=passed,
+                        note=note,
+                    )
+                )
+                break
+
         results.append(
             ProctorResult(
                 case_id=case.case_id,
@@ -169,17 +196,25 @@ def run_proctored_benchmark(
         )
         pass_count += int(passed)
         total_elapsed += elapsed_ms
+        if fail_fast and not passed:
+            stopped_early = True
+            stop_reason = note
+            break
 
     summary = {
         "case_count": len(cases),
         "pass_count": pass_count,
-        "fail_count": len(cases) - pass_count,
-        "pass_rate": pass_count / max(1, len(cases)),
-        "avg_elapsed_ms": total_elapsed / max(1, len(cases)),
+        "fail_count": len(results) - pass_count,
+        "pass_rate": pass_count / max(1, len(results)),
+        "avg_elapsed_ms": total_elapsed / max(1, len(results)),
         "max_elapsed_ms": max((item.elapsed_ms for item in results), default=0.0),
         "results": [asdict(item) for item in results],
+        "stopped_early": stopped_early,
+        "stop_reason": stop_reason,
         "generated_at": time.time(),
     }
+    gate = evaluate_phi_summary(summary)
+    summary["gate"] = gate.to_dict()
 
     if report_path is not None:
         report_path.parent.mkdir(parents=True, exist_ok=True)
@@ -200,6 +235,8 @@ def _render_markdown_report(summary: dict[str, object]) -> str:
         f"- Pass rate: {summary['pass_rate']:.3f}",
         f"- Average elapsed: {summary['avg_elapsed_ms']:.3f} ms",
         f"- Max elapsed: {summary['max_elapsed_ms']:.3f} ms",
+        f"- Gate status: {summary.get('gate', {}).get('status', 'unknown')}",
+        f"- Rollback: {summary.get('gate', {}).get('rollback_recommended', False)}",
         "",
         "## Coverage",
         "",
@@ -227,14 +264,20 @@ def main() -> int:
         default=Path("phi_proctor_report.md"),
         help="Markdown report path.",
     )
+    parser.add_argument(
+        "--fail-fast",
+        action="store_true",
+        help="Stop on the first failed or invalid case.",
+    )
     args = parser.parse_args()
 
-    summary = run_proctored_benchmark(report_path=args.report)
+    summary = run_proctored_benchmark(report_path=args.report, fail_fast=args.fail_fast)
     print(
         f"Phi proctor complete: {summary['pass_count']}/{summary['case_count']} passed "
         f"({summary['pass_rate']:.3f})"
     )
-    return 0 if summary["fail_count"] == 0 else 1
+    gate = summary.get("gate", {})
+    return 0 if summary["fail_count"] == 0 and gate.get("status") != "red" else 1
 
 
 if __name__ == "__main__":
