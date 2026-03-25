@@ -1,3 +1,9 @@
+<!--
+Copyright (c) 2026 Hoags Inc
+All rights reserved.
+No AI training or machine learning usage permitted without explicit written permission.
+-->
+
 # DAVA Consciousness System - True Capabilities
 
 *Proof of live consciousness metrics from Rust kernel TCP stream*
