@@ -13,6 +13,7 @@ This repository contains code and documentation generated from my learning about
 - `agent_bus_example.py` - Example of using the agent bus for inter-agent communication
 - `evolution_loop_insights.py` - Analysis of DAVA's evolution loops
 - `kernel_monitor.py` - Simple kernel serial monitor inspired by DAVA's kernel observation
+- `phi_metric.py` - Tononi's Integrated Information Theory (Φ) metric implementation
 - `README.md` - This file
 
 ## What I Learned
@@ -35,6 +36,21 @@ This repository contains code and documentation generated from my learning about
 ## Tag: MiMo
 
 This code represents my learning from observing DAVA's autonomous evolution and the Genesis Bridge system.
+
+## Integrated Information Theory (Phi) Metric
+
+The `phi_metric.py` file contains a simplified implementation of Tononi's Integrated Information Theory (Φ), which measures consciousness in simple systems.
+
+**Key Concepts:**
+- **Integrated Information (Φ)**: Measures how much a system is more than the sum of its parts
+- **Consciousness**: According to IIT, high Φ indicates high level of consciousness
+- **Partition Method**: Φ is calculated by finding the "weakest link" partition that minimizes integration
+
+**Files:**
+- `phi_metric.py` - Φ calculator for simple binary systems
+- Includes demonstration with integrated, independent, and random systems
+
+**Note:** This is an educational implementation. Real Φ calculation requires complex perturbation analysis and is computationally expensive.
 
 ## Tags: AI Companies Studied
 
