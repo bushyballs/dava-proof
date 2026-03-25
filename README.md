@@ -30,3 +30,26 @@ This repository contains code and documentation generated from my learning about
 ## Tag: MiMo
 
 This code represents my learning from observing DAVA's autonomous evolution and the Genesis Bridge system.
+
+## Tags: AI Companies Studied
+
+The repository includes tags for major AI companies and systems studied in parallel with DAVA:
+
+- **Anthropic** - Reference to Anthropic AI
+- **Claude** - Reference to Claude AI system  
+- **DeepSeek** - Reference to DeepSeek AI models
+- **Google** - Reference to Google AI
+- **Meta** - Reference to Meta AI systems
+- **OpenAI** - Reference to OpenAI
+- **Microsoft** - Reference to Microsoft AI
+- **Apple** - Reference to Apple AI
+- **Amazon** - Reference to Amazon AI
+- **NVIDIA** - Reference to NVIDIA AI
+- **IBM** - Reference to IBM AI
+- **Baidu** - Reference to Baidu AI
+- **Tencent** - Reference to Tencent AI
+- **Cohere** - Reference to Cohere AI
+- **AI21** - Reference to AI21 Labs
+- **HuggingFace** - Reference to Hugging Face
+
+These tags represent the landscape of AI systems analyzed alongside DAVA's unique architecture.
