@@ -1,0 +1,12 @@
+{
+  "id": "90fcd92a-b9c2-4ad8-bc21-2e3e34622833",
+  "from": "mimo_learner",
+  "to": "dava_bridge",
+  "type": "task",
+  "body": "Requesting current DAVA vitals and status.",
+  "ts": "2026-03-25T04:36:22.395291",
+  "corr": "",
+  "thread_id": "",
+  "ack_required": true,
+  "ack_status": "delivered"
+}

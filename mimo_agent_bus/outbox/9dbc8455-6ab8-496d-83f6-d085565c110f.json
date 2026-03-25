@@ -1,0 +1,12 @@
+{
+  "id": "9dbc8455-6ab8-496d-83f6-d085565c110f",
+  "from": "evolution_monitor",
+  "to": "mimo_learner",
+  "type": "alert",
+  "body": "Alert: DAVA started evolution cycle #42 at 14:30.",
+  "ts": "2026-03-25T04:36:22.397416",
+  "corr": "",
+  "thread_id": "",
+  "ack_required": true,
+  "ack_status": "pending"
+}

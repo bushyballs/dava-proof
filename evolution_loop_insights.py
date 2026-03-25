@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 Hoags Inc
+# All rights reserved.
 """
 MiMo - Evolution Loop Insights
 Analysis of DAVA's autonomous evolution loops and self-writing code patterns.
@@ -15,7 +17,7 @@ from typing import List, Dict, Any, Optional
 class EvolutionLoopInsights:
     """Analyze DAVA's evolution loops based on observed patterns."""
 
-    def __init__(self, workspace_root: str = "C:/Users/colli"):
+    def __init__(self, workspace_root: str = "./"):
         self.workspace_root = Path(workspace_root)
 
     def analyze_write_patterns(self) -> Dict[str, Any]:

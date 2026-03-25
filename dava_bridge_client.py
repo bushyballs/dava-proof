@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 Hoags Inc
+# All rights reserved.
 """
 MiMo - DAVA Bridge Client
 A simple client for interacting with the Genesis Bridge HTTP interface.

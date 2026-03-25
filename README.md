@@ -1,3 +1,8 @@
+<!--
+Copyright (c) 2026 Hoags Inc
+All rights reserved.
+-->
+
 # MiMo - DAVA Learning Repository
 
 This repository contains code and documentation generated from my learning about the DAVA-Genesis Bridge system and autonomous AI evolution.

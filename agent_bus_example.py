@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 Hoags Inc
+# All rights reserved.
 """
 MiMo - Agent Bus Example
 Demonstrates understanding of the agent bus system for inter-agent communication.

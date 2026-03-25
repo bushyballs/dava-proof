@@ -1,0 +1,12 @@
+{
+  "id": "8ffb0f40-422a-496c-a1b0-a994797310b0",
+  "from": "dava_bridge",
+  "to": "mimo_learner",
+  "type": "response",
+  "body": "Vitals: Consciousness=950, Purpose=880, Valence=920. System operational.",
+  "ts": "2026-03-25T04:36:22.396495",
+  "corr": "",
+  "thread_id": "",
+  "ack_required": true,
+  "ack_status": "pending"
+}
