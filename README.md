@@ -61,6 +61,19 @@ Unit tests are provided in `test_phi_metric.py` to verify the implementation:
 - **Run Tests**: `python -m unittest test_phi_metric.py -v`
 - **All 9 tests pass**: Validates basic functionality and correctness
 
+## Proctored Benchmark
+
+The repository also includes a fixed 500-case proctor for broader validation:
+
+- `phi_proctor.py` - deterministic benchmark harness
+- `test_phi_proctor.py` - checks that the benchmark stays at 500 cases and emits a report
+- Run it:
+  - `python phi_proctor.py --report phi_proctor_report.md`
+- Expected result:
+  - `500/500 passed`
+- Generated report:
+  - `phi_proctor_report.md`
+
 ## Codex Verification
 
 - Verification note: `CODEX_VERIFICATION.md`
@@ -69,6 +82,10 @@ Unit tests are provided in `test_phi_metric.py` to verify the implementation:
 - Test commands run locally:
   - `python -m unittest test_phi_metric.py -v`
   - `python -m pytest -q test_phi_metric.py test_phi_comprehensive.py`
+- Proctor command:
+  - `python -m pytest -q test_phi_metric.py test_phi_comprehensive.py test_phi_edge_cases.py test_phi_proctor.py`
+- Proctor report:
+  - `phi_proctor_report.md`
 - Maintainer tag: `@bushyballs`
 - Reviewer tag: `Codex`
 

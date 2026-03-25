@@ -12,11 +12,16 @@ This repository was updated and verified by Codex on 2026-03-25.
 
 - `python -m unittest test_phi_metric.py -v`
 - `python -m pytest -q test_phi_metric.py test_phi_comprehensive.py`
+- `python -m pytest -q test_phi_metric.py test_phi_comprehensive.py test_phi_edge_cases.py test_phi_proctor.py`
+- `python phi_proctor.py --report phi_proctor_report.md`
 
 ## Result
 
 - `test_phi_metric.py`: passing
 - `test_phi_comprehensive.py`: passing
+- `test_phi_edge_cases.py`: passing
+- `test_phi_proctor.py`: passing
+- Proctor score: `500/500 passed`
 
 ## Maintainer / Developer Tags
 
