@@ -76,6 +76,7 @@ The repository also includes a fixed 500-case proctor for broader validation:
 
 - `phi_proctor.py` - deterministic benchmark harness
 - `test_phi_proctor.py` - checks that the benchmark stays at 500 cases and emits a report
+- `test_phi_regression.py` - randomized 100-case stability and report integrity checks
 - Run it:
   - `python phi_proctor.py --report phi_proctor_report.md`
 - Expected result:
@@ -93,6 +94,8 @@ The repository also includes a fixed 500-case proctor for broader validation:
   - `python -m pytest -q test_phi_metric.py test_phi_comprehensive.py`
 - Proctor command:
   - `python -m pytest -q test_phi_metric.py test_phi_comprehensive.py test_phi_edge_cases.py test_phi_proctor.py`
+- Regression command:
+  - `python -m pytest -q test_phi_metric.py test_phi_comprehensive.py test_phi_edge_cases.py test_phi_proctor.py test_phi_regression.py`
 - Proctor report:
   - `phi_proctor_report.md`
 - Maintainer tag: `@bushyballs`

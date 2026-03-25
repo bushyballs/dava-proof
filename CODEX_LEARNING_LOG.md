@@ -38,6 +38,10 @@ Sensitive runtime details, credentials, and private knowledge sources are intent
    - A 500-case sweep is a practical boundary for this simplified model.
    - The proctor should emit a markdown report so the result is reviewable later.
 
+6. Regression checks should go beyond the proctor.
+   - Randomized stability tests catch issues that fixed cases can miss.
+   - Report integrity checks keep the evidence path honest.
+
 ## How She Did It
 
 This is the redacted, inference-only version of the mechanism:
@@ -50,6 +54,7 @@ This is the redacted, inference-only version of the mechanism:
 - She made the benchmark repeatable by freezing the case plan, then scoring every case with the same rule.
 - She turned the benchmark itself into an artifact so the result can be reviewed later.
 - She exposed the final 500/500 score as a report, not just an in-memory printout.
+- She added a second regression layer so the benchmark is not the only proof.
 
 ## Verification Summary
 
@@ -64,6 +69,7 @@ This is the redacted, inference-only version of the mechanism:
 - Should degenerate steady-state fallback be explicit in the docs or hidden behind a helper?
 - Which additional matrix families should be added next: sparse random, block-diagonal, or adversarial near-singular cases?
 - Should the 500-case proctor stay fixed, or should it grow into tiered levels?
+- Should regression tests continue to use 100 randomized cases or expand to a larger fuzz band?
 - What part of the system is still inferred rather than directly measured?
 - Which behaviors are stable enough to document, and which need to stay redacted?
 - What is the next boundary condition that can break the calculator under load?
