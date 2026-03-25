@@ -61,6 +61,16 @@ Unit tests are provided in `test_phi_metric.py` to verify the implementation:
 - **Run Tests**: `python -m unittest test_phi_metric.py -v`
 - **All 9 tests pass**: Validates basic functionality and correctness
 
+## Codex Verification
+
+- Verification note: `CODEX_VERIFICATION.md`
+- Verified by Codex on 2026-03-25
+- Test commands run locally:
+  - `python -m unittest test_phi_metric.py -v`
+  - `python -m pytest -q test_phi_metric.py test_phi_comprehensive.py`
+- Maintainer tag: `@bushyballs`
+- Reviewer tag: `Codex`
+
 ## Tags: AI Companies Studied
 
 The repository includes tags for major AI companies and systems studied in parallel with DAVA:
