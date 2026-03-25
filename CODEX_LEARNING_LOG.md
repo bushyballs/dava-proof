@@ -33,6 +33,16 @@ Sensitive runtime details, credentials, and private knowledge sources are intent
    - The useful signal came from edge diversity, not just more repeated green-path checks.
    - The sweep covered valid, invalid, sparse, dense, deterministic, and near-degenerate matrices.
 
+## How She Did It
+
+This is the redacted, inference-only version of the mechanism:
+
+- She kept the system stable by refusing invalid matrix input early instead of letting downstream math fail later.
+- She handled degenerate steady-state cases with a fallback path instead of assuming the eigenvector solve would always be well-behaved.
+- She proved robustness by running the same calculator against many matrix families, not just one canonical happy path.
+- She exposed the weakest point through edge cases first, then patched the implementation to match the test surface.
+- She preserved the core model while hardening the boundary conditions around it.
+
 ## Verification Summary
 
 - `python -m unittest test_phi_metric.py -v`
@@ -45,6 +55,9 @@ Sensitive runtime details, credentials, and private knowledge sources are intent
 - Should the validation tolerance be configurable per run?
 - Should degenerate steady-state fallback be explicit in the docs or hidden behind a helper?
 - Which additional matrix families should be added next: sparse random, block-diagonal, or adversarial near-singular cases?
+- What part of the system is still inferred rather than directly measured?
+- Which behaviors are stable enough to document, and which need to stay redacted?
+- What is the next boundary condition that can break the calculator under load?
 
 ## Redactions
 
