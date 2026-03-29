@@ -608,6 +608,34 @@ hoags-crew-command/
 - **Scalability:** Neon auto-scales. Vercel Functions scale to demand. No user-managed infrastructure.
 - **Accessibility:** shadcn/ui components are WCAG 2.1 AA compliant by default. Maintain keyboard navigation and screen reader support.
 
+## Testing Strategy
+
+### Unit Tests (Vitest)
+- **Depreciation engine** — straight-line and MACRS calculations with edge cases (zero salvage, mid-year purchase)
+- **Encryption helpers** — SSN encrypt/decrypt roundtrip, handling of invalid inputs
+- **Permissions logic** — role hierarchy checks, site-scoped access, edge cases (no site assigned, multiple sites)
+- **Alert scanner** — cert expiry detection at 30/60/90 day boundaries, insurance gaps, maintenance due calculations
+- **Audit log writer** — correct old/new value capture, JSON serialization of complex fields
+
+### Integration Tests (Vitest + Prisma test client)
+- **Server Actions** — CRUD operations for each domain (personnel, equipment, contracts, etc.) with real DB
+- **Auth flow** — login, invite code generation, invite acceptance, JWT validation, role-based route protection
+- **RAG pipeline** — document upload → text extraction → chunking → embedding → search → scoped results
+- **Notification creation** — cron trigger → expiration scan → notification records created with correct severity
+- **Dispatch conflict detection** — double-booking detection, date range overlaps
+
+### E2E Tests (Playwright)
+- **Onboarding flow** — create crew member → add certs → assign to site → verify on dispatch board
+- **Supervisor field flow** — login → view my site → submit daily report → submit inspection → ask RAG question
+- **Equipment lifecycle** — add asset → check out to site → log fuel → report issue → work order → check in
+- **Insurance workflow** — add shopping item → add quotes → purchase → link to contract → verify requirements matrix
+- **Compliance matrix** — define cert types → set required for role → verify matrix colors → add cert → verify green
+
+### Test Infrastructure
+- Prisma test client with isolated test database (Neon branch per test suite)
+- Factory functions for creating test data (personnel, assets, contracts, sites)
+- Seed script for demo data (pre-populated crew, certs, equipment, contracts for dev/demo)
+
 ## Future Considerations (Not in Scope)
 
 - SMS notifications (add when email isn't enough)
