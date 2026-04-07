@@ -1,0 +1,8 @@
+[project]
+name = "bid-command-engine"
+version = "0.1.0"
+description = "Drop a ZIP, win a contract"
+requires-python = ">=3.12"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
