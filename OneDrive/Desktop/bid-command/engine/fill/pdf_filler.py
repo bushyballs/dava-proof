@@ -12,6 +12,7 @@ from pathlib import Path
 import fitz  # PyMuPDF
 
 from engine.config import CompanyInfo
+from engine.fill.column_detect import detect_columns
 
 
 @dataclass
@@ -51,21 +52,24 @@ def _find_clin_positions(page: fitz.Page, clin: str) -> list[fitz.Rect]:
     return [r for r in rects if r.x0 < 120]
 
 
-def _detect_column_positions(page_idx: int) -> tuple[float, float]:
-    """Determine unit-price and amount column X positions by page type.
+def _detect_column_positions(
+    doc: fitz.Document,
+    page_idx: int,
+) -> tuple[float, float]:
+    """Determine unit-price and amount column X positions using smart detection.
 
-    Pages 0-1 are SF-1449 front/back with wider margins.
-    Pages 2+ are OF-336 continuation sheets with narrower columns.
+    Tries header-based and line-based detection first, then falls back
+    to hardcoded positions based on page type.
 
     Args:
+        doc: PyMuPDF document (needed for smart detection).
         page_idx: Zero-based page index in the document.
 
     Returns:
         Tuple of (unit_price_x, amount_x) column positions.
     """
-    if page_idx <= 1:
-        return (458.0, 528.0)
-    return (425.0, 500.0)
+    positions = detect_columns(doc, page_idx)
+    return (positions.unit_price_x, positions.amount_x)
 
 
 def fill_sf1449(
@@ -78,6 +82,10 @@ def fill_sf1449(
     Opens the source PDF, overlays company information on page 1,
     places CLIN pricing on all pages where CLINs are found, adds
     signature block on page 1, and saves to dst_path.
+
+    Uses smart column detection to find UNIT PRICE and AMOUNT column
+    positions dynamically, falling back to hardcoded positions if
+    detection fails.
 
     Args:
         src_path: Path to the original solicitation PDF.
@@ -150,11 +158,11 @@ def fill_sf1449(
                 fontsize=fill_data.fontsize, fontname=fill_data.font,
             )
 
-    # --- All pages: CLIN pricing ---
+    # --- All pages: CLIN pricing (with smart column detection) ---
     max_pages = min(len(doc), 20)
     for page_idx in range(max_pages):
         page = doc[page_idx]
-        up_x, amt_x = _detect_column_positions(page_idx)
+        up_x, amt_x = _detect_column_positions(doc, page_idx)
 
         for clin, price_tuple in fill_data.prices.items():
             unit_price, _qty, amount = price_tuple
