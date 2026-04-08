@@ -103,7 +103,47 @@ def _detect_structural(page: fitz.Page, page_idx: int) -> list[DetectedField]:
 
 
 def _detect_vision(page: fitz.Page, page_idx: int) -> list[DetectedField]:
-    """Tier 3: Vision-based detection. Placeholder for Ollama LLaVA."""
+    """Tier 3: Vision-based field detection via LLaVA or Claude Vision."""
+    import json as _json
+    try:
+        import httpx
+    except ImportError:
+        return []
+    import base64
+    pixmap = page.get_pixmap(dpi=150)
+    png_bytes = pixmap.tobytes("png")
+    b64 = base64.b64encode(png_bytes).decode()
+    prompt = (
+        "This is a PDF form page. Identify every blank field, checkbox, signature line, "
+        "or area that needs to be filled in. For each field return a JSON object with: "
+        '"label" (the field label or nearby text), "type" (text/checkbox/signature/date/currency), '
+        '"bbox" [x0, y0, x1, y1] as approximate pixel coordinates. '
+        "Return a JSON array of objects. Only output the JSON array, nothing else."
+    )
+    try:
+        resp = httpx.post(
+            "http://localhost:11434/api/generate",
+            json={"model": "llava", "prompt": prompt, "images": [b64], "stream": False},
+            timeout=30.0,
+        )
+        if resp.status_code == 200:
+            text = resp.json().get("response", "")
+            start = text.find("[")
+            end = text.rfind("]") + 1
+            if start >= 0 and end > start:
+                items = _json.loads(text[start:end])
+                fields = []
+                for item in items:
+                    fields.append(DetectedField(
+                        page=page_idx,
+                        bbox=tuple(item.get("bbox", [0, 0, 100, 20])),
+                        label=item.get("label", ""),
+                        field_type=item.get("type", "text"),
+                        source="vision",
+                    ))
+                return fields
+    except Exception:
+        pass
     return []
 
 

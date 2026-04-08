@@ -5,6 +5,18 @@ from engine.fill_universal.models import ClassifiedField, FilledField
 from engine.fill_universal.memory import FieldMemory
 from engine.fill_universal.context import resolve_key
 
+
+def _flatten_ctx(ctx: dict, prefix: str = "") -> list[tuple[str, str]]:
+    """Flatten nested context dict into list of (key, value) tuples."""
+    items = []
+    for k, v in ctx.items():
+        key = f"{prefix}.{k}" if prefix else k
+        if isinstance(v, dict):
+            items.extend(_flatten_ctx(v, key))
+        else:
+            items.append((key, str(v)))
+    return items
+
 _CLASSIFICATION_TO_KEYS: dict[str, list[str]] = {
     "identity.name": ["identity.name", "company.name"],
     "identity.code": ["identity.cage", "identity.uei", "identity.ein"],
@@ -40,13 +52,77 @@ def _level2_memory(field: ClassifiedField, memory: FieldMemory | None) -> tuple[
 
 
 def _level3_dava_reason(field: ClassifiedField, ctx: dict) -> tuple[str, float] | None:
-    """Level 3: DAVA reasoning (placeholder)."""
-    return None  # Implemented in Task 10
+    """Level 3: DAVA local reasoning via Ollama."""
+    try:
+        import httpx
+    except ImportError:
+        return None
+    ctx_summary = "\n".join(f"  {k}: {v}" for k, v in _flatten_ctx(ctx))
+    prompt = (
+        f"You are DAVA, filling a PDF form for Colli and Hoags Inc.\n"
+        f"Field label: {field.label}\nField type: {field.classification}\n"
+        f"Available context:\n{ctx_summary}\n\n"
+        f"What value should go in this field? Respond with ONLY the value, nothing else. "
+        f"If you don't know, respond with exactly: UNKNOWN"
+    )
+    try:
+        resp = httpx.post(
+            "http://localhost:11434/api/generate",
+            json={"model": "dava-nexus", "prompt": prompt, "stream": False},
+            timeout=15.0,
+        )
+        if resp.status_code == 200:
+            value = resp.json().get("response", "").strip()
+            if value and value.upper() != "UNKNOWN":
+                return (value, 0.65)
+    except Exception:
+        pass
+    return None
 
 
 def _level4_claude(field: ClassifiedField, ctx: dict, full_text: str = "") -> tuple[str, float] | None:
-    """Level 4: Claude API reasoning (placeholder)."""
-    return None  # Implemented in Task 10
+    """Level 4: Claude API escalation for complex fields."""
+    try:
+        import anthropic
+    except ImportError:
+        return None
+    ctx_summary = "\n".join(f"  {k}: {v}" for k, v in _flatten_ctx(ctx))
+    text_window = full_text[:2000] if full_text else "(no document text available)"
+    prompt = (
+        f"You are helping DAVA fill a PDF form for Hoags Inc. (federal contractor).\n"
+        f"Colli Hoag is an ex-USFS/BLM wildland firefighter. Integrity over winning, always.\n"
+        f"Never fabricate or exaggerate.\n\n"
+        f"Field: {field.label}\nType: {field.classification}\n"
+        f"Context:\n{ctx_summary}\n\nDocument excerpt:\n{text_window}\n\n"
+        f"What value should go in this field? If it's a text field, give the exact value. "
+        f"If it's an essay field, write a professional but concise response. "
+        f"If you cannot determine the answer, respond with: UNKNOWN\n"
+        f"Also rate your confidence 0-100 on a separate last line like: CONFIDENCE: 85"
+    )
+    try:
+        client = anthropic.Anthropic()
+        message = client.messages.create(
+            model="claude-haiku-4-5-20251001", max_tokens=500,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        text = message.content[0].text.strip()
+        lines = text.strip().split("\n")
+        confidence = 0.7
+        value_lines = lines
+        for i, line in enumerate(lines):
+            if line.startswith("CONFIDENCE:"):
+                try:
+                    confidence = int(line.split(":")[1].strip()) / 100.0
+                except ValueError:
+                    pass
+                value_lines = lines[:i]
+                break
+        value = "\n".join(value_lines).strip()
+        if value and value.upper() != "UNKNOWN":
+            return (value, min(confidence, 0.95))
+    except Exception:
+        pass
+    return None
 
 
 def fill_field(

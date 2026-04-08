@@ -1,6 +1,7 @@
 """Tests for the 4-level fill intelligence stack."""
 import tempfile
 from pathlib import Path
+from unittest.mock import patch
 
 from engine.fill_universal.fill import fill_field, fill_fields
 from engine.fill_universal.models import ClassifiedField, DetectedField, FilledField
@@ -62,3 +63,30 @@ def test_date_field_uses_bid_date():
     field = _classified("Date", "temporal.date")
     result = fill_field(field, ctx)
     assert result.value == "04/08/2026"
+
+
+def test_level3_dava_reasoning():
+    field = _classified("Relevant Experience", "essay", confidence=0.8)
+    mock_response = ("10 years wildland firefighting with USFS/BLM", 0.7)
+    with patch("engine.fill_universal.fill._level3_dava_reason", return_value=mock_response):
+        result = fill_field(field, {})
+        assert result.source_level == "dava_reason"
+        assert "wildland" in result.value.lower()
+
+
+def test_level4_claude_escalation():
+    field = _classified("Technical Approach Narrative", "essay", confidence=0.8)
+    mock_response = ("Hoags Inc. will deploy a 4-person crew...", 0.85)
+    with patch("engine.fill_universal.fill._level3_dava_reason", return_value=None):
+        with patch("engine.fill_universal.fill._level4_claude", return_value=mock_response):
+            result = fill_field(field, {})
+            assert result.source_level == "claude"
+            assert result.confidence == 0.85
+
+
+def test_offline_skips_claude():
+    field = _classified("Narrative", "essay", confidence=0.8)
+    with patch("engine.fill_universal.fill._level3_dava_reason", return_value=None):
+        with patch("engine.fill_universal.fill._level4_claude") as mock_claude:
+            result = fill_field(field, {}, offline=True)
+            mock_claude.assert_not_called()
