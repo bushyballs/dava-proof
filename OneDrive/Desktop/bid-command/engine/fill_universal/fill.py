@@ -29,7 +29,35 @@ _CLASSIFICATION_TO_KEYS: dict[str, list[str]] = {
 
 
 def _level1_context(field: ClassifiedField, ctx: dict) -> tuple[str, float] | None:
-    """Level 1: Direct context lookup."""
+    """Level 1: Direct context lookup.
+
+    Uses the field label to disambiguate when classification maps to
+    multiple possible keys (e.g. identity.code -> cage vs uei vs tin).
+    """
+    # Label-aware lookup for identity.code — pick the right one
+    if field.classification == "identity.code":
+        label_lower = field.label.lower()
+        if "cage" in label_lower:
+            v = resolve_key(ctx, "identity.cage")
+            if v:
+                return (str(v), 1.0)
+        if "uei" in label_lower:
+            v = resolve_key(ctx, "identity.uei")
+            if v:
+                return (str(v), 1.0)
+        if "tin" in label_lower or "tax" in label_lower or "ein" in label_lower:
+            v = resolve_key(ctx, "identity.tin")
+            if v:
+                return (str(v), 1.0)
+
+    # Label-aware lookup for identity.name — "point of contact" -> signer
+    if field.classification == "identity.name":
+        label_lower = field.label.lower()
+        if "point of contact" in label_lower or "poc" in label_lower:
+            v = resolve_key(ctx, "identity.signer")
+            if v:
+                return (str(v), 1.0)
+
     key_paths = _CLASSIFICATION_TO_KEYS.get(field.classification, [])
     for key_path in key_paths:
         value = resolve_key(ctx, key_path)

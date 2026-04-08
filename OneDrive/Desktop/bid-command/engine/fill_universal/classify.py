@@ -6,17 +6,23 @@ import re
 from engine.fill_universal.models import DetectedField, ClassifiedField
 from engine.fill_universal.memory import FieldMemory
 
+# Rules ordered most-specific first — a label like "Offeror Telephone"
+# must match identity.phone (keyword "telephone") before identity.name.
 _RULES: list[tuple[re.Pattern, str, float]] = [
-    (re.compile(r"\b(name|offeror|contractor|company|vendor|firm)\b", re.I), "identity.name", 0.95),
-    (re.compile(r"\b(cage|uei|duns|ein|tin|tax.?id)\b", re.I), "identity.code", 0.95),
-    (re.compile(r"\b(address|street|city|state|zip|postal)\b", re.I), "identity.address", 0.90),
-    (re.compile(r"\b(phone|tel|fax|mobile|cell)\b", re.I), "identity.phone", 0.90),
+    (re.compile(r"\b(cage)\b", re.I), "identity.code", 0.95),
+    (re.compile(r"\b(uei)\b", re.I), "identity.code", 0.95),
+    (re.compile(r"\b(duns)\b", re.I), "identity.code", 0.95),
+    (re.compile(r"\b(tin|ein|tax.?id)\b", re.I), "identity.code", 0.95),
+    (re.compile(r"\b(phone|tel(?:ephone)?|fax|mobile|cell)\b", re.I), "identity.phone", 0.90),
     (re.compile(r"\b(email|e-mail)\b", re.I), "identity.email", 0.95),
-    (re.compile(r"\b(date|dated)\b", re.I), "temporal.date", 0.90),
+    (re.compile(r"\b(address|street|city|state|zip|postal)\b", re.I), "identity.address", 0.90),
     (re.compile(r"\b(signature|sign|/s/)\b", re.I), "signature", 0.90),
+    (re.compile(r"\b(point of contact|poc)\b", re.I), "identity.name", 0.90),
+    (re.compile(r"\b(date|dated)\b", re.I), "temporal.date", 0.90),
     (re.compile(r"\b(price|amount|total|cost|\$|dollar)\b", re.I), "currency", 0.90),
     (re.compile(r"\b(quantity|qty|number of|count)\b", re.I), "numeric", 0.85),
     (re.compile(r"\b(describe|explain|narrative|justif|experience)\b", re.I), "essay", 0.80),
+    (re.compile(r"\b(name|offeror|contractor|company|vendor|firm)\b", re.I), "identity.name", 0.95),
 ]
 
 
