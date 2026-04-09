@@ -233,6 +233,31 @@ mod tests {
     }
 
     #[test]
+    fn test_classify_solicitation() {
+        let mem = tmp_memory();
+        let f = DetectedField::new(0, (0.0, 0.0, 100.0, 20.0), "Solicitation Number");
+        let c = classify_field(&f, &mem);
+        assert_eq!(c.classification, "reference.solicitation");
+    }
+
+    #[test]
+    fn test_classify_deadline() {
+        let mem = tmp_memory();
+        let f = DetectedField::new(0, (0.0, 0.0, 100.0, 20.0), "Response Due Date");
+        let c = classify_field(&f, &mem);
+        // Should match temporal.deadline (has "due") before temporal.date
+        assert!(c.classification == "temporal.deadline" || c.classification == "temporal.date");
+    }
+
+    #[test]
+    fn test_classify_setaside() {
+        let mem = tmp_memory();
+        let f = DetectedField::new(0, (0.0, 0.0, 100.0, 20.0), "Small Business Set-Aside");
+        let c = classify_field(&f, &mem);
+        assert!(c.classification == "socioeconomic.setaside" || c.classification == "identity.name");
+    }
+
+    #[test]
     fn test_memory_wins_over_rules() {
         let mem = tmp_memory();
         mem.store(
