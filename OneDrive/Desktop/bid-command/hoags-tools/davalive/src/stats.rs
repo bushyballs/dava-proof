@@ -241,7 +241,69 @@ mod tests {
     #[test]
     fn test_collect_tools_total() {
         let stats = collect_with_paths(None, None, None);
-        // tools_total must always equal the number of registered tool names
         assert_eq!(stats.tools_total, crate::health::TOOL_NAMES.len());
+    }
+
+    #[test]
+    fn test_empty_bus_returns_zeroes() {
+        let tmp = NamedTempFile::new().unwrap();
+        let stats = collect_with_paths(Some(tmp.path()), None, None);
+        assert_eq!(stats.total_bus_events, 0);
+        assert_eq!(stats.total_knowledge_entries, 0);
+        assert_eq!(stats.total_memory_entries, 0);
+        assert_eq!(stats.learning_events_seen, 0);
+    }
+
+    #[test]
+    fn test_empty_memory_returns_zeroes() {
+        let tmp = NamedTempFile::new().unwrap();
+        let _ = FieldMemory::open(tmp.path()).unwrap(); // init tables
+        let stats = collect_with_paths(None, Some(tmp.path()), None);
+        assert_eq!(stats.fields_learned, 0);
+        assert_eq!(stats.templates_cached, 0);
+    }
+
+    #[test]
+    fn test_count_rust_lines_empty_dir() {
+        let dir = TempDir::new().unwrap();
+        assert_eq!(count_rust_lines(dir.path()), 0);
+    }
+
+    #[test]
+    fn test_count_rust_lines_ignores_non_rs() {
+        let dir = TempDir::new().unwrap();
+        std::fs::write(dir.path().join("readme.md"), "# Hello\nWorld\n").unwrap();
+        std::fs::write(dir.path().join("data.json"), "{}\n").unwrap();
+        assert_eq!(count_rust_lines(dir.path()), 0);
+    }
+
+    #[test]
+    fn test_display_format_all_fields() {
+        let stats = DavaStats {
+            total_bus_events: 1,
+            total_knowledge_entries: 2,
+            total_memory_entries: 3,
+            fields_learned: 4,
+            templates_cached: 5,
+            learning_events_seen: 6,
+            tools_built: 7,
+            tools_total: 12,
+            total_rust_lines: 8,
+        };
+        let out = stats.display();
+        assert!(out.contains("Fields learned"));
+        assert!(out.contains("Templates cached"));
+        assert!(out.contains("Learning events"));
+        assert!(out.contains("Rust lines"));
+        assert!(out.contains("7/12"));
+    }
+
+    #[test]
+    fn test_default_stats_all_zeroes() {
+        let stats = DavaStats::default();
+        assert_eq!(stats.total_bus_events, 0);
+        assert_eq!(stats.fields_learned, 0);
+        assert_eq!(stats.tools_built, 0);
+        assert_eq!(stats.total_rust_lines, 0);
     }
 }

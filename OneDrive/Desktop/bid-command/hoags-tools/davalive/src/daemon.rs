@@ -86,4 +86,45 @@ mod tests {
         assert_eq!(s.knowledge_shared, 2);
         assert_eq!(s.memory_updates, 1);
     }
+
+    #[test]
+    fn test_multiple_events_all_processed() {
+        let tmp = NamedTempFile::new().unwrap();
+        let bus = EventBus::open(tmp.path()).unwrap();
+        // Publish events for different connectors
+        bus.publish("pdffill", "pdffill.form_detected", r#"{"template":"W-9"}"#);
+        bus.publish("invoicer", "invoicer.invoice_generated", r#"{"total":500}"#);
+        bus.publish("clauseguard", "clauseguard.risk_found", r#"{"risk_level":"red","clause":"52.249-8"}"#);
+
+        let runner = hoags_core::bus::BusRunner::new(bus);
+        let results = runner.run_once();
+
+        let total: usize = results.iter().map(|(_, r)| r.events_processed).sum();
+        // Each event should be processed by at least 1 connector (learning + specific)
+        assert!(total >= 3, "Expected at least 3 events processed, got {}", total);
+    }
+
+    #[test]
+    fn test_bus_runner_interval() {
+        let tmp = NamedTempFile::new().unwrap();
+        let bus = EventBus::open(tmp.path()).unwrap();
+        let runner = hoags_core::bus::BusRunner::new(bus)
+            .with_interval(std::time::Duration::from_millis(100));
+        assert_eq!(runner.interval, std::time::Duration::from_millis(100));
+    }
+
+    #[test]
+    fn test_connectors_produce_knowledge() {
+        let tmp = NamedTempFile::new().unwrap();
+        let bus = EventBus::open(tmp.path()).unwrap();
+        bus.publish("pdffill", "pdffill.form_detected", r#"{"template":"SF1449"}"#);
+
+        let runner = hoags_core::bus::BusRunner::new(bus);
+        runner.run_once();
+
+        // BidConnector should have shared knowledge to propbuilder
+        let bus2 = EventBus::open(tmp.path()).unwrap();
+        let knowledge = bus2.get_knowledge("propbuilder");
+        assert!(!knowledge.is_empty(), "BidConnector should share knowledge to propbuilder");
+    }
 }

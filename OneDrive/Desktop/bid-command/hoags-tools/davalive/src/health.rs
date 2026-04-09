@@ -168,7 +168,49 @@ mod tests {
 
     #[test]
     fn test_tool_names_count() {
-        // Ensure all 12 expected tools are registered
         assert_eq!(TOOL_NAMES.len(), 12);
+    }
+
+    #[test]
+    fn test_all_tools_present_when_dir_has_all() {
+        let dir = make_tool_dir(TOOL_NAMES);
+        let results = check_tools_in(Some(dir.path()));
+        assert_eq!(healthy_count(&results), TOOL_NAMES.len());
+        assert!(results.iter().all(|t| t.binary_exists));
+    }
+
+    #[test]
+    fn test_partial_tools() {
+        let dir = make_tool_dir(&["pdffill", "sigstamp", "clauseguard"]);
+        let results = check_tools_in(Some(dir.path()));
+        assert_eq!(healthy_count(&results), 3);
+        assert_eq!(results.len(), TOOL_NAMES.len());
+    }
+
+    #[test]
+    fn test_tool_names_are_unique() {
+        let mut names: Vec<&str> = TOOL_NAMES.to_vec();
+        names.sort();
+        names.dedup();
+        assert_eq!(names.len(), TOOL_NAMES.len(), "Duplicate tool names found");
+    }
+
+    #[test]
+    fn test_tool_names_alphabetical_sanity() {
+        // All tool names should be lowercase alphanumeric
+        for name in TOOL_NAMES {
+            assert!(name.chars().all(|c| c.is_ascii_lowercase() || c.is_ascii_digit()),
+                "Tool name '{}' should be lowercase alphanumeric", name);
+        }
+    }
+
+    #[test]
+    fn test_binary_path_contains_tool_name() {
+        let dir = TempDir::new().unwrap();
+        let results = check_tools_in(Some(dir.path()));
+        for t in &results {
+            assert!(t.binary_path.contains(&t.name),
+                "Path '{}' should contain tool name '{}'", t.binary_path, t.name);
+        }
     }
 }
