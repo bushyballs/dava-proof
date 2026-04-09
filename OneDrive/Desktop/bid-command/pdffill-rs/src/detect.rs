@@ -347,6 +347,23 @@ fn is_likely_field_label(label: &str) -> bool {
         if has_zip || has_state { return false; }
     }
 
+    // Skip things that look like filled VALUES (not labels):
+    // - Email addresses
+    if label.contains('@') { return false; }
+    // - Phone numbers (digits with dashes/parens)
+    let digit_count = label.chars().filter(|c| c.is_ascii_digit()).count();
+    if digit_count > 4 && digit_count as f64 / label.len() as f64 > 0.3 { return false; }
+    // - Names that are just "First Last" with no form-like words
+    if label.split_whitespace().count() == 2
+        && label.chars().all(|c| c.is_alphabetic() || c.is_whitespace())
+        && label.chars().filter(|c| c.is_uppercase()).count() == 2
+        && !lower.contains("name") && !lower.contains("date") && !lower.contains("code")
+        && !lower.contains("total") && !lower.contains("price") && !lower.contains("set aside")
+    {
+        // Looks like "Jared Machgan" or "Collin Hoag" — a person name, not a label
+        return false;
+    }
+
     // Skip single-word generic terms and column headers
     if label.split_whitespace().count() == 1 {
         let generics = ["code", "ac", "continued", "n/a", "accepted", "stock",
