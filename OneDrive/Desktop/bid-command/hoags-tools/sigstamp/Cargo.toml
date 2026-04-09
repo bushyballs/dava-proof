@@ -1,0 +1,21 @@
+[package]
+name = "sigstamp"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+hoags_core = { path = "../core" }
+dava_bridge = { path = "../dava-bridge" }
+lopdf = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+clap = { workspace = true }
+chrono = { workspace = true }
+rayon = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }
+
+[[bin]]
+name = "sigstamp"
+path = "src/main.rs"

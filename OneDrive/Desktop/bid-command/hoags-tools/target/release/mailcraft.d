@@ -1,0 +1,1 @@
+C:\Users\colli\OneDrive\Desktop\bid-command\hoags-tools\target\release\mailcraft.exe: C:\Users\colli\OneDrive\Desktop\bid-command\hoags-tools\mailcraft\src\draft.rs C:\Users\colli\OneDrive\Desktop\bid-command\hoags-tools\mailcraft\src\main.rs C:\Users\colli\OneDrive\Desktop\bid-command\hoags-tools\mailcraft\src\templates.rs
