@@ -75,6 +75,22 @@ enum Commands {
         description: Option<String>,
     },
 
+    /// Delete an expense by ID
+    Delete {
+        /// Expense ID to remove
+        id: i64,
+    },
+
+    /// Bulk import expenses from a CSV file
+    ///
+    /// CSV must have headers: amount,vendor,category,date,contract_number,description
+    /// (contract_number and description may be empty)
+    Import {
+        /// Path to the CSV file
+        #[arg(long)]
+        csv: String,
+    },
+
     /// List expenses (optionally filtered)
     List {
         /// Filter by month: YYYY-MM
@@ -90,8 +106,26 @@ enum Commands {
         category: Option<String>,
     },
 
-    /// Show totals by category, month, and contract
+    /// Show totals by category, month, and contract (with monthly trend)
     Summary,
+
+    /// Generate a tax-year expense report with deductibility classification
+    Report {
+        /// Tax year (e.g. 2026)
+        #[arg(long)]
+        tax_year: u32,
+    },
+
+    /// Set a budget limit for a contract; warns when approaching
+    Budget {
+        /// Contract number
+        #[arg(long)]
+        contract: String,
+
+        /// Budget limit in USD (e.g. 50000)
+        #[arg(long)]
+        limit: f64,
+    },
 
     /// Export expenses
     Export {
@@ -151,9 +185,32 @@ fn main() {
                 category,
                 date,
                 contract
+                    .as_deref()
                     .map(|c| format!(" (contract: {})", c))
                     .unwrap_or_default()
             );
+
+            // Budget check after add
+            if let Some(ref cnum) = contract {
+                check_budget_warning(&conn, cnum);
+            }
+        }
+
+        Commands::Delete { id } => {
+            let n = tracker::delete(&conn, id).unwrap_or_else(|e| {
+                eprintln!("Error deleting expense: {}", e);
+                std::process::exit(1);
+            });
+            if n == 0 {
+                eprintln!("No expense found with ID {}.", id);
+                std::process::exit(1);
+            } else {
+                println!("Deleted expense #{}.", id);
+            }
+        }
+
+        Commands::Import { csv } => {
+            import_csv(&conn, &csv);
         }
 
         Commands::List {
@@ -201,6 +258,23 @@ fn main() {
             report::print_summary(&conn);
         }
 
+        Commands::Report { tax_year } => {
+            report::print_tax_year_report(&conn, tax_year);
+        }
+
+        Commands::Budget { contract, limit } => {
+            tracker::upsert_budget(&conn, &contract, limit).unwrap_or_else(|e| {
+                eprintln!("Error setting budget: {}", e);
+                std::process::exit(1);
+            });
+            println!(
+                "Budget set for contract {}: ${:.2}",
+                contract, limit
+            );
+            // Show current spend vs budget
+            check_budget_warning(&conn, &contract);
+        }
+
         Commands::Export {
             format,
             month,
@@ -222,4 +296,105 @@ fn main() {
             report::export_csv(&expenses);
         }
     }
+}
+
+// ── helpers ───────────────────────────────────────────────────────────────────
+
+/// Check if a contract is approaching or over its budget limit and print a warning.
+fn check_budget_warning(conn: &rusqlite::Connection, contract: &str) {
+    if let Ok(Some(limit)) = tracker::get_budget(conn, contract) {
+        if let Ok(spent) = tracker::total_for_contract(conn, contract) {
+            let pct = if limit > 0.0 { spent / limit * 100.0 } else { 0.0 };
+            if spent >= limit {
+                eprintln!(
+                    "WARNING: Contract {} is OVER BUDGET — spent ${:.2} of ${:.2} limit ({:.1}%)",
+                    contract, spent, limit, pct
+                );
+            } else if pct >= 80.0 {
+                eprintln!(
+                    "WARNING: Contract {} is at {:.1}% of budget — spent ${:.2} of ${:.2}",
+                    contract, pct, spent, limit
+                );
+            } else {
+                println!(
+                    "Budget status for {}: ${:.2} spent / ${:.2} limit ({:.1}%)",
+                    contract, spent, limit, pct
+                );
+            }
+        }
+    }
+}
+
+/// Bulk-import expenses from a CSV file.
+///
+/// Expected header: amount,vendor,category,date,contract_number,description
+fn import_csv(conn: &rusqlite::Connection, csv_path: &str) {
+    let mut rdr = csv::Reader::from_path(csv_path).unwrap_or_else(|e| {
+        eprintln!("Error opening CSV '{}': {}", csv_path, e);
+        std::process::exit(1);
+    });
+
+    let today = chrono::Utc::now().format("%Y-%m-%d").to_string();
+    let mut imported = 0u32;
+    let mut errors = 0u32;
+
+    for (line_num, result) in rdr.records().enumerate() {
+        let record = match result {
+            Ok(r) => r,
+            Err(e) => {
+                eprintln!("Line {}: CSV parse error: {}", line_num + 2, e);
+                errors += 1;
+                continue;
+            }
+        };
+
+        // Columns: amount, vendor, category, date, contract_number, description
+        let amount_str = record.get(0).unwrap_or("").trim();
+        let vendor = record.get(1).unwrap_or("").trim();
+        let category_raw = record.get(2).unwrap_or("other").trim();
+        let date = {
+            let d = record.get(3).unwrap_or("").trim();
+            if d.is_empty() { today.as_str() } else { d }
+        };
+        let contract_number = {
+            let c = record.get(4).unwrap_or("").trim();
+            if c.is_empty() { None } else { Some(c) }
+        };
+        let description = {
+            let d = record.get(5).unwrap_or("").trim();
+            if d.is_empty() { None } else { Some(d) }
+        };
+
+        let amount: f64 = match amount_str.parse() {
+            Ok(v) => v,
+            Err(_) => {
+                eprintln!("Line {}: invalid amount '{}', skipping.", line_num + 2, amount_str);
+                errors += 1;
+                continue;
+            }
+        };
+
+        if vendor.is_empty() {
+            eprintln!("Line {}: vendor is empty, skipping.", line_num + 2);
+            errors += 1;
+            continue;
+        }
+
+        let category = Expense::normalize_category(category_raw);
+
+        match tracker::insert(conn, amount, vendor, &category, date, contract_number, description) {
+            Ok(_) => imported += 1,
+            Err(e) => {
+                eprintln!("Line {}: DB error: {}", line_num + 2, e);
+                errors += 1;
+            }
+        }
+    }
+
+    println!(
+        "Import complete: {} imported, {} error{}.",
+        imported,
+        errors,
+        if errors == 1 { "" } else { "s" }
+    );
 }
