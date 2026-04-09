@@ -6,6 +6,7 @@ mod tracker;
 use std::io::Read;
 
 use clap::{Parser, Subcommand};
+use hoags_core::bus::EventBus;
 
 // ---------------------------------------------------------------------------
 // CLI definition
@@ -143,6 +144,13 @@ fn cmd_extract(file: Option<String>, use_stdin: bool, dry_run: bool) {
 
     println!("Extracted and saved {} action item(s):", saved.len());
     print_items(&saved);
+
+    // Publish bus event
+    if let Ok(bus) = EventBus::open_default() {
+        bus.publish("actionminer", "actionminer.action_extracted", &serde_json::json!({
+            "count": saved.len(), "source": source
+        }).to_string());
+    }
 }
 
 fn cmd_list(status: Option<String>, assignee: Option<String>) {

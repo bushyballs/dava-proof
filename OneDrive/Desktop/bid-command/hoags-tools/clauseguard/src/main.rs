@@ -16,6 +16,7 @@ use std::path::PathBuf;
 
 use analyzer::Analyzer;
 use clauses::RiskLevel;
+use hoags_core::bus::EventBus;
 use report::{
     print_analysis, print_clause_check, print_diff, print_summary, to_json_analysis,
     to_json_clause_check, to_json_diff, to_json_summary,
@@ -104,6 +105,18 @@ fn main() {
             match analyzer.analyze(&pdf) {
                 Ok(analysis) => {
                     let min_risk = threshold.map(|t| t.to_risk_level());
+
+                    // Publish bus event
+                    if let Ok(bus) = EventBus::open_default() {
+                        let score = analysis.overall_score;
+                        let count = analysis.all_clause_refs.len();
+                        let pdf_path = pdf.display().to_string();
+                        let risk = if score > 50 { "red" } else if score > 20 { "yellow" } else { "green" };
+                        bus.publish("clauseguard", "clauseguard.clause_analyzed", &serde_json::json!({
+                            "pdf": pdf_path, "risk_level": risk, "score": score, "clauses_found": count
+                        }).to_string());
+                    }
+
                     if cli.json {
                         match to_json_analysis(&analysis) {
                             Ok(j) => println!("{j}"),

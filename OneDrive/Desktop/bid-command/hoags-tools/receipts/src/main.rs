@@ -4,6 +4,7 @@ mod tracker;
 
 use clap::{Parser, Subcommand};
 use expense::Expense;
+use hoags_core::bus::EventBus;
 
 /// Default database location: $RECEIPTS_DB or ~/.hoags/receipts.db
 fn default_db_path() -> String {
@@ -189,6 +190,13 @@ fn main() {
                     .map(|c| format!(" (contract: {})", c))
                     .unwrap_or_default()
             );
+
+            // Publish bus event
+            if let Ok(bus) = EventBus::open_default() {
+                bus.publish("receipts", "receipts.expense_added", &serde_json::json!({
+                    "amount": amount, "vendor": vendor, "category": category, "contract": contract
+                }).to_string());
+            }
 
             // Budget check after add
             if let Some(ref cnum) = contract {
