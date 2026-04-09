@@ -726,6 +726,7 @@ version = "0.1.0"
 dependencies = [
  "chrono",
  "clap",
+ "hoags_core",
  "serde",
  "serde_json",
  "tempfile",
@@ -1125,6 +1126,7 @@ dependencies = [
  "chrono",
  "clap",
  "csv",
+ "hoags_core",
  "serde",
  "serde_json",
  "tabled",
