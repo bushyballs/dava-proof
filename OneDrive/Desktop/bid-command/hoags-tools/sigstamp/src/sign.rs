@@ -580,75 +580,68 @@ mod tests {
         assert!(result.is_err(), "should fail on nonexistent PDF");
     }
 
-    // ── create a minimal valid single-page PDF for integration tests ──────────
 
-    fn minimal_pdf() -> Vec<u8> {
-        // A hand-crafted 1-page PDF with a single text stream.
-        // This is the minimal structure lopdf can load and modify.
-        let content_stream = b"BT /Helv 12 Tf 72 700 Td (Signature: ________) Tj ET\n";
-        let content_len = content_stream.len();
+    // ── create a minimal valid single-page PDF using lopdf API ────────────────
+    // Using lopdf's own API ensures save/load round-trips correctly.
 
-        let mut pdf = Vec::new();
-        pdf.extend_from_slice(b"%PDF-1.4\n");
+    fn make_test_pdf(dir: &std::path::Path, name: &str) -> std::path::PathBuf {
+        use lopdf::{Document, Object, Stream, dictionary};
+        use lopdf::content::{Content, Operation};
 
-        // Object 1: Catalog
-        let obj1_offset = pdf.len();
-        pdf.extend_from_slice(b"1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n");
+        let mut doc = Document::with_version("1.5");
 
-        // Object 2: Pages
-        let obj2_offset = pdf.len();
-        pdf.extend_from_slice(b"2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n");
+        let helv_id = doc.add_object(dictionary! {
+            "Type"     => "Font",
+            "Subtype"  => "Type1",
+            "BaseFont" => "Helvetica",
+        });
+        let resources_id = doc.add_object(dictionary! {
+            "Font" => dictionary! { "Helv" => helv_id }
+        });
 
-        // Object 3: Content stream
-        let obj3_offset = pdf.len();
-        pdf.extend_from_slice(
-            format!(
-                "3 0 obj\n<< /Length {} >>\nstream\n",
-                content_len
-            )
-            .as_bytes(),
-        );
-        pdf.extend_from_slice(content_stream);
-        pdf.extend_from_slice(b"endstream\nendobj\n");
+        let ops = vec![
+            Operation::new("BT", vec![]),
+            Operation::new("Tf", vec![Object::Name(b"Helv".to_vec()), 12.into()]),
+            Operation::new("Td", vec![72.into(), 700.into()]),
+            Operation::new("Tj", vec![Object::string_literal("Signature: ________")]),
+            Operation::new("ET", vec![]),
+        ];
+        let content_bytes = Content { operations: ops }.encode().expect("encode");
+        let stream = Stream::new(dictionary! {}, content_bytes);
+        let content_id = doc.add_object(stream);
 
-        // Object 4: Page
-        let obj4_offset = pdf.len();
-        pdf.extend_from_slice(
-            b"4 0 obj\n<< /Type /Page /Parent 2 0 R \
-              /MediaBox [0 0 612 792] \
-              /Contents 3 0 R \
-              /Resources << /Font << /Helv << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> >> >> \
-              >>\nendobj\n",
-        );
+        let page_id = doc.add_object(dictionary! {
+            "Type"      => "Page",
+            "MediaBox"  => vec![0.into(), 0.into(), 612.into(), 792.into()],
+            "Resources" => resources_id,
+            "Contents"  => content_id,
+        });
 
-        // Cross-reference table
-        let xref_offset = pdf.len();
-        pdf.extend_from_slice(b"xref\n");
-        pdf.extend_from_slice(format!("0 5\n").as_bytes());
-        pdf.extend_from_slice(b"0000000000 65535 f \n");
-        pdf.extend_from_slice(format!("{:010} 00000 n \n", obj1_offset).as_bytes());
-        pdf.extend_from_slice(format!("{:010} 00000 n \n", obj2_offset).as_bytes());
-        pdf.extend_from_slice(format!("{:010} 00000 n \n", obj3_offset).as_bytes());
-        pdf.extend_from_slice(format!("{:010} 00000 n \n", obj4_offset).as_bytes());
+        let pages_id = doc.add_object(dictionary! {
+            "Type"  => "Pages",
+            "Kids"  => vec![page_id.into()],
+            "Count" => 1i64,
+        });
+        doc.get_object_mut(page_id).unwrap()
+            .as_dict_mut().unwrap()
+            .set("Parent", pages_id);
 
-        // Trailer
-        pdf.extend_from_slice(
-            format!(
-                "trailer\n<< /Size 5 /Root 1 0 R >>\nstartxref\n{}\n%%EOF\n",
-                xref_offset
-            )
-            .as_bytes(),
-        );
+        let catalog_id = doc.add_object(dictionary! {
+            "Type"  => "Catalog",
+            "Pages" => pages_id,
+        });
+        doc.trailer.set("Root", catalog_id);
 
-        pdf
+        let path = dir.join(name);
+        doc.save(&path).expect("save test pdf");
+        path
     }
 
     #[test]
     fn test_sign_pdf_creates_output() {
         use tempfile::TempDir;
         let dir = TempDir::new().unwrap();
-        let pdf_path = dir.path().join("test.pdf");
-        std::fs::write(&pdf_path, minimal_pdf()).unwrap();
+        let pdf_path = make_test_pdf(dir.path(), "test.pdf");
 
         let out_dir = dir.path().join("out");
         let params = StampParams {
@@ -669,8 +662,7 @@ mod tests {
     fn test_stamp_date_only_creates_output() {
         use tempfile::TempDir;
         let dir = TempDir::new().unwrap();
-        let pdf_path = dir.path().join("test.pdf");
-        std::fs::write(&pdf_path, minimal_pdf()).unwrap();
+        let pdf_path = make_test_pdf(dir.path(), "test.pdf");
 
         let out_dir = dir.path().join("out");
         let result = stamp_date_only(&pdf_path, &out_dir);
@@ -683,9 +675,7 @@ mod tests {
     fn test_sign_pdf_and_verify_signature_present() {
         use tempfile::TempDir;
         let dir = TempDir::new().unwrap();
-        let pdf_path = dir.path().join("to_sign.pdf");
-        std::fs::write(&pdf_path, minimal_pdf()).unwrap();
-
+        let pdf_path = make_test_pdf(dir.path(), "to_sign.pdf");
         let out_dir = dir.path().join("signed_out");
         let params = StampParams {
             signer: "Collin Hoag".to_string(),
@@ -700,43 +690,9 @@ mod tests {
             .expect("sign_pdf should succeed");
         assert!(signed_path.exists(), "signed PDF should exist");
 
-        // Verify the signed PDF contains a /s/ signature
         let has_sig = verify_pdf_has_signature(&signed_path)
             .expect("verify should succeed");
         assert!(has_sig, "signed PDF should contain /s/ signature");
-    }
-
-    #[test]
-    fn test_debug_print_signed_pdf_streams() {
-        use tempfile::TempDir;
-        let dir = TempDir::new().unwrap();
-        let pdf_path = dir.path().join("debug.pdf");
-        std::fs::write(&pdf_path, minimal_pdf()).unwrap();
-        let out_dir = dir.path().join("debug_out");
-        let params = StampParams {
-            signer: "Collin Hoag".to_string(),
-            title: None,
-            page: 0,
-            x: Some(72.0),
-            y: Some(200.0),
-            initials: false,
-            page_range: None,
-        };
-        let signed_path = sign_pdf(&pdf_path, &out_dir, &params, &[]).unwrap();
-        let doc = lopdf::Document::load(&signed_path).unwrap();
-        println!("Total objects in loaded doc: {}", doc.objects.len());
-        for (id, obj) in &doc.objects {
-            match obj {
-                lopdf::Object::Stream(s) => {
-                    let preview = std::str::from_utf8(&s.content[..s.content.len().min(80)])
-                        .unwrap_or("(non-utf8)");
-                    println!("  Stream {:?}: {} bytes, starts with: {:?}", id, s.content.len(), preview);
-                }
-                other => {
-                    println!("  Obj {:?}: {:?}", id, format!("{:?}", other).chars().take(60).collect::<String>());
-                }
-            }
-        }
     }
 
     /// An unsigned PDF should have verify return false.
@@ -744,8 +700,7 @@ mod tests {
     fn test_verify_unsigned_pdf_returns_false() {
         use tempfile::TempDir;
         let dir = TempDir::new().unwrap();
-        let pdf_path = dir.path().join("unsigned.pdf");
-        std::fs::write(&pdf_path, minimal_pdf()).unwrap();
+        let pdf_path = make_test_pdf(dir.path(), "unsigned.pdf");
 
         let has_sig = verify_pdf_has_signature(&pdf_path)
             .expect("verify should succeed on a valid PDF");
@@ -757,9 +712,7 @@ mod tests {
     fn test_sign_pdf_with_initials() {
         use tempfile::TempDir;
         let dir = TempDir::new().unwrap();
-        let pdf_path = dir.path().join("initials.pdf");
-        std::fs::write(&pdf_path, minimal_pdf()).unwrap();
-
+        let pdf_path = make_test_pdf(dir.path(), "initials.pdf");
         let out_dir = dir.path().join("init_out");
         let params = StampParams {
             signer: "Collin Hoag".to_string(),
@@ -774,7 +727,6 @@ mod tests {
             .expect("sign_pdf with initials should succeed");
 
         // Scan the raw signed PDF bytes for the initials stamp.
-        // Our stamp writes: (/s/ CH) Tj — raw bytes appear literally in the file.
         let raw_bytes = std::fs::read(&signed_path).expect("read signed pdf");
         let sig_bytes = b"/s/ CH";
         let found = raw_bytes.windows(sig_bytes.len()).any(|w| w == sig_bytes);
