@@ -107,6 +107,11 @@ fn main() {
                 Err(e) => eprintln!("\nFailed to render filled PDF: {}", e),
             }
 
+            match pdffill::render::render_confidence_overlay(&pdf, &filled, &out_dir) {
+                Ok(overlay_path) => println!("Overlay:    {}", overlay_path.display()),
+                Err(e) => eprintln!("Failed to render overlay: {}", e),
+            }
+
             match pdffill::render::write_fill_report(&filled, &out_dir) {
                 Ok(report_path) => println!("Report:     {}", report_path.display()),
                 Err(e) => eprintln!("Failed to write report: {}", e),

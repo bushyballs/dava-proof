@@ -224,6 +224,95 @@ fn ensure_fill_fonts(doc: &mut Document, page_id: lopdf::ObjectId) {
     }
 }
 
+/// Render a confidence overlay PDF with colored rectangles over each field.
+/// Green (>=85%), Yellow (50-84%), Red (<50%).
+pub fn render_confidence_overlay(
+    src_path: &Path,
+    fields: &[FilledField],
+    output_dir: &Path,
+) -> Result<PathBuf, Box<dyn std::error::Error>> {
+    std::fs::create_dir_all(output_dir)?;
+    let dst_path = output_dir.join("confidence_overlay.pdf");
+
+    let mut doc = Document::load(src_path)?;
+    let pages: Vec<(u32, lopdf::ObjectId)> = doc.get_pages().into_iter().collect();
+
+    // Group fields by page
+    let mut by_page: std::collections::HashMap<usize, Vec<&FilledField>> = std::collections::HashMap::new();
+    for f in fields {
+        if !f.value.is_empty() {
+            by_page.entry(f.page).or_default().push(f);
+        }
+    }
+
+    for (page_idx, page_fields) in &by_page {
+        let page_num = (*page_idx as u32) + 1;
+        if let Some((_, page_id)) = pages.iter().find(|(pn, _)| *pn == page_num) {
+            let page_height = get_page_height_from_doc(&doc, *page_id);
+
+            let mut draw_ops = String::new();
+            for field in page_fields {
+                let (r, g, b) = if field.confidence >= 0.85 {
+                    (0.0, 0.8, 0.0) // green
+                } else if field.confidence >= 0.5 {
+                    (0.9, 0.7, 0.0) // yellow
+                } else {
+                    (0.9, 0.0, 0.0) // red
+                };
+
+                let x = field.bbox.0;
+                let y = page_height - field.bbox.3; // flip Y, use bottom of bbox
+                let w = field.bbox.2 - field.bbox.0;
+                let h = field.bbox.3 - field.bbox.1;
+
+                // Semi-transparent colored rectangle
+                draw_ops.push_str(&format!(
+                    "q {} {} {} rg 0.25 ca {} {} {} {} re f Q\n",
+                    r, g, b, x, y, w, h.max(14.0)
+                ));
+
+                // Confidence percentage label
+                draw_ops.push_str(&format!(
+                    "BT {} {} {} rg /Helv 5 Tf {} {} Td ({:.0}%) Tj ET\n",
+                    r, g, b,
+                    field.bbox.2 + 2.0,
+                    page_height - field.bbox.1 - 2.0,
+                    field.confidence * 100.0,
+                ));
+            }
+
+            if !draw_ops.is_empty() {
+                ensure_fill_fonts(&mut doc, *page_id);
+                let stream = lopdf::Stream::new(lopdf::Dictionary::new(), draw_ops.into_bytes());
+                let stream_id = doc.add_object(Object::Stream(stream));
+
+                if let Ok(page_dict) = doc.get_dictionary_mut(*page_id) {
+                    match page_dict.get(b"Contents") {
+                        Ok(Object::Reference(existing_ref)) => {
+                            let existing = *existing_ref;
+                            page_dict.set(b"Contents", Object::Array(vec![
+                                Object::Reference(existing),
+                                Object::Reference(stream_id),
+                            ]));
+                        }
+                        Ok(Object::Array(arr)) => {
+                            let mut new_arr = arr.clone();
+                            new_arr.push(Object::Reference(stream_id));
+                            page_dict.set(b"Contents", Object::Array(new_arr));
+                        }
+                        _ => {
+                            page_dict.set(b"Contents", Object::Reference(stream_id));
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    doc.save(&dst_path)?;
+    Ok(dst_path)
+}
+
 /// Write a JSON fill report to `output_dir/fill_report.json`.
 ///
 /// The report contains every field with its resolved value, confidence,
