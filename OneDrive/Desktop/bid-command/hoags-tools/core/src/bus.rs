@@ -192,6 +192,122 @@ impl EventBus {
         let total_memory: i64 = self.conn.query_row("SELECT COUNT(*) FROM connector_memory", [], |r| r.get(0)).unwrap_or(0);
         BusStats { total_events, total_knowledge, total_memory }
     }
+
+    /// Delete all events older than `days` days. Returns the number of rows deleted.
+    pub fn purge_old(&self, days: i64) -> usize {
+        let cutoff = Utc::now()
+            .checked_sub_signed(chrono::Duration::days(days))
+            .unwrap_or_else(Utc::now)
+            .to_rfc3339();
+        self.conn
+            .execute("DELETE FROM bus_events WHERE created_at < ?", params![cutoff])
+            .unwrap_or(0) as usize
+    }
+
+    /// Return a count of events grouped by source_tool.
+    pub fn event_count_by_tool(&self) -> std::collections::HashMap<String, usize> {
+        let mut stmt = match self.conn.prepare(
+            "SELECT source_tool, COUNT(*) FROM bus_events GROUP BY source_tool",
+        ) {
+            Ok(s) => s,
+            Err(_) => return std::collections::HashMap::new(),
+        };
+        stmt.query_map([], |row| {
+            let tool: String = row.get(0)?;
+            let count: i64 = row.get(1)?;
+            Ok((tool, count as usize))
+        })
+        .ok()
+        .map(|rows| rows.filter_map(|r| r.ok()).collect())
+        .unwrap_or_default()
+    }
+
+    /// Count unconsumed (pending) events for a specific consumer tool.
+    pub fn pending_for(&self, tool: &str) -> usize {
+        // events where tool has NOT yet consumed them (consumed_by doesn't contain tool)
+        let query = format!(
+            "SELECT COUNT(*) FROM bus_events WHERE consumed_by NOT LIKE '%{}%'",
+            tool
+        );
+        self.conn
+            .query_row(&query, [], |r| r.get::<_, i64>(0))
+            .unwrap_or(0) as usize
+    }
+
+    /// Dump all events, cross_knowledge, and connector_memory as a JSON string.
+    pub fn export_json(&self) -> String {
+        let events: Vec<BusEvent> = {
+            let mut stmt = self.conn.prepare(
+                "SELECT id, source_tool, event_type, payload, created_at, consumed_by FROM bus_events ORDER BY id",
+            ).unwrap();
+            stmt.query_map([], |row| {
+                Ok(BusEvent {
+                    id: row.get(0)?,
+                    source_tool: row.get(1)?,
+                    event_type: row.get(2)?,
+                    payload: row.get(3)?,
+                    created_at: row.get(4)?,
+                    consumed_by: row.get(5)?,
+                })
+            })
+            .ok()
+            .map(|rows| rows.filter_map(|r| r.ok()).collect())
+            .unwrap_or_default()
+        };
+
+        let knowledge: Vec<serde_json::Value> = {
+            let mut stmt = self.conn.prepare(
+                "SELECT from_tool, to_tool, knowledge_type, content, confidence, created_at FROM cross_knowledge ORDER BY id",
+            ).unwrap();
+            stmt.query_map([], |row| {
+                let from_tool: String = row.get(0)?;
+                let to_tool: String = row.get(1)?;
+                let knowledge_type: String = row.get(2)?;
+                let content: String = row.get(3)?;
+                let confidence: f64 = row.get(4)?;
+                let created_at: String = row.get(5)?;
+                Ok(serde_json::json!({
+                    "from_tool": from_tool,
+                    "to_tool": to_tool,
+                    "knowledge_type": knowledge_type,
+                    "content": content,
+                    "confidence": confidence,
+                    "created_at": created_at,
+                }))
+            })
+            .ok()
+            .map(|rows| rows.filter_map(|r| r.ok()).collect())
+            .unwrap_or_default()
+        };
+
+        let memory: Vec<serde_json::Value> = {
+            let mut stmt = self.conn.prepare(
+                "SELECT connector_name, key, value, updated_at FROM connector_memory ORDER BY id",
+            ).unwrap();
+            stmt.query_map([], |row| {
+                let connector_name: String = row.get(0)?;
+                let key: String = row.get(1)?;
+                let value: String = row.get(2)?;
+                let updated_at: String = row.get(3)?;
+                Ok(serde_json::json!({
+                    "connector": connector_name,
+                    "key": key,
+                    "value": value,
+                    "updated_at": updated_at,
+                }))
+            })
+            .ok()
+            .map(|rows| rows.filter_map(|r| r.ok()).collect())
+            .unwrap_or_default()
+        };
+
+        let root = serde_json::json!({
+            "events": events,
+            "knowledge": knowledge,
+            "memory": memory,
+        });
+        serde_json::to_string_pretty(&root).unwrap_or_else(|_| "{}".to_string())
+    }
 }
 
 #[derive(Debug)]
@@ -199,6 +315,55 @@ pub struct BusStats {
     pub total_events: i64,
     pub total_knowledge: i64,
     pub total_memory: i64,
+}
+
+// ─── BusRunner ───────────────────────────────────────────────────────────────
+
+use crate::connectors::run_all_connectors;
+
+/// Runs all 5 connectors against the bus in a loop with a configurable interval.
+/// Call `BusRunner::new(bus).run_loop()` to start. The loop runs forever until
+/// the process is killed, which is fine for background daemon use.
+pub struct BusRunner {
+    pub bus: EventBus,
+    /// How long to sleep between connector passes.
+    pub interval: std::time::Duration,
+}
+
+impl BusRunner {
+    pub fn new(bus: EventBus) -> Self {
+        Self {
+            bus,
+            interval: std::time::Duration::from_secs(30),
+        }
+    }
+
+    pub fn with_interval(mut self, interval: std::time::Duration) -> Self {
+        self.interval = interval;
+        self
+    }
+
+    /// Run one pass of all connectors immediately, returning the results.
+    pub fn run_once(&self) -> Vec<(String, crate::connectors::ConnectorResult)> {
+        run_all_connectors(&self.bus)
+    }
+
+    /// Block and run connectors in a loop. Each iteration sleeps `self.interval`.
+    /// In tests prefer `run_once`; use this for long-running daemons.
+    pub fn run_loop(&self) -> ! {
+        loop {
+            let results = self.run_once();
+            let total_processed: usize = results.iter().map(|(_, r)| r.events_processed).sum();
+            if total_processed > 0 {
+                eprintln!(
+                    "[BusRunner] pass complete — {} events processed across {} connectors",
+                    total_processed,
+                    results.len()
+                );
+            }
+            std::thread::sleep(self.interval);
+        }
+    }
 }
 
 fn default_bus_path() -> PathBuf {
@@ -304,5 +469,83 @@ mod tests {
         assert_eq!(stats.total_events, 2);
         assert_eq!(stats.total_memory, 1);
         assert_eq!(stats.total_knowledge, 1);
+    }
+
+    #[test]
+    fn test_purge_old_keeps_recent_events() {
+        let bus = tmp_bus();
+        bus.publish("pdffill", "pdffill.form_detected", "{}");
+        bus.publish("invoicer", "invoicer.invoice_generated", "{}");
+        // Purge events older than 30 days — none should be deleted since both are fresh
+        let deleted = bus.purge_old(30);
+        assert_eq!(deleted, 0);
+        let stats = bus.stats();
+        assert_eq!(stats.total_events, 2);
+    }
+
+    #[test]
+    fn test_purge_old_negative_days_removes_all() {
+        let bus = tmp_bus();
+        bus.publish("pdffill", "pdffill.form_detected", "{}");
+        bus.publish("invoicer", "invoicer.invoice_generated", "{}");
+        // days = -1 means cutoff is in the future → all events are "old"
+        let deleted = bus.purge_old(-1);
+        assert_eq!(deleted, 2);
+        let stats = bus.stats();
+        assert_eq!(stats.total_events, 0);
+    }
+
+    #[test]
+    fn test_event_count_by_tool() {
+        let bus = tmp_bus();
+        bus.publish("pdffill", "pdffill.form_detected", "{}");
+        bus.publish("pdffill", "pdffill.form_filled", "{}");
+        bus.publish("invoicer", "invoicer.invoice_generated", "{}");
+        let counts = bus.event_count_by_tool();
+        assert_eq!(counts.get("pdffill"), Some(&2));
+        assert_eq!(counts.get("invoicer"), Some(&1));
+        assert!(counts.get("clauseguard").is_none());
+    }
+
+    #[test]
+    fn test_pending_for_tool() {
+        let bus = tmp_bus();
+        bus.publish("pdffill", "pdffill.form_detected", "{}");
+        bus.publish("pdffill", "pdffill.form_filled", "{}");
+        // Ack one event for clauseguard
+        let events = bus.poll("clauseguard", None);
+        bus.ack(events[0].id, "clauseguard");
+        // clauseguard has consumed 1 of 2, but pending_for counts events NOT yet consumed
+        assert_eq!(bus.pending_for("clauseguard"), 1);
+        // A fresh tool hasn't consumed any
+        assert_eq!(bus.pending_for("invoicer"), 2);
+    }
+
+    #[test]
+    fn test_export_json_structure() {
+        let bus = tmp_bus();
+        bus.publish("pdffill", "pdffill.form_detected", r#"{"template":"SF1449"}"#);
+        bus.set_memory("connector_bid", "last_scan", "2026-04-08");
+        bus.share_knowledge("clauseguard", "mailcraft", "risky_clause", "52.249-8", 0.9);
+        let json_str = bus.export_json();
+        let val: serde_json::Value = serde_json::from_str(&json_str).unwrap();
+        assert!(val["events"].is_array());
+        assert_eq!(val["events"].as_array().unwrap().len(), 1);
+        assert!(val["knowledge"].is_array());
+        assert_eq!(val["knowledge"].as_array().unwrap().len(), 1);
+        assert!(val["memory"].is_array());
+        assert_eq!(val["memory"].as_array().unwrap().len(), 1);
+    }
+
+    #[test]
+    fn test_bus_runner_run_once() {
+        let tmp = NamedTempFile::new().unwrap();
+        let bus = EventBus::open(tmp.path()).unwrap();
+        bus.publish("pdffill", "pdffill.form_detected", r#"{"template":"W9"}"#);
+        let runner = BusRunner::new(bus);
+        let results = runner.run_once();
+        assert_eq!(results.len(), 5);
+        let total: usize = results.iter().map(|(_, r)| r.events_processed).sum();
+        assert!(total >= 2);
     }
 }
