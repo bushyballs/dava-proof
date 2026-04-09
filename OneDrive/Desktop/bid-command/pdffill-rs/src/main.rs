@@ -107,28 +107,71 @@ fn main() {
             println!("{}", "=".repeat(70));
 
             let mut total_fields = 0usize;
-            let mut errors = 0usize;
+            let mut total_classified = std::collections::HashMap::<String, usize>::new();
+            let mut total_sources = std::collections::HashMap::<String, usize>::new();
+            let mut zero_field_pdfs = Vec::new();
+
+            let memory = pdffill::memory::FieldMemory::open_default()
+                .expect("Failed to open memory DB");
 
             for (i, pdf) in pdfs.iter().enumerate() {
                 let start = std::time::Instant::now();
                 let fields = pdffill::detect::detect_all_fields(pdf);
+                let classified = pdffill::classify::classify_fields(&fields, &memory);
                 let ms = start.elapsed().as_millis();
                 let name = pdf.file_name().unwrap_or_default().to_string_lossy();
                 let display_name = if name.len() > 45 { format!("{}...", &name[..42]) } else { name.to_string() };
 
                 println!("  [{:3}/{}] OK {:47} {:4} fields  {:6}ms",
                     i + 1, pdfs.len(), display_name, fields.len(), ms);
+
+                if fields.is_empty() {
+                    zero_field_pdfs.push(display_name.clone());
+                }
+
                 total_fields += fields.len();
+                for f in &fields {
+                    *total_sources.entry(f.source.clone()).or_insert(0) += 1;
+                }
+                for c in &classified {
+                    *total_classified.entry(c.classification.clone()).or_insert(0) += 1;
+                }
             }
 
             let total_ms = start_all.elapsed().as_millis();
             println!("{}", "=".repeat(70));
             println!("  PDFs tested:   {}", pdfs.len());
             println!("  Total fields:  {}", total_fields);
-            println!("  Errors:        {}", errors);
             println!("  Total time:    {}ms ({:.1}s)", total_ms, total_ms as f64 / 1000.0);
             if !pdfs.is_empty() {
                 println!("  Avg per PDF:   {}ms", total_ms / pdfs.len() as u128);
+            }
+
+            if !total_sources.is_empty() {
+                println!("\n  Detection Sources:");
+                let mut sources: Vec<_> = total_sources.iter().collect();
+                sources.sort_by(|a, b| b.1.cmp(a.1));
+                for (src, count) in &sources {
+                    let pct = **count as f64 / total_fields as f64 * 100.0;
+                    println!("    {:15} {:5} ({:.1}%)", src, count, pct);
+                }
+            }
+
+            if !total_classified.is_empty() {
+                println!("\n  Classifications:");
+                let mut classes: Vec<_> = total_classified.iter().collect();
+                classes.sort_by(|a, b| b.1.cmp(a.1));
+                for (cls, count) in &classes {
+                    let pct = **count as f64 / total_fields as f64 * 100.0;
+                    println!("    {:20} {:5} ({:.1}%)", cls, count, pct);
+                }
+            }
+
+            if !zero_field_pdfs.is_empty() {
+                println!("\n  Zero-field PDFs ({}):", zero_field_pdfs.len());
+                for name in &zero_field_pdfs {
+                    println!("    {}", name);
+                }
             }
         }
         Commands::Memory { stats, search } => {

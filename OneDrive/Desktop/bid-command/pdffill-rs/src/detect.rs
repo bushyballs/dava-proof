@@ -207,8 +207,27 @@ fn is_likely_field_label(label: &str) -> bool {
     }
     // Skip common non-field patterns
     let lower = label.to_lowercase();
-    if lower.starts_with("note") || lower.starts_with("see ") || lower.starts_with("refer to") {
-        return false;
+    let skip_starts = ["note", "see ", "refer to", "page ", "continued", "n/a",
+        "po box", "the ", "this ", "a ", "an ", "for ", "based on", "request for",
+        "in accordance", "pursuant", "per ", "as per"];
+    for prefix in &skip_starts {
+        if lower.starts_with(prefix) { return false; }
+    }
+
+    // Skip things that look like addresses (contain state abbreviations + zip)
+    if label.len() > 5 {
+        let has_zip = label.chars().rev().take(5).all(|c| c.is_ascii_digit());
+        let has_state = label.contains(" ID ") || label.contains(" OR ") || label.contains(" WY ")
+            || label.contains(" CA ") || label.contains(" TX ") || label.contains(" WA ")
+            || label.contains(" US") || label.contains(" NM ");
+        if has_zip || has_state { return false; }
+    }
+
+    // Skip single-word generic terms
+    if label.split_whitespace().count() == 1 {
+        let generics = ["code", "ac", "continued", "n/a", "accepted", "stock",
+            "deliver", "administered", "facility"];
+        if generics.contains(&lower.as_str()) { return false; }
     }
 
     true
@@ -338,7 +357,31 @@ pub fn detect_all_fields(pdf_path: &Path) -> Vec<DetectedField> {
     }
 
     // Tier 2: Structural text analysis
-    detect_structural(&doc)
+    let raw = detect_structural(&doc);
+    dedup_fields(raw)
+}
+
+/// Remove duplicate fields that overlap spatially (same page, bbox within 5pt).
+fn dedup_fields(mut fields: Vec<DetectedField>) -> Vec<DetectedField> {
+    if fields.len() < 2 { return fields; }
+    let mut deduped: Vec<DetectedField> = Vec::with_capacity(fields.len());
+    fields.sort_by(|a, b| {
+        a.page.cmp(&b.page)
+            .then_with(|| a.bbox.1.partial_cmp(&b.bbox.1).unwrap_or(std::cmp::Ordering::Equal))
+            .then_with(|| a.bbox.0.partial_cmp(&b.bbox.0).unwrap_or(std::cmp::Ordering::Equal))
+    });
+    for field in fields {
+        let is_dup = deduped.iter().any(|e| {
+            e.page == field.page
+                && (e.bbox.0 - field.bbox.0).abs() < 5.0
+                && (e.bbox.1 - field.bbox.1).abs() < 5.0
+                && e.field_type == field.field_type
+        });
+        if !is_dup {
+            deduped.push(field);
+        }
+    }
+    deduped
 }
 
 #[cfg(test)]
