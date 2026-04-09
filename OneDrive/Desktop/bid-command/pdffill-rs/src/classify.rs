@@ -1,6 +1,7 @@
 use crate::memory::FieldMemory;
 use crate::models::{ClassifiedField, DetectedField};
 use regex::Regex;
+use std::sync::LazyLock;
 
 struct Rule {
     pattern: Regex,
@@ -8,8 +9,7 @@ struct Rule {
     confidence: f64,
 }
 
-fn build_rules() -> Vec<Rule> {
-    vec![
+static RULES: LazyLock<Vec<Rule>> = LazyLock::new(|| vec![
         Rule {
             pattern: Regex::new(r"(?i)\b(cage)\b").unwrap(),
             classification: "identity.code",
@@ -80,8 +80,78 @@ fn build_rules() -> Vec<Rule> {
             classification: "identity.name",
             confidence: 0.95,
         },
-    ]
-}
+        // Government form specific
+        Rule {
+            pattern: Regex::new(r"(?i)\b(solicitation|rfq|rfp|ifb|sol\s+no|sol\s+number)\b").unwrap(),
+            classification: "reference.solicitation",
+            confidence: 0.85,
+        },
+        Rule {
+            pattern: Regex::new(r"(?i)\b(contract\s+no|contract\s+number|award\s+no)\b").unwrap(),
+            classification: "reference.contract",
+            confidence: 0.85,
+        },
+        Rule {
+            pattern: Regex::new(r"(?i)\b(naics|sic\s+code|psc|product.?service)\b").unwrap(),
+            classification: "reference.naics",
+            confidence: 0.85,
+        },
+        Rule {
+            pattern: Regex::new(r"(?i)\b(deliver|ship|performance|place of)\b").unwrap(),
+            classification: "location.delivery",
+            confidence: 0.80,
+        },
+        Rule {
+            pattern: Regex::new(r"(?i)\b(issued|administered|payment|invoice|remit)\b").unwrap(),
+            classification: "admin.office",
+            confidence: 0.75,
+        },
+        Rule {
+            pattern: Regex::new(r"(?i)\b(period|effective|start|end|from|through|duration)\b").unwrap(),
+            classification: "temporal.period",
+            confidence: 0.80,
+        },
+        Rule {
+            pattern: Regex::new(r"(?i)\b(item|clin|slin|line\s+item|supplies|services)\b").unwrap(),
+            classification: "clin.item",
+            confidence: 0.80,
+        },
+        Rule {
+            pattern: Regex::new(r"(?i)\b(discount|terms|payment\s+terms|net\s+\d+)\b").unwrap(),
+            classification: "terms.payment",
+            confidence: 0.80,
+        },
+        Rule {
+            pattern: Regex::new(r"(?i)\b(fob|destination|origin|shipping)\b").unwrap(),
+            classification: "terms.shipping",
+            confidence: 0.80,
+        },
+        Rule {
+            pattern: Regex::new(r"(?i)\b(amendment|modification|change|sf\s*30)\b").unwrap(),
+            classification: "reference.amendment",
+            confidence: 0.85,
+        },
+        Rule {
+            pattern: Regex::new(r"(?i)\b(wage|sca|prevailing|labor\s+rate|fringe)\b").unwrap(),
+            classification: "reference.wage",
+            confidence: 0.85,
+        },
+        Rule {
+            pattern: Regex::new(r"(?i)\b(insurance|liability|bond|surety)\b").unwrap(),
+            classification: "terms.insurance",
+            confidence: 0.80,
+        },
+        Rule {
+            pattern: Regex::new(r"(?i)\b(submit|due|response|deadline|close)\b").unwrap(),
+            classification: "temporal.deadline",
+            confidence: 0.85,
+        },
+        Rule {
+            pattern: Regex::new(r"(?i)\b(set.?aside|small\s+business|hubzone|sdvosb|wosb|8\(?a\)?)\b").unwrap(),
+            classification: "socioeconomic.setaside",
+            confidence: 0.85,
+        },
+    ]);
 
 /// Classify a single detected field using memory lookup then rule-based matching.
 pub fn classify_field(field: &DetectedField, memory: &FieldMemory) -> ClassifiedField {
@@ -103,8 +173,7 @@ pub fn classify_field(field: &DetectedField, memory: &FieldMemory) -> Classified
         .replace('_', " ")
         .replace('-', " ");
 
-    let rules = build_rules();
-    for rule in &rules {
+    for rule in RULES.iter() {
         if rule.pattern.is_match(&label) {
             return ClassifiedField::from_detected(field, rule.classification, rule.confidence);
         }
