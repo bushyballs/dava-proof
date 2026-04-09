@@ -26,6 +26,14 @@ enum Commands {
         #[arg(long)]
         airgap: bool,
     },
+    /// Batch test PDFs in a directory
+    Batch {
+        /// Directory containing PDFs
+        dir: PathBuf,
+        /// Maximum PDFs to test
+        #[arg(long, default_value = "50")]
+        max: usize,
+    },
     /// Query DAVA's memory
     Memory {
         /// Show memory statistics
@@ -35,6 +43,21 @@ enum Commands {
         #[arg(long)]
         search: Option<String>,
     },
+}
+
+fn collect_pdfs(dir: &std::path::Path, pdfs: &mut Vec<PathBuf>, max: usize) {
+    if pdfs.len() >= max { return; }
+    if let Ok(entries) = std::fs::read_dir(dir) {
+        for entry in entries.flatten() {
+            if pdfs.len() >= max { return; }
+            let path = entry.path();
+            if path.is_dir() {
+                collect_pdfs(&path, pdfs, max);
+            } else if path.extension().and_then(|e| e.to_str()) == Some("pdf") {
+                pdfs.push(path);
+            }
+        }
+    }
 }
 
 fn main() {
@@ -73,6 +96,39 @@ fn main() {
                     else { "RED" };
                 let val = if f.value.is_empty() { "(empty)" } else { &f.value };
                 println!("  {:6} {:45} -> {}", color, f.label, val);
+            }
+        }
+        Commands::Batch { dir, max } => {
+            let start_all = std::time::Instant::now();
+            let mut pdfs: Vec<PathBuf> = Vec::new();
+            collect_pdfs(&dir, &mut pdfs, max);
+
+            println!("Testing {} PDFs from {}", pdfs.len(), dir.display());
+            println!("{}", "=".repeat(70));
+
+            let mut total_fields = 0usize;
+            let mut errors = 0usize;
+
+            for (i, pdf) in pdfs.iter().enumerate() {
+                let start = std::time::Instant::now();
+                let fields = pdffill::detect::detect_all_fields(pdf);
+                let ms = start.elapsed().as_millis();
+                let name = pdf.file_name().unwrap_or_default().to_string_lossy();
+                let display_name = if name.len() > 45 { format!("{}...", &name[..42]) } else { name.to_string() };
+
+                println!("  [{:3}/{}] OK {:47} {:4} fields  {:6}ms",
+                    i + 1, pdfs.len(), display_name, fields.len(), ms);
+                total_fields += fields.len();
+            }
+
+            let total_ms = start_all.elapsed().as_millis();
+            println!("{}", "=".repeat(70));
+            println!("  PDFs tested:   {}", pdfs.len());
+            println!("  Total fields:  {}", total_fields);
+            println!("  Errors:        {}", errors);
+            println!("  Total time:    {}ms ({:.1}s)", total_ms, total_ms as f64 / 1000.0);
+            if !pdfs.is_empty() {
+                println!("  Avg per PDF:   {}ms", total_ms / pdfs.len() as u128);
             }
         }
         Commands::Memory { stats, search } => {
