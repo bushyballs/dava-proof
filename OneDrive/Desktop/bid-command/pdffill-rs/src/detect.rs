@@ -344,6 +344,33 @@ fn detect_structural(doc: &Document) -> Vec<DetectedField> {
         }
     }
 
+    // Keyword-based detection — look for known form field keywords anywhere in text
+    // This catches fields even when lopdf's text extraction doesn't preserve line breaks
+    let form_keywords = [
+        "Offeror Name", "Offeror Address", "Offeror Telephone", "Offeror Email",
+        "Offeror Point of Contact", "Offeror UEI", "Offeror Cage Code",
+        "Offeror Signature", "Tax Identification", "Quote Submitted",
+        "Bid Provided By", "Base Year Total", "Option Year", "Total 3 year",
+        "Contractor Name", "Company Name", "Vendor Name",
+    ];
+    for (page_idx, text) in &page_texts {
+        for keyword in &form_keywords {
+            if text.contains(keyword) {
+                let already = fields.iter().any(|f| f.page == *page_idx && f.label == *keyword);
+                if !already {
+                    fields.push(DetectedField {
+                        page: *page_idx,
+                        bbox: (100.0, 0.0, 400.0, 12.0),
+                        label: keyword.to_string(),
+                        field_type: "text".to_string(),
+                        source: "structural".to_string(),
+                        widget_name: String::new(),
+                    });
+                }
+            }
+        }
+    }
+
     fields
 }
 
