@@ -7,6 +7,7 @@
 mod draft;
 mod templates;
 
+use hoags_core::bus::EventBus;
 use std::path::PathBuf;
 
 use clap::{Parser, Subcommand};
@@ -253,6 +254,13 @@ fn main() {
                 path.display()
             );
             println!("NOTE: This draft has NOT been sent. Review before emailing.");
+
+            if let Ok(bus) = EventBus::open_default() {
+                bus.publish("mailcraft", "mailcraft.email_drafted", &serde_json::json!({
+                    "type": email_type,
+                    "solicitation": identifier
+                }).to_string());
+            }
         }
         Err(e) => {
             eprintln!("error: failed to save draft: {}", e);

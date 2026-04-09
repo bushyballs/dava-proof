@@ -15,6 +15,7 @@ mod health;
 mod stats;
 
 use clap::{Parser, Subcommand};
+use hoags_core::bus::EventBus;
 
 #[derive(Parser)]
 #[command(
@@ -87,6 +88,13 @@ fn cmd_pulse() {
         "Heartbeat complete — {} events, {} knowledge entries, {} memory updates",
         total_events, total_knowledge, total_memory
     );
+
+    if let Ok(bus) = EventBus::open_default() {
+        bus.publish("davalive", "davalive.heartbeat", &serde_json::json!({
+            "connectors_run": summaries.len(),
+            "events_processed": total_events
+        }).to_string());
+    }
 }
 
 fn cmd_health(json_output: bool) {

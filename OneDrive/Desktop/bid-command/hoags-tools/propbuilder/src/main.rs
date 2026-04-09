@@ -1,4 +1,5 @@
 use clap::{Parser, Subcommand};
+use hoags_core::bus::EventBus;
 use std::path::PathBuf;
 
 mod context;
@@ -170,6 +171,13 @@ fn main() {
                     println!("[propbuilder] Package complete — {} files written:", files.len());
                     for f in &files {
                         println!("  -> {}", f.display());
+                    }
+                    let sol_number = ctx.solicitation.number.clone();
+                    if let Ok(bus) = EventBus::open_default() {
+                        bus.publish("propbuilder", "propbuilder.proposal_generated", &serde_json::json!({
+                            "output_path": output.display().to_string(),
+                            "solicitation": sol_number
+                        }).to_string());
                     }
                 }
                 Err(e) => {

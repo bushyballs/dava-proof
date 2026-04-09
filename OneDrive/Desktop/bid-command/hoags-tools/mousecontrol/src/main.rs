@@ -2,6 +2,7 @@ mod actions;
 mod platform_win;
 
 use clap::{Parser, Subcommand};
+use hoags_core::bus::EventBus;
 
 /// MOUSECONTROL — DAVA's hands.
 ///
@@ -66,36 +67,53 @@ fn main() {
         eprintln!("[DRY RUN MODE] Pass --live to execute for real.");
     }
 
-    let result = match cli.command {
+    let (result, action_label) = match cli.command {
         Commands::Click { x, y, button } => {
             let action = actions::Action::Click { x, y, button };
-            actions::execute(&action, live)
+            let label = format!("{:?}", action);
+            (actions::execute(&action, live), label)
         }
         Commands::Move { x, y } => {
             let action = actions::Action::Move { x, y };
-            actions::execute(&action, live)
+            let label = format!("{:?}", action);
+            (actions::execute(&action, live), label)
         }
         Commands::Type { text } => {
             let action = actions::Action::Type { text };
-            actions::execute(&action, live)
+            let label = format!("{:?}", action);
+            (actions::execute(&action, live), label)
         }
         Commands::Key { combo } => {
             let action = actions::Action::Key { combo };
-            actions::execute(&action, live)
+            let label = format!("{:?}", action);
+            (actions::execute(&action, live), label)
         }
         Commands::Position => {
             if live {
                 let (x, y) = platform_win::get_cursor_position();
-                Ok(format!("Mouse position: ({}, {})", x, y))
+                (Ok(format!("Mouse position: ({}, {})", x, y)), "Position".to_string())
             } else {
-                Ok("[DRY RUN] Would report current mouse position".to_string())
+                (Ok("[DRY RUN] Would report current mouse position".to_string()), "Position".to_string())
             }
         }
-        Commands::Script { file } => run_script(&file, live),
+        Commands::Script { file } => {
+            let label = format!("Script({})", file);
+            (run_script(&file, live), label)
+        }
     };
 
     match result {
-        Ok(msg) => println!("{}", msg),
+        Ok(msg) => {
+            println!("{}", msg);
+            if live {
+                if let Ok(bus) = EventBus::open_default() {
+                    bus.publish("mousecontrol", "mousecontrol.action_executed", &serde_json::json!({
+                        "action": action_label,
+                        "live": true
+                    }).to_string());
+                }
+            }
+        }
         Err(e) => {
             eprintln!("Error: {}", e);
             std::process::exit(1);

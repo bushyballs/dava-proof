@@ -6,6 +6,7 @@ mod stats;
 
 use anyhow::Result;
 use clap::{Parser, Subcommand};
+use hoags_core::bus::EventBus;
 use filter::{Filter, FilterOp, apply_filter};
 use output::{print_csv, print_describe, print_info, print_json, print_pivot, print_stats, print_table};
 use pivot::pivot as do_pivot;
@@ -179,6 +180,13 @@ fn main() -> Result<()> {
             let sheet = read_sheet(&file)?;
             let stats = compute_stats(&sheet);
             print_stats(&stats);
+            if let Ok(bus) = EventBus::open_default() {
+                bus.publish("sheetwise", "sheetwise.data_analyzed", &serde_json::json!({
+                    "file": file.display().to_string(),
+                    "rows": sheet.row_count(),
+                    "columns": sheet.columns.len()
+                }).to_string());
+            }
         }
 
         Commands::Filter {
@@ -357,6 +365,13 @@ fn main() -> Result<()> {
             let stats = compute_stats(&sheet);
             let describe_stats = compute_describe(&sheet, &stats);
             print_describe(&describe_stats);
+            if let Ok(bus) = EventBus::open_default() {
+                bus.publish("sheetwise", "sheetwise.data_analyzed", &serde_json::json!({
+                    "file": file.display().to_string(),
+                    "rows": sheet.row_count(),
+                    "columns": sheet.columns.len()
+                }).to_string());
+            }
         }
     }
 

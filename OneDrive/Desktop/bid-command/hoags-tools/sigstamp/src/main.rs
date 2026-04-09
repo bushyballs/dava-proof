@@ -195,7 +195,15 @@ fn main() {
             };
 
             match sign_pdf(&pdf, &output_dir, &params, &locs) {
-                Ok(out) => println!("Signed: {}", out.display()),
+                Ok(out) => {
+                    println!("Signed: {}", out.display());
+                    if let Ok(bus) = EventBus::open_default() {
+                        bus.publish("sigstamp", "sigstamp.document_signed", &serde_json::json!({
+                            "document": pdf.display().to_string(),
+                            "signer": params.signer
+                        }).to_string());
+                    }
+                }
                 Err(e) => {
                     eprintln!("Error signing PDF: {}", e);
                     std::process::exit(1);

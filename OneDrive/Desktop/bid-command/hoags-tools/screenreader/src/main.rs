@@ -9,6 +9,7 @@ mod read;
 mod watch;
 mod windows;
 
+use hoags_core::bus::EventBus;
 use std::path::PathBuf;
 
 use clap::{Parser, Subcommand};
@@ -84,7 +85,14 @@ fn cmd_capture(output: PathBuf, region: Option<String>) {
         None => {
             println!("Capturing full screen -> {}", output.display());
             match capture::capture_screen(&output) {
-                Ok(()) => println!("Saved: {}", output.display()),
+                Ok(()) => {
+                    println!("Saved: {}", output.display());
+                    if let Ok(bus) = EventBus::open_default() {
+                        bus.publish("screenreader", "screenreader.screen_captured", &serde_json::json!({
+                            "output": output.display().to_string()
+                        }).to_string());
+                    }
+                }
                 Err(e) => {
                     eprintln!("Error: {e}");
                     std::process::exit(1);
@@ -98,7 +106,14 @@ fn cmd_capture(output: PathBuf, region: Option<String>) {
             });
             println!("Capturing region {x},{y},{w},{h} -> {}", output.display());
             match capture::capture_region(&output, x, y, w, h) {
-                Ok(()) => println!("Saved: {}", output.display()),
+                Ok(()) => {
+                    println!("Saved: {}", output.display());
+                    if let Ok(bus) = EventBus::open_default() {
+                        bus.publish("screenreader", "screenreader.screen_captured", &serde_json::json!({
+                            "output": output.display().to_string()
+                        }).to_string());
+                    }
+                }
                 Err(e) => {
                     eprintln!("Error: {e}");
                     std::process::exit(1);
