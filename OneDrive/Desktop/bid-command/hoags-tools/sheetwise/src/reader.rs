@@ -237,4 +237,71 @@ mod tests {
         assert_eq!(sheet.columns[1].col_type, ColType::Integer);
         assert_eq!(sheet.columns[2].col_type, ColType::Boolean);
     }
+
+    #[test]
+    fn test_detect_delimiter_semicolon() {
+        assert_eq!(detect_delimiter("a;b;c"), b';');
+    }
+
+    #[test]
+    fn test_detect_delimiter_single_field() {
+        // A line with no delimiters — all counts are 0, falls through to last
+        // entry (semicolon) by max_by_key stability; just verify it returns
+        // *a* valid delimiter byte without panicking.
+        let delim = detect_delimiter("justoneword");
+        assert!(
+            [b',', b'\t', b'|', b';'].contains(&delim),
+            "unexpected delimiter: {delim}"
+        );
+    }
+
+    #[test]
+    fn test_infer_date_iso() {
+        let vals = vec!["2026-01-01", "2026-04-08", "2025-12-31"];
+        assert_eq!(infer_type(&vals), ColType::Date);
+    }
+
+    #[test]
+    fn test_infer_empty_column_is_string() {
+        let vals: Vec<&str> = vec![];
+        assert_eq!(infer_type(&vals), ColType::String);
+    }
+
+    #[test]
+    fn test_read_tsv() {
+        use std::io::Write;
+        let mut tmp = tempfile::NamedTempFile::new().unwrap();
+        write!(tmp, "Name\tScore\n").unwrap();
+        write!(tmp, "Alice\t95\n").unwrap();
+        write!(tmp, "Bob\t87\n").unwrap();
+        let sheet = read_sheet(tmp.path()).unwrap();
+        assert_eq!(sheet.delimiter, b'\t');
+        assert_eq!(sheet.row_count(), 2);
+        assert_eq!(sheet.columns[1].col_type, ColType::Integer);
+    }
+
+    #[test]
+    fn test_sheet_col_count_matches_headers() {
+        use std::io::Write;
+        let mut tmp = tempfile::NamedTempFile::new().unwrap();
+        writeln!(tmp, "A,B,C,D,E").unwrap();
+        writeln!(tmp, "1,2,3,4,5").unwrap();
+        let sheet = read_sheet(tmp.path()).unwrap();
+        assert_eq!(sheet.col_count(), 5);
+    }
+
+    #[test]
+    fn test_infer_all_empty_values_is_string() {
+        let vals = vec!["", "", ""];
+        assert_eq!(infer_type(&vals), ColType::String);
+    }
+
+    #[test]
+    fn test_coltype_display() {
+        assert_eq!(ColType::Integer.to_string(), "integer");
+        assert_eq!(ColType::Float.to_string(), "float");
+        assert_eq!(ColType::Boolean.to_string(), "boolean");
+        assert_eq!(ColType::Date.to_string(), "date");
+        assert_eq!(ColType::String.to_string(), "string");
+    }
 }

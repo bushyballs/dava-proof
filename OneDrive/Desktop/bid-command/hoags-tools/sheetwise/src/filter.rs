@@ -240,4 +240,73 @@ mod tests {
         // Bob(1500,Austin) and Carol(1000,Denver) — not Dave because Boston excluded
         assert_eq!(rows.len(), 2);
     }
+
+    #[test]
+    fn test_filter_unknown_column_returns_empty() {
+        let sheet = make_sheet();
+        let f = Filter {
+            column: "NoSuchColumn".to_string(),
+            op: FilterOp::Eq,
+            value: "anything".to_string(),
+        };
+        let rows = apply_filter(&sheet, &f);
+        assert!(rows.is_empty());
+    }
+
+    #[test]
+    fn test_filter_lte() {
+        let sheet = make_sheet();
+        let f = Filter {
+            column: "Amount".to_string(),
+            op: FilterOp::Lte,
+            value: "500".to_string(),
+        };
+        let rows = apply_filter(&sheet, &f);
+        assert_eq!(rows.len(), 1); // only Alice with 500
+    }
+
+    #[test]
+    fn test_filter_ne() {
+        let sheet = make_sheet();
+        let f = Filter {
+            column: "City".to_string(),
+            op: FilterOp::Ne,
+            value: "Denver".to_string(),
+        };
+        let rows = apply_filter(&sheet, &f);
+        assert_eq!(rows.len(), 2); // Bob(Austin) + Dave(Boston)
+    }
+
+    #[test]
+    fn test_filter_op_from_str_all_variants() {
+        assert_eq!(FilterOp::from_str("eq"), Some(FilterOp::Eq));
+        assert_eq!(FilterOp::from_str("ne"), Some(FilterOp::Ne));
+        assert_eq!(FilterOp::from_str("gt"), Some(FilterOp::Gt));
+        assert_eq!(FilterOp::from_str("lt"), Some(FilterOp::Lt));
+        assert_eq!(FilterOp::from_str("gte"), Some(FilterOp::Gte));
+        assert_eq!(FilterOp::from_str("lte"), Some(FilterOp::Lte));
+        assert_eq!(FilterOp::from_str("contains"), Some(FilterOp::Contains));
+        assert_eq!(FilterOp::from_str("starts_with"), Some(FilterOp::StartsWith));
+        assert_eq!(FilterOp::from_str("startswith"), Some(FilterOp::StartsWith));
+        assert_eq!(FilterOp::from_str("unknown"), None);
+    }
+
+    #[test]
+    fn test_apply_filters_empty_filters_returns_all() {
+        let sheet = make_sheet();
+        let rows = apply_filters(&sheet, &[]);
+        assert_eq!(rows.len(), 4); // all rows
+    }
+
+    #[test]
+    fn test_filter_lt() {
+        let sheet = make_sheet();
+        let f = Filter {
+            column: "Amount".to_string(),
+            op: FilterOp::Lt,
+            value: "1000".to_string(),
+        };
+        let rows = apply_filter(&sheet, &f);
+        assert_eq!(rows.len(), 1); // only Alice(500)
+    }
 }
