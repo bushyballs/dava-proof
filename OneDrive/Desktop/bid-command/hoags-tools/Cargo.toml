@@ -13,6 +13,9 @@ members = [
     "sheetwise",
     "actionminer",
     "dava-bridge",
+    "screenreader",
+    "mousecontrol",
+    "davalive",
 ]
 
 [workspace.dependencies]

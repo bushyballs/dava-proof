@@ -32,6 +32,24 @@ impl Default for Identity {
     }
 }
 
+impl Identity {
+    /// Build an Identity from optional overrides, falling back to env/defaults.
+    pub fn with_overrides(company: Option<&str>, signer: Option<&str>) -> Self {
+        let mut id = Identity::default();
+        if let Some(c) = company {
+            if !c.is_empty() {
+                id.company = c.to_string();
+            }
+        }
+        if let Some(s) = signer {
+            if !s.is_empty() {
+                id.signer = s.to_string();
+            }
+        }
+        id
+    }
+}
+
 fn signature(id: &Identity) -> String {
     let phone_line = if id.phone.is_empty() {
         String::new()
@@ -45,6 +63,35 @@ fn signature(id: &Identity) -> String {
 }
 
 // ---------------------------------------------------------------------------
+// Email validation
+// ---------------------------------------------------------------------------
+
+/// Validate that an email looks like a .gov or .mil address.
+///
+/// Returns `Ok(())` if valid, `Err(msg)` with a human-readable message if not.
+/// An empty email string bypasses the check (some commands make CO email optional).
+pub fn validate_gov_email(email: &str) -> Result<(), String> {
+    if email.is_empty() {
+        return Ok(());
+    }
+    let lower = email.to_lowercase();
+    // Must contain @ with something on each side
+    let at_pos = lower.find('@').ok_or_else(|| {
+        format!("'{}' does not look like a valid email address (missing @)", email)
+    })?;
+    let domain = &lower[at_pos + 1..];
+    if domain.ends_with(".gov") || domain.ends_with(".mil") {
+        Ok(())
+    } else {
+        Err(format!(
+            "'{}' does not appear to be a .gov or .mil address. \
+             Federal CO emails must end in .gov or .mil.",
+            email
+        ))
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Quote submission
 // ---------------------------------------------------------------------------
 
@@ -54,13 +101,17 @@ fn signature(id: &Identity) -> String {
 /// * `co_name`   – contracting officer full name
 /// * `co_email`  – CO email address
 /// * `attachments` – list of attachment file names to mention
+/// * `company`   – override company name (None = use env/default)
+/// * `signer`    – override signer name (None = use env/default)
 pub fn quote_submit(
     sol: &str,
     co_name: &str,
     co_email: &str,
     attachments: &[&str],
+    company: Option<&str>,
+    signer: Option<&str>,
 ) -> EmailDraft {
-    let id = Identity::default();
+    let id = Identity::with_overrides(company, signer);
 
     let att_list = if attachments.is_empty() {
         "    • Completed SF 1449 / quote form\n    • Price schedule\n    • Any required representations and certifications".to_string()
@@ -114,8 +165,16 @@ mission.
 /// * `sol`            – solicitation number
 /// * `amendment_num`  – amendment number (e.g. `1`)
 /// * `co_email`       – CO email (optional; defaults to empty string)
-pub fn amendment_ack(sol: &str, amendment_num: u32, co_email: &str) -> EmailDraft {
-    let id = Identity::default();
+/// * `company`        – override company name (None = use env/default)
+/// * `signer`         – override signer name (None = use env/default)
+pub fn amendment_ack(
+    sol: &str,
+    amendment_num: u32,
+    co_email: &str,
+    company: Option<&str>,
+    signer: Option<&str>,
+) -> EmailDraft {
+    let id = Identity::with_overrides(company, signer);
 
     let body = format!(
         r#"To Whom It May Concern,
@@ -158,8 +217,16 @@ Please let us know if further acknowledgment or documentation is required.
 /// * `sol`     – solicitation number
 /// * `co_name` – contracting officer full name
 /// * `co_email`– CO email address
-pub fn debrief_request(sol: &str, co_name: &str, co_email: &str) -> EmailDraft {
-    let id = Identity::default();
+/// * `company` – override company name (None = use env/default)
+/// * `signer`  – override signer name (None = use env/default)
+pub fn debrief_request(
+    sol: &str,
+    co_name: &str,
+    co_email: &str,
+    company: Option<&str>,
+    signer: Option<&str>,
+) -> EmailDraft {
+    let id = Identity::with_overrides(company, signer);
 
     let body = format!(
         r#"Dear {co_name},
@@ -207,8 +274,16 @@ procurements.
 /// * `contract`  – contract number (e.g. `12444626P0028`)
 /// * `co_name`   – contracting officer full name (optional)
 /// * `co_email`  – CO email address (optional)
-pub fn award_response(contract: &str, co_name: &str, co_email: &str) -> EmailDraft {
-    let id = Identity::default();
+/// * `company`   – override company name (None = use env/default)
+/// * `signer`    – override signer name (None = use env/default)
+pub fn award_response(
+    contract: &str,
+    co_name: &str,
+    co_email: &str,
+    company: Option<&str>,
+    signer: Option<&str>,
+) -> EmailDraft {
+    let id = Identity::with_overrides(company, signer);
 
     let salutation = if co_name.is_empty() {
         "To Whom It May Concern".to_string()
@@ -252,6 +327,171 @@ with any questions or requirements.
 }
 
 // ---------------------------------------------------------------------------
+// Status update (monthly)
+// ---------------------------------------------------------------------------
+
+/// Draft a monthly contract status-update email.
+///
+/// * `contract`  – contract number
+/// * `status`    – free-text status string (e.g. "On track")
+/// * `co_email`  – CO email address (optional)
+/// * `company`   – override company name (None = use env/default)
+/// * `signer`    – override signer name (None = use env/default)
+pub fn status_update(
+    contract: &str,
+    status: &str,
+    co_email: &str,
+    company: Option<&str>,
+    signer: Option<&str>,
+) -> EmailDraft {
+    let id = Identity::with_overrides(company, signer);
+    let month = chrono::Utc::now().format("%B %Y").to_string();
+
+    let body = format!(
+        r#"To Whom It May Concern,
+
+{company} is pleased to provide the following monthly status update for
+Contract {contract} — reporting period: {month}.
+
+Current Status: {status}
+
+Summary:
+  • All performance objectives are being tracked and managed in accordance
+    with the contract statement of work.
+  • No significant issues, risks, or delays to report at this time unless
+    noted in the status above.
+  • Invoicing and documentation are current and in compliance with contract
+    requirements.
+
+Please do not hesitate to contact us if you require additional detail or
+if any action items need to be addressed.
+
+{sig}"#,
+        company = id.company,
+        contract = contract,
+        month = month,
+        status = status,
+        sig = signature(&id),
+    );
+
+    EmailDraft {
+        to: co_email.to_string(),
+        subject: format!("Monthly Status Update — Contract {} ({})", contract, month),
+        body,
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Question to CO
+// ---------------------------------------------------------------------------
+
+/// Draft a pre-solicitation question to the contracting officer.
+///
+/// * `sol`      – solicitation number
+/// * `question` – the question text
+/// * `co_email` – CO email address (optional)
+/// * `company`  – override company name (None = use env/default)
+/// * `signer`   – override signer name (None = use env/default)
+pub fn question(
+    sol: &str,
+    question_text: &str,
+    co_email: &str,
+    company: Option<&str>,
+    signer: Option<&str>,
+) -> EmailDraft {
+    let id = Identity::with_overrides(company, signer);
+
+    let body = format!(
+        r#"To Whom It May Concern,
+
+{company} respectfully submits the following question regarding
+Solicitation {sol}:
+
+  {question}
+
+We appreciate your assistance in clarifying this matter. Should additional
+information be needed to address our question, please do not hesitate to
+contact us. We look forward to your response.
+
+{sig}"#,
+        company = id.company,
+        sol = sol,
+        question = question_text,
+        sig = signature(&id),
+    );
+
+    EmailDraft {
+        to: co_email.to_string(),
+        subject: format!("Question Regarding Solicitation {}", sol),
+        body,
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Invoice submission
+// ---------------------------------------------------------------------------
+
+/// Draft an invoice submission email.
+///
+/// * `invoice_number` – invoice identifier (e.g. "HOAGS-INV-001")
+/// * `amount`         – invoice amount in USD
+/// * `contract`       – contract number (optional)
+/// * `co_email`       – CO / finance office email (optional)
+/// * `company`        – override company name (None = use env/default)
+/// * `signer`         – override signer name (None = use env/default)
+pub fn invoice_submit(
+    invoice_number: &str,
+    amount: f64,
+    contract: Option<&str>,
+    co_email: &str,
+    company: Option<&str>,
+    signer: Option<&str>,
+) -> EmailDraft {
+    let id = Identity::with_overrides(company, signer);
+    let contract_line = contract
+        .map(|c| format!("Contract Number: {}\n", c))
+        .unwrap_or_default();
+    let contract_ref = contract
+        .map(|c| format!(" under Contract {}", c))
+        .unwrap_or_default();
+
+    let body = format!(
+        r#"To Whom It May Concern,
+
+{company} hereby submits the following invoice for services rendered{contract_ref}:
+
+  Invoice Number:  {invoice_number}
+  {contract_line}Invoice Amount:  ${amount:.2}
+
+Please find the invoice attached to this correspondence. Payment should be
+remitted in accordance with the terms set forth in the contract and applicable
+prompt-payment regulations (31 U.S.C. § 3901 et seq.).
+
+If you have any questions regarding this invoice or require additional
+supporting documentation, please contact us at your earliest convenience.
+
+{sig}"#,
+        company = id.company,
+        contract_ref = contract_ref,
+        invoice_number = invoice_number,
+        contract_line = contract_line,
+        amount = amount,
+        sig = signature(&id),
+    );
+
+    let subject = match contract {
+        Some(c) => format!("Invoice Submission — {} — Contract {}", invoice_number, c),
+        None => format!("Invoice Submission — {}", invoice_number),
+    };
+
+    EmailDraft {
+        to: co_email.to_string(),
+        subject,
+        body,
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
 
@@ -259,21 +499,65 @@ with any questions or requirements.
 mod tests {
     use super::*;
 
+    // ---- validate_gov_email ------------------------------------------------
+
+    #[test]
+    fn valid_gov_email_accepted() {
+        assert!(validate_gov_email("co@usace.army.mil").is_ok());
+        assert!(validate_gov_email("buyer@fs.usda.gov").is_ok());
+    }
+
+    #[test]
+    fn non_gov_email_rejected() {
+        let result = validate_gov_email("person@gmail.com");
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains(".gov or .mil"));
+    }
+
+    #[test]
+    fn empty_email_bypasses_validation() {
+        assert!(validate_gov_email("").is_ok());
+    }
+
+    #[test]
+    fn email_missing_at_sign_rejected() {
+        assert!(validate_gov_email("notanemail").is_err());
+    }
+
+    // ---- Identity overrides ------------------------------------------------
+
+    #[test]
+    fn identity_overrides_company_and_signer() {
+        let id = Identity::with_overrides(Some("ACME Corp"), Some("Jane Smith"));
+        assert_eq!(id.company, "ACME Corp");
+        assert_eq!(id.signer, "Jane Smith");
+    }
+
+    #[test]
+    fn identity_empty_override_falls_back_to_default() {
+        let id = Identity::with_overrides(Some(""), Some(""));
+        // Falls back to env or default "Hoags Inc." / "Collin Hoag"
+        assert!(!id.company.is_empty());
+        assert!(!id.signer.is_empty());
+    }
+
+    // ---- quote_submit -------------------------------------------------------
+
     #[test]
     fn quote_submit_subject_contains_sol() {
-        let d = quote_submit("W9127S26QA030", "Ashley Stokes", "ashley@usace.army.mil", &[]);
+        let d = quote_submit("W9127S26QA030", "Ashley Stokes", "ashley@usace.army.mil", &[], None, None);
         assert!(d.subject.contains("W9127S26QA030"));
     }
 
     #[test]
     fn quote_submit_to_is_co_email() {
-        let d = quote_submit("W9127S26QA030", "Ashley Stokes", "ashley@usace.army.mil", &[]);
+        let d = quote_submit("W9127S26QA030", "Ashley Stokes", "ashley@usace.army.mil", &[], None, None);
         assert_eq!(d.to, "ashley@usace.army.mil");
     }
 
     #[test]
     fn quote_submit_body_mentions_co_name() {
-        let d = quote_submit("W9127S26QA030", "Ashley Stokes", "ashley@usace.army.mil", &[]);
+        let d = quote_submit("W9127S26QA030", "Ashley Stokes", "ashley@usace.army.mil", &[], None, None);
         assert!(d.body.contains("Ashley Stokes"));
     }
 
@@ -284,55 +568,137 @@ mod tests {
             "Jane Doe",
             "jane@agency.gov",
             &["SF1449.pdf", "price_schedule.xlsx"],
+            None,
+            None,
         );
         assert!(d.body.contains("SF1449.pdf"));
         assert!(d.body.contains("price_schedule.xlsx"));
     }
 
     #[test]
+    fn quote_submit_company_override() {
+        let d = quote_submit("TEST001", "Jane Doe", "jane@agency.gov", &[], Some("ACME Corp"), Some("Alice"));
+        assert!(d.body.contains("ACME Corp"));
+        assert!(d.body.contains("Alice"));
+    }
+
+    // ---- amendment_ack -----------------------------------------------------
+
+    #[test]
     fn amendment_ack_subject_contains_amendment_number() {
-        let d = amendment_ack("1240BE26Q0050", 1, "");
+        let d = amendment_ack("1240BE26Q0050", 1, "", None, None);
         assert!(d.subject.contains("Amendment 1"));
         assert!(d.subject.contains("1240BE26Q0050"));
     }
 
     #[test]
     fn amendment_ack_body_references_amendment() {
-        let d = amendment_ack("1240BE26Q0050", 2, "co@agency.gov");
+        let d = amendment_ack("1240BE26Q0050", 2, "co@agency.gov", None, None);
         assert!(d.body.contains("Amendment No. 2"));
         assert!(d.body.contains("1240BE26Q0050"));
     }
 
     #[test]
+    fn amendment_ack_zero_to_empty_string_when_no_email() {
+        let d = amendment_ack("TESTSOL", 3, "", None, None);
+        assert_eq!(d.to, "");
+    }
+
+    // ---- debrief_request ---------------------------------------------------
+
+    #[test]
     fn debrief_request_cites_far_15506() {
-        let d = debrief_request("127EAV26Q0031", "Ellena Silva", "ellena@agency.gov");
+        let d = debrief_request("127EAV26Q0031", "Ellena Silva", "ellena@agency.gov", None, None);
         assert!(d.body.contains("FAR 15.506"));
         assert!(d.subject.contains("FAR 15.506"));
     }
 
     #[test]
     fn debrief_request_to_is_co_email() {
-        let d = debrief_request("127EAV26Q0031", "Ellena Silva", "ellena@agency.gov");
+        let d = debrief_request("127EAV26Q0031", "Ellena Silva", "ellena@agency.gov", None, None);
         assert_eq!(d.to, "ellena@agency.gov");
     }
 
+    // ---- award_response ----------------------------------------------------
+
     #[test]
     fn award_response_subject_contains_contract() {
-        let d = award_response("12444626P0028", "John Smith", "john@agency.gov");
+        let d = award_response("12444626P0028", "John Smith", "john@agency.gov", None, None);
         assert!(d.subject.contains("12444626P0028"));
     }
 
     #[test]
     fn award_response_body_mentions_contract() {
-        let d = award_response("12444626P0028", "", "");
+        let d = award_response("12444626P0028", "", "", None, None);
         assert!(d.body.contains("12444626P0028"));
-        // unnamed CO falls back to generic salutation
         assert!(d.body.contains("To Whom It May Concern"));
     }
 
+    // ---- status_update -----------------------------------------------------
+
     #[test]
-    fn amendment_ack_zero_to_empty_string_when_no_email() {
-        let d = amendment_ack("TESTSOL", 3, "");
-        assert_eq!(d.to, "");
+    fn status_update_subject_contains_contract() {
+        let d = status_update("12444626P0028", "On track", "co@usace.army.mil", None, None);
+        assert!(d.subject.contains("12444626P0028"));
+        assert!(d.subject.contains("Monthly Status Update"));
+    }
+
+    #[test]
+    fn status_update_body_contains_status() {
+        let d = status_update("12444626P0028", "On track", "co@usace.army.mil", None, None);
+        assert!(d.body.contains("On track"));
+    }
+
+    #[test]
+    fn status_update_body_contains_contract() {
+        let d = status_update("12444626P0028", "On track", "", None, None);
+        assert!(d.body.contains("12444626P0028"));
+    }
+
+    // ---- question ----------------------------------------------------------
+
+    #[test]
+    fn question_subject_contains_sol() {
+        let d = question("W9127S26QA030", "What is the required security clearance?", "co@fs.usda.gov", None, None);
+        assert!(d.subject.contains("W9127S26QA030"));
+    }
+
+    #[test]
+    fn question_body_contains_question_text() {
+        let d = question("W9127S26QA030", "What is the required security clearance?", "co@fs.usda.gov", None, None);
+        assert!(d.body.contains("What is the required security clearance?"));
+    }
+
+    #[test]
+    fn question_to_is_co_email() {
+        let d = question("W9127S26QA030", "?", "co@fs.usda.gov", None, None);
+        assert_eq!(d.to, "co@fs.usda.gov");
+    }
+
+    // ---- invoice_submit ----------------------------------------------------
+
+    #[test]
+    fn invoice_submit_subject_contains_invoice_number() {
+        let d = invoice_submit("HOAGS-INV-001", 10645.63, Some("12444626P0028"), "finance@usace.army.mil", None, None);
+        assert!(d.subject.contains("HOAGS-INV-001"));
+    }
+
+    #[test]
+    fn invoice_submit_body_contains_amount() {
+        let d = invoice_submit("HOAGS-INV-001", 10645.63, None, "", None, None);
+        assert!(d.body.contains("10645.63"));
+    }
+
+    #[test]
+    fn invoice_submit_body_contains_contract_when_provided() {
+        let d = invoice_submit("HOAGS-INV-001", 500.0, Some("ABC123"), "", None, None);
+        assert!(d.body.contains("ABC123"));
+    }
+
+    #[test]
+    fn invoice_submit_subject_no_contract_when_absent() {
+        let d = invoice_submit("HOAGS-INV-002", 100.0, None, "", None, None);
+        assert!(d.subject.contains("HOAGS-INV-002"));
+        assert!(!d.subject.contains("Contract"));
     }
 }
