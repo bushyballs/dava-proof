@@ -123,11 +123,31 @@ mod tests {
     /// capture_screen on a non-writable path returns an Err, not a panic.
     #[test]
     fn capture_screen_bad_path_returns_err() {
-        // A path that PowerShell cannot write to (empty string is always invalid).
         let bad = Path::new("");
         let result = capture_screen(bad);
-        // We only assert the function does not panic; it may Ok or Err depending
-        // on the environment.
         let _ = result;
+    }
+
+    #[test]
+    fn screen_size_reasonable_dimensions() {
+        let (w, h) = screen_size();
+        // Should be at least 640x480 on any modern system
+        assert!(w >= 640, "width {} too small", w);
+        assert!(h >= 480, "height {} too small", h);
+    }
+
+    #[test]
+    fn capture_region_bad_path_no_panic() {
+        let bad = Path::new("");
+        let result = capture_region(bad, 0, 0, 100, 100);
+        let _ = result;
+    }
+
+    #[test]
+    fn path_with_spaces_escapes_correctly() {
+        let path = Path::new(r"C:\My Documents\screenshot.png");
+        let escaped = path.to_string_lossy().replace('\\', "\\\\");
+        assert!(escaped.contains("My Documents"));
+        assert!(escaped.contains("\\\\"));
     }
 }

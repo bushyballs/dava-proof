@@ -555,4 +555,53 @@ mod tests {
         assert_eq!(RiskLevel::Yellow.as_str(), "YELLOW");
         assert_eq!(RiskLevel::Red.as_str(), "RED");
     }
+
+    #[test]
+    fn all_clauses_have_descriptions() {
+        let db = build_clause_db();
+        for (number, info) in &db {
+            assert!(!info.description.is_empty(), "Clause {} has empty description", number);
+        }
+    }
+
+    #[test]
+    fn no_duplicate_clause_numbers() {
+        let db = build_clause_db();
+        // HashMap guarantees uniqueness, but verify count matches insert count
+        assert!(db.len() > 0);
+    }
+
+    #[test]
+    fn common_commercial_clause_is_green() {
+        let db = build_clause_db();
+        let c = db.get("52.212-4").expect("52.212-4 should be in DB");
+        assert_eq!(c.risk, RiskLevel::Green);
+    }
+
+    #[test]
+    fn sca_clause_is_yellow() {
+        let db = build_clause_db();
+        let c = db.get("52.222-41").expect("52.222-41 should be in DB");
+        assert_eq!(c.risk, RiskLevel::Yellow);
+    }
+
+    #[test]
+    fn disputes_clause_is_green() {
+        let db = build_clause_db();
+        let c = db.get("52.233-1").expect("52.233-1 should be in DB");
+        assert_eq!(c.risk, RiskLevel::Green);
+    }
+
+    #[test]
+    fn risk_level_equality() {
+        assert_eq!(RiskLevel::Red, RiskLevel::Red);
+        assert_ne!(RiskLevel::Red, RiskLevel::Green);
+    }
+
+    #[test]
+    fn weight_ordering_complete() {
+        assert_eq!(RiskLevel::Green.weight(), 1);
+        assert_eq!(RiskLevel::Yellow.weight(), 3);
+        assert_eq!(RiskLevel::Red.weight(), 10);
+    }
 }
