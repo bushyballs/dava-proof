@@ -350,17 +350,25 @@ fn is_likely_field_label(label: &str) -> bool {
     // Skip things that look like filled VALUES (not labels):
     // - Email addresses
     if label.contains('@') { return false; }
+    // - Dollar amounts
+    if lower.starts_with("$") || lower.contains("$xx") { return false; }
     // - Phone numbers (digits with dashes/parens)
     let digit_count = label.chars().filter(|c| c.is_ascii_digit()).count();
     if digit_count > 4 && digit_count as f64 / label.len() as f64 > 0.3 { return false; }
-    // - Names that are just "First Last" with no form-like words
-    if label.split_whitespace().count() == 2
-        && label.chars().all(|c| c.is_alphabetic() || c.is_whitespace())
-        && label.chars().filter(|c| c.is_uppercase()).count() == 2
-        && !lower.contains("name") && !lower.contains("date") && !lower.contains("code")
-        && !lower.contains("total") && !lower.contains("price") && !lower.contains("set aside")
-    {
-        // Looks like "Jared Machgan" or "Collin Hoag" — a person name, not a label
+    // - Names that are just "First Last" or "FIRST LAST" with no form-like words
+    let wc = label.split_whitespace().count();
+    if wc == 2 && label.chars().all(|c| c.is_alphabetic() || c.is_whitespace()) {
+        let has_form_word = lower.contains("name") || lower.contains("date") || lower.contains("code")
+            || lower.contains("total") || lower.contains("price") || lower.contains("set aside")
+            || lower.contains("size") || lower.contains("type") || lower.contains("number");
+        if !has_form_word {
+            return false; // "Stacey Phillips", "Jared Machgan" etc.
+        }
+    }
+    // - Parenthetical instructions like "(No collect calls)"
+    if lower.starts_with('(') && lower.ends_with(')') { return false; }
+    // - "ARE NOT ATTACHED" type fragments
+    if lower.starts_with("are ") || lower.starts_with("is ") || lower.starts_with("it ") {
         return false;
     }
 
