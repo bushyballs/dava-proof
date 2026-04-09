@@ -7,7 +7,8 @@ mod templates;
 
 use context::{load_context, load_context_with_sol};
 use proposal::{
-    build_cover_letter, build_past_performance, build_price_schedule,
+    build_capability_statement, build_checklist, build_cover_letter,
+    build_past_performance, build_price_schedule,
     build_technical_approach, extract_sol_meta, generate_full_package,
 };
 
@@ -89,6 +90,28 @@ enum Commands {
 
         /// Output file path.
         #[arg(long, value_name = "FILE", default_value = "technical_approach.pdf")]
+        output: PathBuf,
+    },
+
+    /// Extract submission requirements from a solicitation PDF and produce a checklist.
+    Checklist {
+        /// Path to the solicitation PDF.
+        #[arg(long, value_name = "PDF")]
+        solicitation: PathBuf,
+
+        /// Output file path.
+        #[arg(long, value_name = "FILE", default_value = "checklist.pdf")]
+        output: PathBuf,
+    },
+
+    /// Generate a one-page capability statement PDF from a context JSON.
+    Capability {
+        /// Path to the company context JSON file.
+        #[arg(long, value_name = "JSON")]
+        context: PathBuf,
+
+        /// Output file path.
+        #[arg(long, value_name = "FILE", default_value = "capability_statement.pdf")]
         output: PathBuf,
     },
 }
@@ -186,6 +209,38 @@ fn main() {
                 std::process::exit(1);
             });
             let mut doc = build_technical_approach(&ctx);
+            doc.save(&output).unwrap_or_else(|e| {
+                eprintln!("ERROR saving PDF: {}", e);
+                std::process::exit(1);
+            });
+            println!("  -> {}", output.display());
+        }
+
+        Commands::Checklist { solicitation, output } => {
+            println!("[propbuilder] Extracting submission checklist from solicitation PDF...");
+            println!("  solicitation: {}", solicitation.display());
+            let sol_meta = extract_sol_meta(&solicitation);
+            if !sol_meta.number.is_empty() {
+                println!("  -> Sol number: {}", sol_meta.number);
+            }
+            if !sol_meta.due_date.is_empty() {
+                println!("  -> Due date  : {}", sol_meta.due_date);
+            }
+            let mut doc = build_checklist(&solicitation, &sol_meta);
+            doc.save(&output).unwrap_or_else(|e| {
+                eprintln!("ERROR saving PDF: {}", e);
+                std::process::exit(1);
+            });
+            println!("  -> {}", output.display());
+        }
+
+        Commands::Capability { context, output } => {
+            println!("[propbuilder] Building capability statement...");
+            let ctx = load_context(&context).unwrap_or_else(|e| {
+                eprintln!("ERROR: {}", e);
+                std::process::exit(1);
+            });
+            let mut doc = build_capability_statement(&ctx);
             doc.save(&output).unwrap_or_else(|e| {
                 eprintln!("ERROR saving PDF: {}", e);
                 std::process::exit(1);

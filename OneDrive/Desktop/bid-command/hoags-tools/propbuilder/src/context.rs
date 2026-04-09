@@ -97,6 +97,9 @@ pub struct SolicitationMeta {
     pub agency: String,
     #[serde(default)]
     pub issue_date: String,
+    /// NAICS code for the procurement (e.g., "561720").
+    #[serde(default)]
+    pub naics: String,
 }
 
 /// Load and parse the context JSON file.
@@ -132,6 +135,9 @@ pub fn load_context_with_sol(
         }
         if !s.agency.is_empty() {
             ctx.solicitation.agency = s.agency;
+        }
+        if !s.naics.is_empty() {
+            ctx.solicitation.naics = s.naics;
         }
     }
     Ok(ctx)

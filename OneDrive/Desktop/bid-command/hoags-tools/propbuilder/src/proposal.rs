@@ -74,6 +74,20 @@ pub fn extract_sol_meta(pdf_path: &Path) -> SolicitationMeta {
         meta.agency = "Department of the Army".to_string();
     }
 
+    // NAICS code: 6-digit number following "naics" keyword
+    if let Some(idx) = text_lc.find("naics") {
+        let snippet: String = all_text[idx..].chars().take(30).collect();
+        // Extract first sequence of 6 consecutive digits
+        let digits: String = snippet
+            .chars()
+            .skip_while(|c| !c.is_ascii_digit())
+            .take_while(|c| c.is_ascii_digit())
+            .collect();
+        if digits.len() == 6 {
+            meta.naics = digits;
+        }
+    }
+
     meta
 }
 
@@ -113,6 +127,21 @@ pub fn build_cover_letter(ctx: &ProposalContext, co_name_override: Option<&str>)
         ctx.solicitation.title.clone()
     };
 
+    // Build a compact reference block for the info bar below the header
+    let sol_meta_line = {
+        let mut parts = Vec::new();
+        if !ctx.solicitation.number.is_empty() {
+            parts.push(format!("Sol: {}", ctx.solicitation.number));
+        }
+        if !ctx.solicitation.naics.is_empty() {
+            parts.push(format!("NAICS: {}", ctx.solicitation.naics));
+        }
+        if !ctx.solicitation.due_date.is_empty() {
+            parts.push(format!("Due: {}", ctx.solicitation.due_date));
+        }
+        parts.join("  |  ")
+    };
+
     let mut rects: Vec<Rect> = Vec::new();
     let mut hrules: Vec<HRule> = Vec::new();
     let mut lines: Vec<TextLine> = Vec::new();
@@ -140,7 +169,25 @@ pub fn build_cover_letter(ctx: &ProposalContext, co_name_override: Option<&str>)
         cage_line,
     ));
 
-    let mut y = PAGE_H - 110.0;
+    // Sol info bar just below the blue header (light gray band)
+    let mut header_bottom_y = PAGE_H - 80.0;
+    if !sol_meta_line.is_empty() {
+        rects.push(Rect {
+            x: 0.0,
+            y: header_bottom_y - 20.0,
+            w: PAGE_W,
+            h: 20.0,
+            fill: (0.93, 0.95, 0.99),
+        });
+        lines.push(TextLine::new(
+            MARGIN, header_bottom_y - 14.0, 9.0, "F1",
+            (Color::HOAGS_BLUE.r, Color::HOAGS_BLUE.g, Color::HOAGS_BLUE.b),
+            &sol_meta_line,
+        ));
+        header_bottom_y -= 20.0;
+    }
+
+    let mut y = header_bottom_y - 30.0;
 
     // Date
     push_text(&mut lines, MARGIN, y, 11.0, "F1", Color::BLACK, &today);
@@ -270,6 +317,7 @@ pub fn build_past_performance(ctx: &ProposalContext) -> Document {
     let mut rects: Vec<Rect> = Vec::new();
     let mut hrules: Vec<HRule> = Vec::new();
     let mut lines: Vec<TextLine> = Vec::new();
+    let mut current_page: u32 = 1;
 
     // Blue header
     rects.push(Rect {
@@ -309,6 +357,9 @@ pub fn build_past_performance(ctx: &ProposalContext) -> Document {
     } else {
         for (i, pp) in ctx.past_performance.iter().enumerate() {
             if y < 150.0 {
+                // Emit footer on current page before starting a new one
+                footer_line(&mut hrules, &mut lines, ctx, current_page);
+                current_page += 1;
                 // Push current page, start new page
                 let stream = templates::build_stream(&rects, &hrules, &lines);
                 let stream_id = doc.add_object(Object::Stream(stream));
@@ -384,7 +435,7 @@ pub fn build_past_performance(ctx: &ProposalContext) -> Document {
     }
 
     // Footer
-    footer_line(&mut hrules, &mut lines, ctx, 1);
+    footer_line(&mut hrules, &mut lines, ctx, current_page);
 
     let stream = templates::build_stream(&rects, &hrules, &lines);
     let stream_id = doc.add_object(Object::Stream(stream));
@@ -570,6 +621,7 @@ pub fn build_technical_approach(ctx: &ProposalContext) -> Document {
     let mut rects: Vec<Rect> = Vec::new();
     let mut hrules: Vec<HRule> = Vec::new();
     let mut lines: Vec<TextLine> = Vec::new();
+    let mut current_page: u32 = 1;
 
     // Header
     rects.push(Rect {
@@ -623,6 +675,8 @@ pub fn build_technical_approach(ctx: &ProposalContext) -> Document {
 
     for (heading, body) in &sections {
         if y < 120.0 {
+            footer_line(&mut hrules, &mut lines, ctx, current_page);
+            current_page += 1;
             let stream = templates::build_stream(&rects, &hrules, &lines);
             let stream_id = doc.add_object(Object::Stream(stream));
             let page_id = templates::add_page(&mut doc, stream_id);
@@ -648,6 +702,416 @@ pub fn build_technical_approach(ctx: &ProposalContext) -> Document {
         y -= 18.0;
     }
 
+    footer_line(&mut hrules, &mut lines, ctx, current_page);
+
+    let stream = templates::build_stream(&rects, &hrules, &lines);
+    let stream_id = doc.add_object(Object::Stream(stream));
+    let page_id = templates::add_page(&mut doc, stream_id);
+    pages_kids.push(Object::Reference(page_id));
+
+    attach_pages(doc, pages_kids)
+}
+
+// ─── Submission checklist PDF ────────────────────────────────────────────────
+
+/// A single checklist item extracted (or inferred) from solicitation text.
+#[derive(Debug, Clone)]
+pub struct ChecklistItem {
+    pub description: String,
+    pub required: bool,
+}
+
+/// Extract submission requirements from solicitation text and build a checklist PDF.
+pub fn build_checklist(pdf_path: &Path, sol_meta: &SolicitationMeta) -> Document {
+    // Step 1: Extract text from PDF
+    let raw_text = extract_raw_text(pdf_path);
+
+    // Step 2: Heuristic extraction of checklist items
+    let items = extract_checklist_items(&raw_text);
+
+    // Step 3: Render the PDF
+    let mut doc = Document::with_version("1.4");
+    let mut pages_kids: Vec<Object> = Vec::new();
+    let mut rects: Vec<Rect> = Vec::new();
+    let mut hrules: Vec<HRule> = Vec::new();
+    let mut lines: Vec<TextLine> = Vec::new();
+    let mut current_page: u32 = 1;
+
+    // Header
+    rects.push(Rect {
+        x: 0.0,
+        y: PAGE_H - 70.0,
+        w: PAGE_W,
+        h: 70.0,
+        fill: (Color::HOAGS_BLUE.r, Color::HOAGS_BLUE.g, Color::HOAGS_BLUE.b),
+    });
+    lines.push(TextLine::new(
+        MARGIN, PAGE_H - 30.0, 18.0, "F2",
+        (Color::WHITE.r, Color::WHITE.g, Color::WHITE.b),
+        "Submission Requirements Checklist",
+    ));
+    let sub_header = if sol_meta.number.is_empty() {
+        "Extracted from solicitation PDF".to_string()
+    } else {
+        format!("Sol. {} — {}", sol_meta.number, sol_meta.agency)
+    };
+    lines.push(TextLine::new(
+        MARGIN, PAGE_H - 52.0, 10.0, "F1",
+        (0.85, 0.92, 1.0),
+        &sub_header,
+    ));
+
+    let mut y = PAGE_H - 100.0;
+    let body_width = PAGE_W - 2.0 * MARGIN;
+
+    // Due date reminder
+    if !sol_meta.due_date.is_empty() {
+        rects.push(Rect {
+            x: MARGIN,
+            y: y - 6.0,
+            w: body_width,
+            h: 20.0,
+            fill: (1.0, 0.97, 0.88),
+        });
+        let deadline_text = format!("Response Deadline: {}", sol_meta.due_date);
+        push_text(&mut lines, MARGIN + 4.0, y + 6.0, 10.0, "F2", Color::BLACK, &deadline_text);
+        y -= 28.0;
+    }
+
+    if items.is_empty() {
+        push_text(&mut lines, MARGIN, y, 11.0, "F3", Color::DARK_GRAY,
+            "No specific submission requirements detected. Review PDF manually.");
+        y -= 20.0;
+        // Provide standard federal proposal checklist as fallback
+        let fallback = default_checklist_items();
+        render_checklist_items(&mut rects, &mut hrules, &mut lines, &mut pages_kids,
+            &mut doc, &mut y, &mut current_page, &fallback, body_width);
+    } else {
+        render_checklist_items(&mut rects, &mut hrules, &mut lines, &mut pages_kids,
+            &mut doc, &mut y, &mut current_page, &items, body_width);
+    }
+
+    // Footer
+    footer_line_bare(&mut hrules, &mut lines, &sub_header, current_page);
+
+    let stream = templates::build_stream(&rects, &hrules, &lines);
+    let stream_id = doc.add_object(Object::Stream(stream));
+    let page_id = templates::add_page(&mut doc, stream_id);
+    pages_kids.push(Object::Reference(page_id));
+
+    attach_pages(doc, pages_kids)
+}
+
+fn extract_raw_text(pdf_path: &Path) -> String {
+    let doc = match Document::load(pdf_path) {
+        Ok(d) => d,
+        Err(_) => return String::new(),
+    };
+    let mut text = String::new();
+    for (_, obj) in doc.objects.iter() {
+        if let Ok(stream) = obj.as_stream() {
+            if let Ok(decoded) = stream.decode_content() {
+                for op in &decoded.operations {
+                    for operand in &op.operands {
+                        if let Ok(s) = operand.as_str() {
+                            text.push(' ');
+                            text.push_str(&String::from_utf8_lossy(s));
+                        }
+                    }
+                }
+            }
+        }
+    }
+    text
+}
+
+fn extract_checklist_items(text: &str) -> Vec<ChecklistItem> {
+    let mut items: Vec<ChecklistItem> = Vec::new();
+    let text_lc = text.to_lowercase();
+
+    // Patterns that signal a submission requirement
+    let submission_keywords = [
+        ("signed sf1449", true),
+        ("signed sf 1449", true),
+        ("completed price schedule", true),
+        ("technical approach", true),
+        ("past performance", true),
+        ("capabilities statement", true),
+        ("capability statement", true),
+        ("sam.gov registration", true),
+        ("sam registration", true),
+        ("representations and certifications", true),
+        ("reps and certs", true),
+        ("section k", true),
+        ("section l", true),
+        ("section m", true),
+        ("price volume", true),
+        ("technical volume", true),
+        ("management plan", false),
+        ("quality control plan", false),
+        ("qcp", false),
+        ("insurance certificate", false),
+        ("performance bond", false),
+        ("bid bond", false),
+        ("subcontracting plan", false),
+        ("wage determination", false),
+        ("key personnel", false),
+    ];
+
+    for (keyword, required) in &submission_keywords {
+        if text_lc.contains(keyword) {
+            // Title-case the keyword for display
+            let display = keyword
+                .split_whitespace()
+                .map(|w| {
+                    let mut chars = w.chars();
+                    match chars.next() {
+                        None => String::new(),
+                        Some(first) => first.to_uppercase().collect::<String>() + chars.as_str(),
+                    }
+                })
+                .collect::<Vec<_>>()
+                .join(" ");
+            items.push(ChecklistItem { description: display, required: *required });
+        }
+    }
+
+    items
+}
+
+fn default_checklist_items() -> Vec<ChecklistItem> {
+    vec![
+        ChecklistItem { description: "Signed SF1449 (Blocks 12, 17, 23, 24, 30, 31)".into(), required: true },
+        ChecklistItem { description: "Completed Price Schedule (all CLINs, option years, grand total)".into(), required: true },
+        ChecklistItem { description: "Technical Approach / Technical Volume".into(), required: true },
+        ChecklistItem { description: "Past Performance References (3 minimum)".into(), required: true },
+        ChecklistItem { description: "Representations and Certifications (Section K)".into(), required: true },
+        ChecklistItem { description: "Active SAM.gov Registration".into(), required: true },
+        ChecklistItem { description: "Capability Statement".into(), required: false },
+        ChecklistItem { description: "Quality Control Plan".into(), required: false },
+        ChecklistItem { description: "Key Personnel Resumes".into(), required: false },
+        ChecklistItem { description: "Insurance Certificates".into(), required: false },
+    ]
+}
+
+fn render_checklist_items(
+    rects: &mut Vec<Rect>,
+    hrules: &mut Vec<HRule>,
+    lines: &mut Vec<TextLine>,
+    pages_kids: &mut Vec<Object>,
+    doc: &mut Document,
+    y: &mut f64,
+    current_page: &mut u32,
+    items: &[ChecklistItem],
+    body_width: f64,
+) {
+    // Section header
+    rects.push(Rect {
+        x: MARGIN,
+        y: *y - 4.0,
+        w: body_width,
+        h: 18.0,
+        fill: (Color::HOAGS_BLUE.r, Color::HOAGS_BLUE.g, Color::HOAGS_BLUE.b),
+    });
+    lines.push(TextLine::new(MARGIN + 4.0, *y + 6.0, 9.0, "F2",
+        (Color::WHITE.r, Color::WHITE.g, Color::WHITE.b), "Item"));
+    lines.push(TextLine::new(MARGIN + body_width - 80.0, *y + 6.0, 9.0, "F2",
+        (Color::WHITE.r, Color::WHITE.g, Color::WHITE.b), "Required"));
+    lines.push(TextLine::new(MARGIN + body_width - 30.0, *y + 6.0, 9.0, "F2",
+        (Color::WHITE.r, Color::WHITE.g, Color::WHITE.b), "Done"));
+    *y -= 22.0;
+
+    for (i, item) in items.iter().enumerate() {
+        if *y < 100.0 {
+            let stream = templates::build_stream(rects, hrules, lines);
+            let stream_id = doc.add_object(Object::Stream(stream));
+            let page_id = templates::add_page(doc, stream_id);
+            pages_kids.push(Object::Reference(page_id));
+            *rects = Vec::new();
+            *hrules = Vec::new();
+            *lines = Vec::new();
+            *current_page += 1;
+            *y = PAGE_H - MARGIN;
+        }
+
+        // Alternating row background
+        if i % 2 == 0 {
+            rects.push(Rect {
+                x: MARGIN,
+                y: *y - 4.0,
+                w: body_width,
+                h: 18.0,
+                fill: (0.95, 0.96, 0.99),
+            });
+        }
+
+        // Checkbox outline ([ ])
+        lines.push(TextLine::new(MARGIN + 4.0, *y + 6.0, 10.0, "F1", (0.0, 0.0, 0.0),
+            &format!("[ ] {}", item.description)));
+
+        // Required indicator
+        let req_color = if item.required {
+            (0.8, 0.1, 0.1)
+        } else {
+            (0.3, 0.3, 0.3)
+        };
+        let req_text = if item.required { "YES" } else { "No" };
+        lines.push(TextLine::new(MARGIN + body_width - 76.0, *y + 6.0, 9.0, "F2", req_color, req_text));
+
+        *y -= 18.0;
+    }
+
+    // Bottom separator
+    hrules.push(HRule {
+        x: MARGIN,
+        y: *y,
+        w: body_width,
+        width_pts: 0.5,
+        color: (0.75, 0.75, 0.85),
+    });
+    *y -= 16.0;
+}
+
+fn footer_line_bare(hrules: &mut Vec<HRule>, lines: &mut Vec<TextLine>, label: &str, page: u32) {
+    hrules.push(HRule {
+        x: MARGIN,
+        y: 50.0,
+        w: PAGE_W - 2.0 * MARGIN,
+        width_pts: 0.5,
+        color: (0.80, 0.80, 0.80),
+    });
+    let footer = format!("{} | Page {}", label, page);
+    lines.push(TextLine::new(MARGIN, 36.0, 8.0, "F1",
+        (Color::DARK_GRAY.r, Color::DARK_GRAY.g, Color::DARK_GRAY.b), &footer));
+}
+
+// ─── Capability Statement PDF ─────────────────────────────────────────────────
+
+pub fn build_capability_statement(ctx: &ProposalContext) -> Document {
+    let mut doc = Document::with_version("1.4");
+    let mut pages_kids: Vec<Object> = Vec::new();
+    let mut rects: Vec<Rect> = Vec::new();
+    let mut hrules: Vec<HRule> = Vec::new();
+    let mut lines: Vec<TextLine> = Vec::new();
+
+    let body_width = PAGE_W - 2.0 * MARGIN;
+
+    // Full-width branded header
+    rects.push(Rect {
+        x: 0.0,
+        y: PAGE_H - 100.0,
+        w: PAGE_W,
+        h: 100.0,
+        fill: (Color::HOAGS_BLUE.r, Color::HOAGS_BLUE.g, Color::HOAGS_BLUE.b),
+    });
+    lines.push(TextLine::new(
+        MARGIN, PAGE_H - 36.0, 22.0, "F2",
+        (Color::WHITE.r, Color::WHITE.g, Color::WHITE.b),
+        &ctx.company.name,
+    ));
+    lines.push(TextLine::new(
+        MARGIN, PAGE_H - 58.0, 11.0, "F1",
+        (0.85, 0.92, 1.0),
+        "Capability Statement",
+    ));
+    let cage_uei = format!("CAGE: {}  |  UEI: {}", ctx.company.cage, ctx.company.uei);
+    lines.push(TextLine::new(
+        MARGIN, PAGE_H - 76.0, 10.0, "F1",
+        (0.75, 0.85, 1.0),
+        &cage_uei,
+    ));
+    if !ctx.company.address.is_empty() {
+        lines.push(TextLine::new(
+            MARGIN, PAGE_H - 92.0, 9.0, "F1",
+            (0.75, 0.85, 1.0),
+            &ctx.company.address,
+        ));
+    }
+
+    let mut y = PAGE_H - 125.0;
+
+    // ── Core Competencies ──────────────────────────────────────────────
+    section_heading(&mut rects, &mut hrules, &mut lines, &mut y, "Core Competencies", body_width);
+
+    // Derive core competencies from past performance and NAICS
+    let mut competencies: Vec<String> = Vec::new();
+    if !ctx.solicitation.naics.is_empty() {
+        competencies.push(format!("NAICS {} — primary area of performance", ctx.solicitation.naics));
+    }
+    for pp in &ctx.past_performance {
+        if !pp.agency.is_empty() {
+            competencies.push(format!("{}: {}", pp.agency, pp.title));
+        }
+    }
+    if competencies.is_empty() {
+        competencies.push("Federal services delivery — janitorial, facilities, grounds maintenance".into());
+        competencies.push("Quality control and performance reporting".into());
+        competencies.push("SAM.gov registered small business".into());
+    }
+
+    for comp in &competencies {
+        if y < 100.0 { break; }
+        lines.push(TextLine::new(MARGIN + 8.0, y, 10.0, "F1", (0.0, 0.0, 0.0),
+            &format!("  • {}", comp)));
+        y -= 15.0;
+    }
+    y -= 8.0;
+
+    // ── Differentiators ────────────────────────────────────────────────
+    section_heading(&mut rects, &mut hrules, &mut lines, &mut y, "Differentiators", body_width);
+
+    let differentiators = [
+        "Veteran-led small business with operational experience in federal environments",
+        "Fully SAM.gov registered, active CAGE and UEI",
+        "Responsive and direct — single point of contact for all contract matters",
+        "Commitment to zero-defect quality control with documented inspection procedures",
+        "Flexible mobilization capability — rapid transition to full performance",
+    ];
+    for d in &differentiators {
+        lines.push(TextLine::new(MARGIN + 8.0, y, 10.0, "F1", (0.0, 0.0, 0.0),
+            &format!("  • {}", d)));
+        y -= 15.0;
+    }
+    y -= 8.0;
+
+    // ── Past Performance Summary ───────────────────────────────────────
+    if !ctx.past_performance.is_empty() {
+        section_heading(&mut rects, &mut hrules, &mut lines, &mut y, "Past Performance", body_width);
+        for pp in &ctx.past_performance {
+            if y < 120.0 { break; }
+            // Row background
+            rects.push(Rect {
+                x: MARGIN,
+                y: y - 4.0,
+                w: body_width,
+                h: 18.0,
+                fill: (0.95, 0.96, 0.99),
+            });
+            let summary = format!("{} — {} | ${:.0} | {}",
+                pp.title, pp.agency, pp.value, pp.period);
+            y = wrap_text(&mut lines, MARGIN + 8.0, y + 6.0, 9.5, body_width - 16.0, &summary, 14.0);
+            y -= 6.0;
+        }
+        y -= 8.0;
+    }
+
+    // ── Contact Information ────────────────────────────────────────────
+    section_heading(&mut rects, &mut hrules, &mut lines, &mut y, "Contact", body_width);
+    push_text(&mut lines, MARGIN + 8.0, y, 10.0, "F2", Color::BLACK, &ctx.signer.name);
+    y -= 15.0;
+    push_text(&mut lines, MARGIN + 8.0, y, 10.0, "F1", Color::DARK_GRAY, &ctx.signer.title);
+    y -= 15.0;
+    if !ctx.signer.phone.is_empty() {
+        push_text(&mut lines, MARGIN + 8.0, y, 10.0, "F1", Color::DARK_GRAY, &ctx.signer.phone);
+        y -= 15.0;
+    }
+    if !ctx.signer.email.is_empty() {
+        push_text(&mut lines, MARGIN + 8.0, y, 10.0, "F1", Color::DARK_GRAY, &ctx.signer.email);
+        y -= 15.0;
+    }
+    let _ = y; // y may not be used after contact block
+
+    // Footer
     footer_line(&mut hrules, &mut lines, ctx, 1);
 
     let stream = templates::build_stream(&rects, &hrules, &lines);
@@ -656,6 +1120,33 @@ pub fn build_technical_approach(ctx: &ProposalContext) -> Document {
     pages_kids.push(Object::Reference(page_id));
 
     attach_pages(doc, pages_kids)
+}
+
+fn section_heading(
+    rects: &mut Vec<Rect>,
+    hrules: &mut Vec<HRule>,
+    lines: &mut Vec<TextLine>,
+    y: &mut f64,
+    title: &str,
+    body_width: f64,
+) {
+    rects.push(Rect {
+        x: MARGIN,
+        y: *y - 4.0,
+        w: body_width,
+        h: 18.0,
+        fill: (0.88, 0.92, 0.97),
+    });
+    lines.push(TextLine::new(MARGIN + 4.0, *y + 6.0, 10.0, "F2",
+        (Color::HOAGS_BLUE.r, Color::HOAGS_BLUE.g, Color::HOAGS_BLUE.b), title));
+    hrules.push(HRule {
+        x: MARGIN,
+        y: *y - 5.0,
+        w: body_width,
+        width_pts: 0.5,
+        color: (Color::HOAGS_BLUE.r, Color::HOAGS_BLUE.g, Color::HOAGS_BLUE.b),
+    });
+    *y -= 22.0;
 }
 
 // ─── Full package generator ───────────────────────────────────────────────────
@@ -851,6 +1342,7 @@ mod tests {
                 co_email: "ashley.stokes@fs.usda.gov".into(),
                 agency: "USDA Forest Service".into(),
                 issue_date: "2026-04-01".into(),
+                naics: "561720".into(),
             },
         }
     }
@@ -951,5 +1443,203 @@ mod tests {
         ];
         let total: f64 = clins.iter().map(|c| c.total()).sum();
         assert!((total - 42500.0).abs() < 0.01);
+    }
+
+    // ── Content verification tests ──────────────────────────────────────────────
+    // These tests save the PDF and scan the raw bytes for expected text strings.
+    // PDF content streams embed ASCII text as literal bytes, so a simple
+    // bytes-contains check works for short ASCII strings.
+
+    fn pdf_contains(path: &std::path::Path, needle: &str) -> bool {
+        let bytes = std::fs::read(path).unwrap();
+        // Search the raw bytes for the ASCII needle
+        bytes.windows(needle.len())
+            .any(|w| w == needle.as_bytes())
+    }
+
+    #[test]
+    fn test_cover_letter_contains_sol_number() {
+        let ctx = sample_ctx();
+        let mut doc = build_cover_letter(&ctx, None);
+        let tmp = TempDir::new().unwrap();
+        let path = tmp.path().join("cover_sol.pdf");
+        doc.save(&path).unwrap();
+        assert!(pdf_contains(&path, "12444626P0025"),
+            "Cover letter PDF should contain the solicitation number");
+    }
+
+    #[test]
+    fn test_cover_letter_contains_naics() {
+        let mut ctx = sample_ctx();
+        ctx.solicitation.naics = "561720".to_string();
+        let mut doc = build_cover_letter(&ctx, None);
+        let tmp = TempDir::new().unwrap();
+        let path = tmp.path().join("cover_naics.pdf");
+        doc.save(&path).unwrap();
+        assert!(pdf_contains(&path, "561720"),
+            "Cover letter PDF should contain the NAICS code");
+    }
+
+    #[test]
+    fn test_cover_letter_contains_due_date() {
+        let ctx = sample_ctx();
+        let mut doc = build_cover_letter(&ctx, None);
+        let tmp = TempDir::new().unwrap();
+        let path = tmp.path().join("cover_due.pdf");
+        doc.save(&path).unwrap();
+        assert!(pdf_contains(&path, "2026-05-01"),
+            "Cover letter PDF should contain the response deadline");
+    }
+
+    #[test]
+    fn test_cover_letter_contains_company_name() {
+        let ctx = sample_ctx();
+        let mut doc = build_cover_letter(&ctx, None);
+        let tmp = TempDir::new().unwrap();
+        let path = tmp.path().join("cover_name.pdf");
+        doc.save(&path).unwrap();
+        assert!(pdf_contains(&path, "Hoags Inc."),
+            "Cover letter PDF should contain the company name");
+    }
+
+    #[test]
+    fn test_price_schedule_contains_grand_total() {
+        let ctx = sample_ctx();
+        let mut doc = build_price_schedule(&ctx);
+        let tmp = TempDir::new().unwrap();
+        let path = tmp.path().join("price_total.pdf");
+        doc.save(&path).unwrap();
+        assert!(pdf_contains(&path, "GRAND TOTAL"),
+            "Price schedule PDF should contain GRAND TOTAL label");
+    }
+
+    #[test]
+    fn test_price_schedule_contains_clin_number() {
+        let ctx = sample_ctx();
+        let mut doc = build_price_schedule(&ctx);
+        let tmp = TempDir::new().unwrap();
+        let path = tmp.path().join("price_clin.pdf");
+        doc.save(&path).unwrap();
+        assert!(pdf_contains(&path, "0001"),
+            "Price schedule PDF should contain CLIN number");
+    }
+
+    #[test]
+    fn test_past_performance_contains_contract_number() {
+        let ctx = sample_ctx();
+        let mut doc = build_past_performance(&ctx);
+        let tmp = TempDir::new().unwrap();
+        let path = tmp.path().join("pp_contract.pdf");
+        doc.save(&path).unwrap();
+        assert!(pdf_contains(&path, "12444626P0025"),
+            "Past performance PDF should contain the contract number");
+    }
+
+    #[test]
+    fn test_technical_approach_contains_section_headings() {
+        let ctx = sample_ctx();
+        let mut doc = build_technical_approach(&ctx);
+        let tmp = TempDir::new().unwrap();
+        let path = tmp.path().join("ta_sections.pdf");
+        doc.save(&path).unwrap();
+        assert!(pdf_contains(&path, "Technical Approach"),
+            "Technical approach PDF should contain section title");
+        assert!(pdf_contains(&path, "Quality Control"),
+            "Technical approach PDF should contain Quality Control section");
+    }
+
+    #[test]
+    fn test_footer_contains_page_number() {
+        let ctx = sample_ctx();
+        let mut doc = build_past_performance(&ctx);
+        let tmp = TempDir::new().unwrap();
+        let path = tmp.path().join("pp_footer.pdf");
+        doc.save(&path).unwrap();
+        // The footer includes "Page 1"
+        assert!(pdf_contains(&path, "Page 1"),
+            "PDF footer should contain page number");
+    }
+
+    #[test]
+    fn test_capability_statement_produces_pdf() {
+        let ctx = sample_ctx();
+        let mut doc = build_capability_statement(&ctx);
+        let tmp = TempDir::new().unwrap();
+        let path = tmp.path().join("capability.pdf");
+        doc.save(&path).unwrap();
+        let bytes = std::fs::read(&path).unwrap();
+        assert!(bytes.starts_with(b"%PDF"),
+            "Capability statement should be a valid PDF");
+    }
+
+    #[test]
+    fn test_capability_statement_contains_company_info() {
+        let ctx = sample_ctx();
+        let mut doc = build_capability_statement(&ctx);
+        let tmp = TempDir::new().unwrap();
+        let path = tmp.path().join("capability_info.pdf");
+        doc.save(&path).unwrap();
+        assert!(pdf_contains(&path, "Hoags Inc."),
+            "Capability statement should contain company name");
+        assert!(pdf_contains(&path, "15XV5"),
+            "Capability statement should contain CAGE code");
+        assert!(pdf_contains(&path, "DUHWVUXFNPV5"),
+            "Capability statement should contain UEI");
+    }
+
+    #[test]
+    fn test_capability_statement_contains_differentiators() {
+        let ctx = sample_ctx();
+        let mut doc = build_capability_statement(&ctx);
+        let tmp = TempDir::new().unwrap();
+        let path = tmp.path().join("capability_diff.pdf");
+        doc.save(&path).unwrap();
+        assert!(pdf_contains(&path, "Differentiators"),
+            "Capability statement should contain Differentiators section");
+    }
+
+    #[test]
+    fn test_checklist_produces_pdf_with_default_items() {
+        // Build a minimal PDF to feed as solicitation
+        let ctx = sample_ctx();
+        let tmp = TempDir::new().unwrap();
+        // Generate a simple PDF via cover letter to use as mock solicitation
+        let sol_path = tmp.path().join("mock_sol.pdf");
+        let mut mock_doc = build_cover_letter(&ctx, None);
+        mock_doc.save(&sol_path).unwrap();
+
+        let sol_meta = extract_sol_meta(&sol_path);
+        let mut checklist_doc = build_checklist(&sol_path, &sol_meta);
+        let cl_path = tmp.path().join("checklist.pdf");
+        checklist_doc.save(&cl_path).unwrap();
+
+        let bytes = std::fs::read(&cl_path).unwrap();
+        assert!(bytes.starts_with(b"%PDF"),
+            "Checklist should be a valid PDF");
+        assert!(pdf_contains(&cl_path, "Checklist"),
+            "Checklist PDF should contain 'Checklist' heading");
+    }
+
+    #[test]
+    fn test_checklist_contains_deadline_when_present() {
+        let ctx = sample_ctx();
+        let tmp = TempDir::new().unwrap();
+        // Generate a simple PDF to feed as solicitation
+        let sol_path = tmp.path().join("mock_sol2.pdf");
+        let mut mock_doc = build_cover_letter(&ctx, None);
+        mock_doc.save(&sol_path).unwrap();
+
+        // Override sol_meta with a known due date
+        let sol_meta = crate::context::SolicitationMeta {
+            number: "TEST-0001".into(),
+            due_date: "2026-06-15".into(),
+            ..Default::default()
+        };
+        let mut checklist_doc = build_checklist(&sol_path, &sol_meta);
+        let cl_path = tmp.path().join("checklist_deadline.pdf");
+        checklist_doc.save(&cl_path).unwrap();
+
+        assert!(pdf_contains(&cl_path, "2026-06-15"),
+            "Checklist PDF should show the response deadline");
     }
 }
