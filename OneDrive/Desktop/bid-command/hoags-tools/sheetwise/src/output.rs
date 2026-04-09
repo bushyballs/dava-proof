@@ -158,10 +158,119 @@ pub fn print_describe(stats: &[DescribeColStats]) {
     }
 }
 
-fn truncate(s: &str, max: usize) -> String {
+pub fn truncate(s: &str, max: usize) -> String {
     if s.len() <= max {
         s.to_string()
     } else {
         format!("{}…", &s[..max - 1])
+    }
+}
+
+/// Convert rows to JSON string (testable version that returns String).
+pub fn rows_to_json(columns: &[String], rows: &[Vec<String>]) -> String {
+    let array: Vec<Value> = rows
+        .iter()
+        .map(|row| {
+            let mut obj = serde_json::Map::new();
+            for (i, col) in columns.iter().enumerate() {
+                let val = row.get(i).map(|s| s.as_str()).unwrap_or("");
+                if let Ok(n) = val.parse::<i64>() {
+                    obj.insert(col.clone(), json!(n));
+                } else if let Ok(f) = val.parse::<f64>() {
+                    obj.insert(col.clone(), json!(f));
+                } else {
+                    obj.insert(col.clone(), json!(val));
+                }
+            }
+            Value::Object(obj)
+        })
+        .collect();
+    serde_json::to_string_pretty(&array).unwrap()
+}
+
+/// Convert rows to CSV string (testable version).
+pub fn rows_to_csv(columns: &[String], rows: &[Vec<String>]) -> String {
+    let mut wtr = csv::WriterBuilder::new().from_writer(Vec::new());
+    wtr.write_record(columns).unwrap();
+    for row in rows {
+        wtr.write_record(row).unwrap();
+    }
+    String::from_utf8(wtr.into_inner().unwrap()).unwrap()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_truncate_short() {
+        assert_eq!(truncate("hello", 10), "hello");
+    }
+
+    #[test]
+    fn test_truncate_exact() {
+        assert_eq!(truncate("hello", 5), "hello");
+    }
+
+    #[test]
+    fn test_truncate_long() {
+        let result = truncate("hello world", 5);
+        assert!(result.chars().count() <= 5); // 4 chars + ellipsis char
+        assert!(result.ends_with('…'));
+    }
+
+    #[test]
+    fn test_rows_to_json_basic() {
+        let cols = vec!["Name".into(), "Age".into()];
+        let rows = vec![vec!["Alice".into(), "30".into()]];
+        let json = rows_to_json(&cols, &rows);
+        let parsed: Vec<Value> = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed.len(), 1);
+        assert_eq!(parsed[0]["Name"], "Alice");
+        assert_eq!(parsed[0]["Age"], 30); // should be numeric
+    }
+
+    #[test]
+    fn test_rows_to_json_empty() {
+        let cols = vec!["A".into()];
+        let rows: Vec<Vec<String>> = vec![];
+        let json = rows_to_json(&cols, &rows);
+        assert_eq!(json, "[]");
+    }
+
+    #[test]
+    fn test_rows_to_json_float() {
+        let cols = vec!["Price".into()];
+        let rows = vec![vec!["19.99".into()]];
+        let json = rows_to_json(&cols, &rows);
+        let parsed: Vec<Value> = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed[0]["Price"], 19.99);
+    }
+
+    #[test]
+    fn test_rows_to_csv_basic() {
+        let cols = vec!["Name".into(), "Age".into()];
+        let rows = vec![vec!["Alice".into(), "30".into()]];
+        let csv = rows_to_csv(&cols, &rows);
+        assert!(csv.contains("Name,Age"));
+        assert!(csv.contains("Alice,30"));
+    }
+
+    #[test]
+    fn test_rows_to_csv_empty_rows() {
+        let cols = vec!["A".into()];
+        let rows: Vec<Vec<String>> = vec![];
+        let csv = rows_to_csv(&cols, &rows);
+        assert!(csv.contains("A"));
+        assert_eq!(csv.lines().count(), 1); // header only
+    }
+
+    #[test]
+    fn test_rows_to_csv_special_chars() {
+        let cols = vec!["Name".into()];
+        let rows = vec![vec!["O'Brien, Jr.".into()]];
+        let csv = rows_to_csv(&cols, &rows);
+        // CSV should quote the field with comma
+        assert!(csv.contains("\"O'Brien, Jr.\""));
     }
 }
