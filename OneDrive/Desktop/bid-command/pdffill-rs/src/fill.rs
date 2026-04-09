@@ -4,14 +4,17 @@ use crate::models::{ClassifiedField, FilledField};
 use serde_json::Value;
 
 /// Maps a classification to the ordered list of context keys to try.
+/// Supports both nested ("identity.name") and flat ("name") formats.
 fn context_keys(classification: &str) -> Vec<&'static str> {
     match classification {
-        "identity.name" => vec!["identity.name", "company.name"],
+        "identity.name" => vec!["identity.name", "company.name", "name"],
+        // identity.code uses label-aware disambiguation — don't put flat keys here
+        // to avoid CAGE being returned for TIN fields
         "identity.code" => vec!["identity.cage", "identity.uei", "identity.ein"],
-        "identity.address" => vec!["identity.address"],
-        "identity.phone" => vec!["identity.phone"],
-        "identity.email" => vec!["identity.email"],
-        "signature" => vec!["identity.signer"],
+        "identity.address" => vec!["identity.address", "address"],
+        "identity.phone" => vec!["identity.phone", "phone"],
+        "identity.email" => vec!["identity.email", "email"],
+        "signature" => vec!["identity.signer", "signer_name", "signer"],
         "temporal.date" => vec!["bid.date", "date"],
         _ => vec![],
     }
@@ -23,18 +26,18 @@ fn level1_context(field: &ClassifiedField, ctx: &Value) -> Option<(String, f64)>
     if field.classification == "identity.code" {
         let label_lower = field.label.to_lowercase();
         if label_lower.contains("cage") {
-            if let Some(v) = resolve_key(ctx, "identity.cage") {
-                return Some((v, 1.0));
+            for key in &["identity.cage", "cage"] {
+                if let Some(v) = resolve_key(ctx, key) { return Some((v, 1.0)); }
             }
         }
         if label_lower.contains("uei") {
-            if let Some(v) = resolve_key(ctx, "identity.uei") {
-                return Some((v, 1.0));
+            for key in &["identity.uei", "uei"] {
+                if let Some(v) = resolve_key(ctx, key) { return Some((v, 1.0)); }
             }
         }
         if label_lower.contains("tin") || label_lower.contains("tax") || label_lower.contains("ein") {
-            if let Some(v) = resolve_key(ctx, "identity.tin") {
-                return Some((v, 1.0));
+            for key in &["identity.tin", "tin"] {
+                if let Some(v) = resolve_key(ctx, key) { return Some((v, 1.0)); }
             }
         }
     }
@@ -43,8 +46,8 @@ fn level1_context(field: &ClassifiedField, ctx: &Value) -> Option<(String, f64)>
     if field.classification == "identity.name" {
         let label_lower = field.label.to_lowercase();
         if label_lower.contains("point of contact") || label_lower.contains("poc") {
-            if let Some(v) = resolve_key(ctx, "identity.signer") {
-                return Some((v, 1.0));
+            for key in &["identity.signer", "signer_name", "signer"] {
+                if let Some(v) = resolve_key(ctx, key) { return Some((v, 1.0)); }
             }
         }
     }
@@ -86,13 +89,15 @@ pub fn fill_field(
 ) -> FilledField {
     // Signature gets "/s/ <signer>" formatting
     if field.classification == "signature" {
-        if let Some(signer) = resolve_key(ctx, "identity.signer") {
-            return FilledField::from_classified(
-                field,
-                &format!("/s/ {}", signer),
-                "context",
-                1.0,
-            );
+        for key in &["identity.signer", "signer_name", "signer"] {
+            if let Some(signer) = resolve_key(ctx, key) {
+                return FilledField::from_classified(
+                    field,
+                    &format!("/s/ {}", signer),
+                    "context",
+                    1.0,
+                );
+            }
         }
     }
 

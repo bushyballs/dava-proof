@@ -237,23 +237,40 @@ fn detect_structural(doc: &Document) -> Vec<DetectedField> {
     }
 
     // Text-based "Label:" detection (always runs — catches what content stream misses)
+    // Handles both single labels ("Name:") and concatenated labels ("Name:  Address:  Phone:")
     for (page_idx, text) in &page_texts {
         for text_line in text.lines() {
             let trimmed = text_line.trim();
-            if trimmed.ends_with(':') && trimmed.len() > 2 && trimmed.len() < 60 {
-                let label = trimmed.trim_end_matches(':').trim();
-                if !label.is_empty() {
-                    let already = fields.iter().any(|f| f.page == *page_idx && f.label == label);
-                    if !already {
-                        fields.push(DetectedField {
-                            page: *page_idx,
-                            bbox: (100.0, 0.0, 400.0, 12.0),
-                            label: label.to_string(),
-                            field_type: "text".to_string(),
-                            source: "structural".to_string(),
-                            widget_name: String::new(),
-                        });
-                    }
+
+            // Split on ":  " (colon + 2+ spaces) to handle concatenated fields
+            // "Offeror Name:  Offeror Address:  Offeror Phone:" → 3 separate labels
+            let segments: Vec<&str> = trimmed.split(":").collect();
+
+            for (seg_idx, segment) in segments.iter().enumerate() {
+                let label = segment.trim();
+                // Skip empty segments and the last empty one after trailing ":"
+                if label.is_empty() || label.len() > 60 {
+                    continue;
+                }
+                // Must look like a field label: not too long, contains letters
+                if !label.chars().any(|c| c.is_alphabetic()) {
+                    continue;
+                }
+                // Skip if it looks like a sentence (has periods or is very long)
+                if label.contains('.') && label.len() > 30 {
+                    continue;
+                }
+
+                let already = fields.iter().any(|f| f.page == *page_idx && f.label == label);
+                if !already {
+                    fields.push(DetectedField {
+                        page: *page_idx,
+                        bbox: (100.0, 0.0, 400.0, 12.0),
+                        label: label.to_string(),
+                        field_type: "text".to_string(),
+                        source: "structural".to_string(),
+                        widget_name: String::new(),
+                    });
                 }
             }
         }
