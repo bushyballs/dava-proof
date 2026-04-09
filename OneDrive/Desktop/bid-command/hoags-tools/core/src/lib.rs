@@ -10,3 +10,6 @@ pub use context::{load_context_file, resolve_key};
 pub use memory::FieldMemory;
 pub use bus::{EventBus, BusRunner};
 pub use connectors::run_all_connectors;
+
+#[cfg(test)]
+pub mod integration_tests;
