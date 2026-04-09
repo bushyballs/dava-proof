@@ -213,4 +213,50 @@ mod tests {
                 "Path '{}' should contain tool name '{}'", t.binary_path, t.name);
         }
     }
+
+    // ── 5 new health tests ────────────────────────────────────────────────────
+
+    #[test]
+    fn test_all_12_tools_registered() {
+        // TOOL_NAMES must contain exactly 12 tools
+        assert_eq!(TOOL_NAMES.len(), 12, "expected 12 tools, got {}", TOOL_NAMES.len());
+    }
+
+    #[test]
+    fn test_health_returns_correct_count() {
+        // check_tools_in always returns one entry per tool name
+        let dir = TempDir::new().unwrap();
+        let results = check_tools_in(Some(dir.path()));
+        assert_eq!(results.len(), TOOL_NAMES.len());
+    }
+
+    #[test]
+    fn test_health_partial_build() {
+        // Build only 5 tools, expect healthy_count to return 5
+        let subset = &TOOL_NAMES[..5];
+        let dir = make_tool_dir(subset);
+        let results = check_tools_in(Some(dir.path()));
+        assert_eq!(healthy_count(&results), 5);
+        // The remaining 7 should be missing
+        let missing: Vec<_> = results.iter().filter(|t| !t.binary_exists).collect();
+        assert_eq!(missing.len(), TOOL_NAMES.len() - 5);
+    }
+
+    #[test]
+    fn test_status_str_all_missing_in_empty_dir() {
+        let dir = TempDir::new().unwrap();
+        let results = check_tools_in(Some(dir.path()));
+        for t in &results {
+            assert_eq!(t.status_str(), "MISSING", "tool '{}' should be MISSING", t.name);
+        }
+    }
+
+    #[test]
+    fn test_status_str_all_ok_when_all_present() {
+        let dir = make_tool_dir(TOOL_NAMES);
+        let results = check_tools_in(Some(dir.path()));
+        for t in &results {
+            assert_eq!(t.status_str(), "OK", "tool '{}' should be OK", t.name);
+        }
+    }
 }

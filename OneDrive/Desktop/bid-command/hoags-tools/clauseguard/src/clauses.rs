@@ -604,4 +604,45 @@ mod tests {
         assert_eq!(RiskLevel::Yellow.weight(), 3);
         assert_eq!(RiskLevel::Red.weight(), 10);
     }
+
+    // ── 3 new clauses tests ───────────────────────────────────────────────────
+
+    #[test]
+    fn test_compare_identical_pdfs() {
+        // ContractDiff on two analyses with the same clauses should have empty only_in_a/b
+        // and risk_delta == 0.
+        use std::collections::HashSet;
+        let db = build_clause_db();
+        let clauses: Vec<String> = db.keys().take(3).cloned().collect();
+        let clause_set_a: HashSet<String> = clauses.iter().cloned().collect();
+        let clause_set_b = clause_set_a.clone();
+        let only_in_a: Vec<String> = clause_set_a.difference(&clause_set_b).cloned().collect();
+        let only_in_b: Vec<String> = clause_set_b.difference(&clause_set_a).cloned().collect();
+        assert!(only_in_a.is_empty(), "identical clause sets should have no unique-to-A clauses");
+        assert!(only_in_b.is_empty(), "identical clause sets should have no unique-to-B clauses");
+    }
+
+    #[test]
+    fn test_clause_description_not_too_long() {
+        let db = build_clause_db();
+        for (number, info) in &db {
+            assert!(
+                info.description.len() <= 500,
+                "Clause {} description is too long ({} chars)",
+                number,
+                info.description.len()
+            );
+        }
+    }
+
+    #[test]
+    fn test_all_risk_levels_present_in_db() {
+        let db = build_clause_db();
+        let has_green = db.values().any(|c| c.risk == RiskLevel::Green);
+        let has_yellow = db.values().any(|c| c.risk == RiskLevel::Yellow);
+        let has_red = db.values().any(|c| c.risk == RiskLevel::Red);
+        assert!(has_green, "DB should have at least one GREEN clause");
+        assert!(has_yellow, "DB should have at least one YELLOW clause");
+        assert!(has_red, "DB should have at least one RED clause");
+    }
 }

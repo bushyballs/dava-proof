@@ -258,4 +258,98 @@ mod tests {
             assert!(result.is_ok(), "Dry run failed for {:?}", action);
         }
     }
+
+    // ── 10 new tests ──────────────────────────────────────────────────────────
+
+    #[test]
+    fn test_action_click_negative_coords() {
+        // Negative coords are valid (off-screen positions); dry-run should succeed
+        let a = Action::Click { x: -100, y: -200, button: "left".into() };
+        let result = execute(&a, false).unwrap();
+        assert!(result.contains("[DRY RUN]"));
+    }
+
+    #[test]
+    fn test_action_move_zero_zero() {
+        let a = Action::Move { x: 0, y: 0 };
+        let result = execute(&a, false).unwrap();
+        assert!(result.contains("[DRY RUN]"));
+        assert!(result.contains("Move"));
+    }
+
+    #[test]
+    fn test_action_type_empty_string() {
+        let a = Action::Type { text: String::new() };
+        let result = execute(&a, false).unwrap();
+        assert!(result.contains("[DRY RUN]"));
+        assert!(result.contains("Type"));
+    }
+
+    #[test]
+    fn test_action_key_unknown_combo() {
+        // Even unknown combos are accepted by the Action enum; dry-run should not call platform
+        let a = Action::Key { combo: "superkey+z".into() };
+        let result = execute(&a, false).unwrap();
+        assert!(result.contains("[DRY RUN]"), "dry run should succeed regardless of combo: {}", result);
+    }
+
+    #[test]
+    fn test_action_wait_zero_ms() {
+        // Wait 0ms dry-run should succeed without blocking
+        let a = Action::Wait { ms: 0 };
+        let result = execute(&a, false).unwrap();
+        assert!(result.contains("[DRY RUN]"));
+    }
+
+    #[test]
+    fn test_script_with_all_types() {
+        let json = r#"[
+            {"type":"click","x":1,"y":2},
+            {"type":"move","x":3,"y":4},
+            {"type":"type","text":"abc"},
+            {"type":"key","combo":"ctrl+v"},
+            {"type":"wait","ms":50},
+            {"type":"screenshot","output":"screen.png"}
+        ]"#;
+        let actions: Vec<Action> = serde_json::from_str(json).unwrap();
+        assert_eq!(actions.len(), 6);
+        for action in &actions {
+            assert!(execute(action, false).is_ok());
+        }
+    }
+
+    #[test]
+    fn test_script_single_action() {
+        let json = r#"[{"type":"move","x":500,"y":300}]"#;
+        let actions: Vec<Action> = serde_json::from_str(json).unwrap();
+        assert_eq!(actions.len(), 1);
+        let result = execute(&actions[0], false).unwrap();
+        assert!(result.contains("[DRY RUN]"));
+    }
+
+    #[test]
+    fn test_dry_run_never_calls_platform() {
+        // All action types in dry-run mode must return Ok without touching the OS
+        let actions = vec![
+            Action::Click { x: 9999, y: 9999, button: "right".into() },
+            Action::Move { x: 9999, y: 9999 },
+            Action::Type { text: "sensitive data".into() },
+            Action::Key { combo: "ctrl+alt+delete".into() },
+            Action::Wait { ms: 0 },
+            Action::Screenshot { output: "secret.png".into() },
+        ];
+        for action in &actions {
+            let result = execute(action, false);
+            assert!(
+                result.is_ok(),
+                "dry run should always succeed for {:?}, got: {:?}",
+                action,
+                result
+            );
+            assert!(
+                result.unwrap().starts_with("[DRY RUN]"),
+                "response must start with [DRY RUN]"
+            );
+        }
+    }
 }

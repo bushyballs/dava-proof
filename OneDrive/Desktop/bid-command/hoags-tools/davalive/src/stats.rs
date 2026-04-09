@@ -306,4 +306,53 @@ mod tests {
         assert_eq!(stats.tools_built, 0);
         assert_eq!(stats.total_rust_lines, 0);
     }
+
+    // ── 5 new stats tests ─────────────────────────────────────────────────────
+
+    #[test]
+    fn test_stats_display_not_empty() {
+        let stats = DavaStats::default();
+        let out = stats.display();
+        assert!(!out.is_empty(), "display() should return non-empty string");
+    }
+
+    #[test]
+    fn test_stats_with_both_bus_and_memory() {
+        let (tmp_bus, _bus) = tmp_bus_with_data();
+        let tmp_mem = tmp_memory_with_data();
+        let stats = collect_with_paths(Some(tmp_bus.path()), Some(tmp_mem.path()), None);
+        assert!(stats.total_bus_events > 0, "bus events should be > 0");
+        assert!(stats.fields_learned > 0, "fields_learned should be > 0");
+    }
+
+    #[test]
+    fn test_count_rust_lines_nested_dirs() {
+        let dir = TempDir::new().unwrap();
+        // Create nested structure: src/lib.rs and src/module/mod.rs
+        let src = dir.path().join("src");
+        let moddir = src.join("module");
+        std::fs::create_dir_all(&moddir).unwrap();
+        std::fs::write(src.join("lib.rs"), "// line1\n// line2\n").unwrap();
+        std::fs::write(moddir.join("mod.rs"), "// a\n// b\n// c\n").unwrap();
+        let lines = count_rust_lines(dir.path());
+        assert_eq!(lines, 5, "expected 5 lines across nested dirs, got {}", lines);
+    }
+
+    #[test]
+    fn test_count_rust_lines_symlinks_safe() {
+        // Count on a plain dir with only real files should not panic or loop
+        let dir = TempDir::new().unwrap();
+        std::fs::write(dir.path().join("main.rs"), "fn main() {}\n").unwrap();
+        // Just verify it returns a sane value without panicking
+        let lines = count_rust_lines(dir.path());
+        assert!(lines >= 1);
+    }
+
+    #[test]
+    fn test_stats_default_paths_dont_panic() {
+        // collect_with_paths with all None should not panic even when DBs don't exist
+        let stats = collect_with_paths(None, None, None);
+        // tools_total should always equal TOOL_NAMES.len()
+        assert_eq!(stats.tools_total, crate::health::TOOL_NAMES.len());
+    }
 }

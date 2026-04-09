@@ -267,4 +267,24 @@ mod tests {
     fn named_key_unknown_passthrough() {
         assert_eq!(named_key("a"), "a");
     }
+
+    #[test]
+    fn test_combo_parse_ctrl_alt_delete() {
+        // ctrl+alt+delete — both ctrl and alt are valid modifiers; "delete" is a named key
+        let result = combo_to_sendkeys("ctrl+alt+delete");
+        assert!(result.is_ok(), "ctrl+alt+delete should parse, got: {:?}", result);
+        let sk = result.unwrap();
+        assert!(sk.contains('^'), "should contain ctrl (^): {}", sk);
+        assert!(sk.contains('%'), "should contain alt (%): {}", sk);
+        assert!(sk.contains("{DELETE}") || sk.to_uppercase().contains("DELETE"),
+            "should contain DELETE key: {}", sk);
+    }
+
+    #[test]
+    fn test_combo_parse_single_key() {
+        // A single key with no modifier should pass through (or wrap as named key)
+        let result = combo_to_sendkeys("f5");
+        assert!(result.is_ok(), "f5 should parse, got: {:?}", result);
+        assert_eq!(result.unwrap(), "{F5}");
+    }
 }

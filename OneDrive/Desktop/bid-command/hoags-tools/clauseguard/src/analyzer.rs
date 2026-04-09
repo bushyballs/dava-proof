@@ -609,8 +609,79 @@ mod tests {
 
     // ── Summary paragraph test ─────────────────────────────────────────────────
 
+    // ── 7 new analyzer tests ─────────────────────────────────────────────────
+
     #[test]
-    fn summary_paragraph_contains_risk_level() {
+    fn test_analyze_empty_text() {
+        // extract_readable_text on an empty slice should return an empty string
+        let text = extract_readable_text(b"");
+        assert!(text.is_empty(), "empty content should give empty text");
+    }
+
+    #[test]
+    fn test_analyze_no_clauses_green() {
+        // Text with no risk phrases and no clause numbers should score GREEN
+        let a = Analyzer::new();
+        let text = "This is a standard statement of work for routine cleaning services.";
+        let red = a.find_hits(text, &a.red_res, RED_PHRASES);
+        let yellow = a.find_hits(text, &a.yellow_res, YELLOW_PHRASES);
+        let green_hits = a.find_hits(text, &a.green_res, GREEN_PHRASES);
+        let score = PageRisk::compute_score(red.len(), yellow.len(), green_hits.len());
+        assert_eq!(PageRisk::score_to_level(score), RiskLevel::Green);
+    }
+
+    #[test]
+    fn test_analyze_single_red_clause() {
+        let a = Analyzer::new();
+        let text = "Contractor shall not seek excess reprocurement costs under any circumstance.";
+        let hits = a.find_hits(text, &a.red_res, RED_PHRASES);
+        assert!(!hits.is_empty(), "should detect at least one red phrase");
+        let score = PageRisk::compute_score(hits.len(), 0, 0);
+        assert!(score >= RiskLevel::Red.weight(), "single red hit should push score above 0");
+    }
+
+    #[test]
+    fn test_far_pattern_matches() {
+        let a = Analyzer::new();
+        let text = "Clause 52.222-41 applies to all service employees.";
+        let clauses = a.find_clauses(text);
+        assert!(clauses.contains(&"52.222-41".to_string()), "should match FAR 52.222-41");
+    }
+
+    #[test]
+    fn test_dfars_pattern_matches() {
+        let a = Analyzer::new();
+        let text = "Contractor must comply with 252.204-7012 cybersecurity requirements.";
+        let clauses = a.find_clauses(text);
+        assert!(clauses.contains(&"252.204-7012".to_string()), "should match DFARS 252.204-7012");
+    }
+
+    #[test]
+    fn test_phrase_detection_indemnify() {
+        let a = Analyzer::new();
+        let text = "The contractor must indemnify the Government from third-party claims.";
+        let hits = a.find_hits(text, &a.red_res, RED_PHRASES);
+        assert!(hits.contains(&"indemnify".to_string()), "indemnify not found in: {hits:?}");
+    }
+
+    #[test]
+    fn test_phrase_detection_hold_harmless() {
+        let a = Analyzer::new();
+        let text = "Contractor agrees to hold harmless and defend the United States.";
+        let hits = a.find_hits(text, &a.red_res, RED_PHRASES);
+        assert!(hits.contains(&"hold harmless".to_string()), "hold harmless not found in: {hits:?}");
+    }
+
+    #[test]
+    fn test_risk_score_calculation() {
+        // 3 red hits, 2 yellow, 0 green — should be RED level
+        let score = PageRisk::compute_score(3, 2, 0);
+        assert_eq!(PageRisk::score_to_level(score), RiskLevel::Red,
+            "3 red + 2 yellow should be RED, score={}", score);
+    }
+
+    #[test]
+    fn test_summary_paragraph_contains_risk_level() {
         use crate::report::build_risk_paragraph;
         use crate::clauses::ClauseInfo;
 

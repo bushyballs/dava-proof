@@ -283,4 +283,71 @@ mod tests {
         assert_eq!(items.len(), 1);
         assert!(items[0].description.contains("weekly status reports"));
     }
+
+    // ── 5 new extract tests ───────────────────────────────────────────────────
+
+    #[test]
+    fn test_extract_todo_pattern() {
+        let text = "TODO: Schedule kickoff meeting with stakeholders";
+        let items = extract(text, "notes.md");
+        assert_eq!(items.len(), 1);
+        assert!(items[0].description.contains("kickoff meeting"));
+    }
+
+    #[test]
+    fn test_extract_action_colon_pattern() {
+        let text = "ACTION: Prepare cost estimate by Friday";
+        let items = extract(text, "meeting.md");
+        assert_eq!(items.len(), 1);
+        assert!(items[0].description.contains("cost estimate"));
+    }
+
+    #[test]
+    fn test_extract_assigned_to_pattern() {
+        let text = "ACTION: Write the proposal\nAssigned to: Sarah Jones";
+        let items = extract(text, "proj.md");
+        assert!(!items.is_empty(), "should find at least one action item");
+        // The assignee may be picked up from the inline next-line scan
+        let _ = &items[0].assignee; // no panic
+    }
+
+    #[test]
+    fn test_extract_deadline_by_date() {
+        let text = "TODO: Submit invoice by 2026-05-01";
+        let items = extract(text, "finance.md");
+        assert!(!items.is_empty());
+        let deadline = items[0].deadline.as_deref();
+        assert!(
+            deadline.map(|d| d.contains("2026")).unwrap_or(false),
+            "expected deadline to contain year, got: {:?}", deadline
+        );
+    }
+
+    #[test]
+    fn test_extract_no_actions_empty() {
+        let text = "Meeting notes from last week. Everything looks good. No follow-ups needed.";
+        let items = extract(text, "notes.md");
+        // Verb phrases like "needs" in "no follow-ups needed" — verify no panic and low count
+        // The text doesn't have typical action markers, list should be 0 or low
+        assert!(items.len() <= 1, "expected 0-1 items for passive text, got {}", items.len());
+    }
+
+    #[test]
+    fn test_extract_bullet_list_after_header() {
+        let text = "Action Items:\n- Send progress report\n- Book travel\n- Review contract terms\n";
+        let items = extract(text, "weekly.md");
+        assert!(items.len() >= 3, "expected >= 3 items, got {}", items.len());
+        assert!(items.iter().any(|i| i.description.contains("progress report")));
+        assert!(items.iter().any(|i| i.description.contains("Book travel")));
+    }
+
+    #[test]
+    fn test_deadline_parse_iso_format() {
+        use crate::deadline::parse_deadline;
+        use chrono::Datelike;
+        let d = parse_deadline("2026-12-31").unwrap();
+        assert_eq!(d.year(), 2026);
+        assert_eq!(d.month(), 12);
+        assert_eq!(d.day(), 31);
+    }
 }

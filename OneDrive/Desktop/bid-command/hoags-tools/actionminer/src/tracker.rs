@@ -310,4 +310,50 @@ mod tests {
         assert_eq!(ins.len(), 3);
         assert_eq!(list(&conn, None).unwrap().len(), 3);
     }
+
+    // ── 4 new tracker tests ───────────────────────────────────────────────────
+
+    #[test]
+    fn test_tracker_complete_item() {
+        let conn = tmp_conn();
+        let item = ActionItem::new("Submit final report", None, None, "proj.md");
+        let saved = insert(&conn, &item).unwrap();
+        let ok = complete(&conn, saved.id).unwrap();
+        assert!(ok, "complete() should return true for existing item");
+        let done = list(&conn, Some("done")).unwrap();
+        assert_eq!(done.len(), 1);
+        assert_eq!(done[0].description, "Submit final report");
+    }
+
+    #[test]
+    fn test_tracker_list_open_only() {
+        let conn = tmp_conn();
+        let a = insert(&conn, &ActionItem::new("Open task", None, None, "f.md")).unwrap();
+        let b = insert(&conn, &ActionItem::new("Done task", None, None, "f.md")).unwrap();
+        complete(&conn, b.id).unwrap();
+        let open = list(&conn, Some("open")).unwrap();
+        assert_eq!(open.len(), 1);
+        assert_eq!(open[0].id, a.id);
+    }
+
+    #[test]
+    fn test_tracker_assign_updates() {
+        let conn = tmp_conn();
+        let item = insert(&conn, &ActionItem::new("Design mockup", None, None, "design.md")).unwrap();
+        let ok = assign(&conn, item.id, "@alice").unwrap();
+        assert!(ok, "assign() should return true for existing id");
+        let rows = list_by_assignee(&conn, "@alice").unwrap();
+        assert_eq!(rows.len(), 1);
+        assert_eq!(rows[0].assignee.as_deref(), Some("@alice"));
+    }
+
+    #[test]
+    fn test_export_csv_format() {
+        let conn = tmp_conn();
+        insert(&conn, &ActionItem::new("Write tests", Some("@bob".into()), None, "src.md")).unwrap();
+        let csv = export_csv(&conn).unwrap();
+        assert!(csv.starts_with("id,description"), "csv should start with header");
+        assert!(csv.contains("Write tests"));
+        assert!(csv.contains("@bob"));
+    }
 }

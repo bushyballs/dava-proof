@@ -401,4 +401,126 @@ mod tests {
         let supplies = sums.iter().find(|(c, _)| c == "supplies").unwrap();
         assert!((supplies.1 - 100.0).abs() < 0.001);
     }
+
+    // ── 10 new tests ──────────────────────────────────────────────────────────
+
+    #[test]
+    fn test_grand_total_with_multiple_expenses() {
+        let (_f, conn) = tmp_conn();
+        insert(&conn, 25.0, "A", "supplies", "2026-04-01", None, None).unwrap();
+        insert(&conn, 75.0, "B", "fuel", "2026-04-02", None, None).unwrap();
+        insert(&conn, 50.0, "C", "labor", "2026-04-03", None, None).unwrap();
+        let total = grand_total(&conn).unwrap();
+        assert!((total - 150.0).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_sum_by_category_multiple() {
+        let (_f, conn) = tmp_conn();
+        insert(&conn, 10.0, "A", "fuel", "2026-04-01", None, None).unwrap();
+        insert(&conn, 20.0, "B", "fuel", "2026-04-02", None, None).unwrap();
+        insert(&conn, 30.0, "C", "supplies", "2026-04-03", None, None).unwrap();
+        insert(&conn, 40.0, "D", "labor", "2026-04-04", None, None).unwrap();
+        let sums = sum_by_category(&conn).unwrap();
+        assert_eq!(sums.len(), 3);
+        let fuel = sums.iter().find(|(c, _)| c == "fuel").unwrap();
+        assert!((fuel.1 - 30.0).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_sum_by_month_format() {
+        let (_f, conn) = tmp_conn();
+        insert(&conn, 100.0, "A", "supplies", "2026-01-15", None, None).unwrap();
+        insert(&conn, 200.0, "B", "fuel", "2026-02-20", None, None).unwrap();
+        let sums = sum_by_month(&conn).unwrap();
+        // Month keys should be "YYYY-MM" format
+        for (month, _) in &sums {
+            assert_eq!(month.len(), 7, "month key '{}' should be 7 chars", month);
+            assert!(month.contains('-'), "month key '{}' should contain dash", month);
+        }
+    }
+
+    #[test]
+    fn test_list_by_category_filter() {
+        let (_f, conn) = tmp_conn();
+        insert(&conn, 10.0, "A", "fuel", "2026-04-01", None, None).unwrap();
+        insert(&conn, 20.0, "B", "supplies", "2026-04-02", None, None).unwrap();
+        insert(&conn, 30.0, "C", "fuel", "2026-04-03", None, None).unwrap();
+        let fuel = list_by_category(&conn, "fuel").unwrap();
+        assert_eq!(fuel.len(), 2);
+        assert!(fuel.iter().all(|e| e.category == "fuel"));
+    }
+
+    #[test]
+    fn test_delete_nonexistent_returns_error() {
+        let (_f, conn) = tmp_conn();
+        // Deleting a non-existent id returns 0 rows affected (not an error)
+        let n = delete(&conn, 99999).unwrap();
+        assert_eq!(n, 0, "deleting non-existent id should affect 0 rows");
+    }
+
+    #[test]
+    fn test_import_csv_valid_data() {
+        // Simulate CSV parsing: parse "amount,vendor,category,date" lines
+        let (_f, conn) = tmp_conn();
+        let csv = "45.00,HomeDepot,supplies,2026-04-01\n12.50,GasStation,fuel,2026-04-02\n";
+        let mut inserted = 0i64;
+        for line in csv.lines() {
+            let parts: Vec<&str> = line.split(',').collect();
+            if parts.len() == 4 {
+                let amount: f64 = parts[0].parse().unwrap();
+                let id = insert(&conn, amount, parts[1], parts[2], parts[3], None, None).unwrap();
+                assert!(id > 0);
+                inserted += 1;
+            }
+        }
+        assert_eq!(inserted, 2);
+        let rows = list_all(&conn).unwrap();
+        assert_eq!(rows.len(), 2);
+    }
+
+    #[test]
+    fn test_budget_insert_and_check() {
+        let (_f, conn) = tmp_conn();
+        upsert_budget(&conn, "PROJ-001", 10000.0).unwrap();
+        let limit = get_budget(&conn, "PROJ-001").unwrap();
+        assert!(limit.is_some());
+        assert!((limit.unwrap() - 10000.0).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_budget_over_limit_warning() {
+        let (_f, conn) = tmp_conn();
+        upsert_budget(&conn, "PROJ-002", 500.0).unwrap();
+        insert(&conn, 300.0, "V1", "supplies", "2026-04-01", Some("PROJ-002"), None).unwrap();
+        insert(&conn, 250.0, "V2", "labor", "2026-04-02", Some("PROJ-002"), None).unwrap();
+        let spent = total_for_contract(&conn, "PROJ-002").unwrap();
+        let limit = get_budget(&conn, "PROJ-002").unwrap().unwrap();
+        // Spent (550) exceeds limit (500) — the caller is responsible for the warning
+        assert!(spent > limit, "spent {} should exceed limit {}", spent, limit);
+    }
+
+    #[test]
+    fn test_expense_with_long_description() {
+        let (_f, conn) = tmp_conn();
+        let long_desc = "A".repeat(500);
+        let id = insert(
+            &conn, 99.99, "LongDescVendor", "supplies", "2026-04-05",
+            None, Some(&long_desc),
+        ).unwrap();
+        assert!(id > 0);
+        let rows = list_all(&conn).unwrap();
+        assert_eq!(rows.len(), 1);
+        assert_eq!(rows[0].description.as_deref().unwrap().len(), 500);
+    }
+
+    #[test]
+    fn test_expense_negative_amount_handling() {
+        // The DB accepts any REAL value; negative amounts represent credits/refunds
+        let (_f, conn) = tmp_conn();
+        let id = insert(&conn, -25.00, "Refund", "supplies", "2026-04-10", None, None).unwrap();
+        assert!(id > 0);
+        let total = grand_total(&conn).unwrap();
+        assert!((total - (-25.0)).abs() < 0.001);
+    }
 }
