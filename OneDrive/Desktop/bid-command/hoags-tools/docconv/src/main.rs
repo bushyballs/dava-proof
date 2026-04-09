@@ -17,6 +17,7 @@ mod pdf_ops;
 
 use anyhow::Context;
 use clap::{Parser, Subcommand};
+use hoags_core::bus::EventBus;
 use rayon::prelude::*;
 use std::path::{Path, PathBuf};
 
@@ -191,6 +192,14 @@ fn cmd_convert(input: &Path, to: &str, output: Option<&Path>) -> anyhow::Result<
         .with_context(|| format!("Writing output to {}", out_path.display()))?;
 
     println!("Converted → {}", out_path.display());
+
+    if let Ok(bus) = EventBus::open_default() {
+        bus.publish("docconv", "docconv.document_converted", &serde_json::json!({
+            "input": input.display().to_string(),
+            "output_format": to
+        }).to_string());
+    }
+
     Ok(())
 }
 
