@@ -91,8 +91,35 @@ pub fn render_filled_pdf(
                 let mut text_ops = String::new();
                 for field in page_fields {
                     let x = field.bbox.0;
-                    let y = page_height - field.bbox.1 - 2.0;
+                    let y_top = page_height - field.bbox.1;
                     let bbox_width = field.bbox.2 - field.bbox.0;
+                    let bbox_height = field.bbox.3 - field.bbox.1;
+
+                    // Checkbox rendering: draw an X mark when checked
+                    if field.field_type == "checkbox" {
+                        let checked = matches!(
+                            field.value.to_lowercase().as_str(),
+                            "true" | "yes" | "x" | "checked"
+                        );
+                        if checked {
+                            let bx = x;
+                            let by = y_top - bbox_height;
+                            let bw = bbox_width;
+                            let bh = bbox_height;
+                            // Draw two diagonals forming an X inside the checkbox rect
+                            text_ops.push_str(&format!(
+                                "q 0 0 0 rg 2 w {} {} m {} {} l S {} {} m {} {} l S Q
+",
+                                bx + 2.0, by + 2.0,
+                                bx + bw - 2.0, by + bh - 2.0,
+                                bx + bw - 2.0, by + 2.0,
+                                bx + 2.0, by + bh - 2.0,
+                            ));
+                        }
+                        continue; // checkbox handled — skip text rendering
+                    }
+
+                    let y = y_top - 2.0;
 
                     // Pick font and size based on classification
                     let (font_name, base_size) = match field.classification.as_str() {
@@ -104,7 +131,8 @@ pub fn render_filled_pdf(
 
                     // Set blue fill color, then render text
                     text_ops.push_str(&format!(
-                        "BT 0 0 0.6 rg /{} {} Tf {} {} Td ({}) Tj ET\n",
+                        "BT 0 0 0.6 rg /{} {} Tf {} {} Td ({}) Tj ET
+",
                         font_name, fontsize, x, y,
                         escape_pdf_string(&field.value)
                     ));
