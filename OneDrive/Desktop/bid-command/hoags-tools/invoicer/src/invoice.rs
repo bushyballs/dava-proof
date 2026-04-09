@@ -454,4 +454,155 @@ mod tests {
         assert!(!result.ok);
         assert!(result.errors.iter().any(|e| e.contains("duplicate CLIN")));
     }
+
+    #[test]
+    fn test_parse_contract_invalid_json() {
+        let result = parse_contract("not valid json {{{");
+        assert!(result.is_err(), "should fail on invalid JSON");
+        assert!(result.unwrap_err().contains("Failed to parse contract JSON"));
+    }
+
+    #[test]
+    fn test_build_invoice_number_short_contract() {
+        // Contract number shorter than 6 chars should still work.
+        let num = build_invoice_number("W912", "2026-04", 1);
+        assert!(num.starts_with("HOAGS-INV-W912-"));
+        assert!(num.ends_with("-001"));
+    }
+
+    #[test]
+    fn test_build_invoice_number_sequence_padding() {
+        // Sequence 99 should be padded to 3 digits.
+        let num = build_invoice_number("W9127S26QA030", "2026-04", 99);
+        assert!(num.ends_with("-099"), "got: {num}");
+        // Sequence 100 should be 3 digits too.
+        let num2 = build_invoice_number("W9127S26QA030", "2026-04", 100);
+        assert!(num2.ends_with("-100"), "got: {num2}");
+    }
+
+    #[test]
+    fn test_calculate_invoice_lines_december_month_end() {
+        // December month-end arithmetic (year rolls over).
+        let json = r#"{
+          "contract_number": "TEST-001",
+          "contractor": "Hoags Inc.",
+          "clins": [{"number": "0001", "description": "Service", "unit_price": 100.0, "quantity": 12.0, "unit": "MO"}],
+          "period": {"start": "2026-01-01", "end": "2026-12-31"}
+        }"#;
+        let c = parse_contract(json).unwrap();
+        let (lines, total) = calculate_invoice_lines(&c, "2026-12").unwrap();
+        assert!(!lines.is_empty());
+        assert!(total > 0.0);
+    }
+
+    #[test]
+    fn test_calculate_invoice_lines_invalid_period_format() {
+        let json = r#"{
+          "contract_number": "TEST-001",
+          "contractor": "Hoags Inc.",
+          "clins": [{"number": "0001", "description": "Service", "unit_price": 100.0, "quantity": 1.0, "unit": "EA"}],
+          "period": {"start": "2026-01-01", "end": "2026-12-31"}
+        }"#;
+        let c = parse_contract(json).unwrap();
+        // Missing dash separator.
+        let result = calculate_invoice_lines(&c, "202604");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_calculate_invoice_lines_invalid_month() {
+        let json = r#"{
+          "contract_number": "TEST-001",
+          "contractor": "Hoags Inc.",
+          "clins": [{"number": "0001", "description": "Service", "unit_price": 100.0, "quantity": 1.0, "unit": "EA"}],
+          "period": {"start": "2026-01-01", "end": "2026-12-31"}
+        }"#;
+        let c = parse_contract(json).unwrap();
+        let result = calculate_invoice_lines(&c, "2026-13");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_calculate_invoice_lines_partial_month_start() {
+        // Contract starts mid-month, billing covers full first month.
+        let json = r#"{
+          "contract_number": "TEST-002",
+          "contractor": "Hoags Inc.",
+          "clins": [{"number": "0001", "description": "Service", "unit_price": 1000.0, "quantity": 1.0, "unit": "EA"}],
+          "period": {"start": "2026-04-15", "end": "2026-12-31"}
+        }"#;
+        let c = parse_contract(json).unwrap();
+        // April billing — only days 15-30 overlap (16 days).
+        let (lines, total) = calculate_invoice_lines(&c, "2026-04").unwrap();
+        assert!(!lines.is_empty());
+        // Should be pro-rated, not full amount.
+        assert!(total < 1000.0);
+    }
+
+    #[test]
+    fn test_validate_contract_zero_unit_price() {
+        let json = r#"{
+          "contract_number": "W9127S26QA030",
+          "contractor": "Hoags Inc.",
+          "clins": [
+            {"number": "0001", "description": "Service", "unit_price": 0.0, "quantity": 1.0, "unit": "EA"}
+          ],
+          "period": {"start": "2026-04-01", "end": "2026-12-31"}
+        }"#;
+        let c = parse_contract(json).unwrap();
+        let result = validate_contract(&c);
+        assert!(!result.ok);
+        assert!(result.errors.iter().any(|e| e.contains("unit_price")));
+    }
+
+    #[test]
+    fn test_validate_contract_zero_quantity() {
+        let json = r#"{
+          "contract_number": "W9127S26QA030",
+          "contractor": "Hoags Inc.",
+          "clins": [
+            {"number": "0001", "description": "Service", "unit_price": 100.0, "quantity": 0.0, "unit": "EA"}
+          ],
+          "period": {"start": "2026-04-01", "end": "2026-12-31"}
+        }"#;
+        let c = parse_contract(json).unwrap();
+        let result = validate_contract(&c);
+        assert!(!result.ok);
+        assert!(result.errors.iter().any(|e| e.contains("quantity")));
+    }
+
+    #[test]
+    fn test_validate_contract_empty_contractor() {
+        let json = r#"{
+          "contract_number": "W9127S26QA030",
+          "contractor": "   ",
+          "clins": [
+            {"number": "0001", "description": "Service", "unit_price": 100.0, "quantity": 1.0, "unit": "EA"}
+          ],
+          "period": {"start": "2026-04-01", "end": "2026-12-31"}
+        }"#;
+        let c = parse_contract(json).unwrap();
+        let result = validate_contract(&c);
+        assert!(!result.ok);
+        assert!(result.errors.iter().any(|e| e.contains("contractor name")));
+    }
+
+    #[test]
+    fn test_calculate_invoice_with_deduction_floors_at_zero() {
+        use std::collections::HashMap;
+        let json = r#"{
+          "contract_number": "TEST-003",
+          "contractor": "Hoags Inc.",
+          "clins": [{"number": "0001", "description": "Service", "unit_price": 10.0, "quantity": 1.0, "unit": "EA"}],
+          "period": {"start": "2026-05-01", "end": "2026-05-31"}
+        }"#;
+        let c = parse_contract(json).unwrap();
+        let mut already: HashMap<String, f64> = HashMap::new();
+        // Already invoiced more than the period amount — should floor at 0.
+        already.insert("0001".to_string(), 9999.0);
+        let (lines, total) = calculate_invoice_lines_with_deduction(&c, "2026-05", &already).unwrap();
+        assert!(!lines.is_empty());
+        assert_eq!(total, 0.0);
+        assert_eq!(lines[0].amount, 0.0);
+    }
 }
