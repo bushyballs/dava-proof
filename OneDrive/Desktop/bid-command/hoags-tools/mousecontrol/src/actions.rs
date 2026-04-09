@@ -178,4 +178,84 @@ mod tests {
         let actions = load_script(path.to_str().unwrap()).unwrap();
         assert_eq!(actions.len(), 2);
     }
+
+    #[test]
+    fn dry_run_click_right_button() {
+        let action = Action::Click { x: 100, y: 200, button: "right".into() };
+        let result = execute(&action, false).unwrap();
+        assert!(result.contains("DRY RUN"));
+        assert!(result.contains("right"));
+    }
+
+    #[test]
+    fn dry_run_screenshot() {
+        let action = Action::Screenshot { output: "test.png".into() };
+        let result = execute(&action, false).unwrap();
+        assert!(result.contains("DRY RUN"));
+        assert!(result.contains("test.png"));
+    }
+
+    #[test]
+    fn dry_run_wait() {
+        let action = Action::Wait { ms: 500 };
+        let result = execute(&action, false).unwrap();
+        assert!(result.contains("DRY RUN"));
+    }
+
+    #[test]
+    fn serde_click_default_button() {
+        let json = r#"{"type":"click","x":50,"y":100}"#;
+        let action: Action = serde_json::from_str(json).unwrap();
+        match action {
+            Action::Click { button, .. } => assert_eq!(button, "left"),
+            _ => panic!("Expected Click"),
+        }
+    }
+
+    #[test]
+    fn serde_all_action_types() {
+        let actions = vec![
+            r#"{"type":"click","x":0,"y":0}"#,
+            r#"{"type":"move","x":10,"y":20}"#,
+            r#"{"type":"type","text":"hello"}"#,
+            r#"{"type":"key","combo":"ctrl+s"}"#,
+            r#"{"type":"wait","ms":100}"#,
+            r#"{"type":"screenshot","output":"out.png"}"#,
+        ];
+        for json in actions {
+            let _: Action = serde_json::from_str(json).unwrap();
+        }
+    }
+
+    #[test]
+    fn serde_invalid_type_errors() {
+        let json = r#"{"type":"unknown_action","x":0}"#;
+        let result: Result<Action, _> = serde_json::from_str(json);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn load_script_empty_array() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("empty.json");
+        std::fs::write(&path, "[]").unwrap();
+        let actions = load_script(path.to_str().unwrap()).unwrap();
+        assert!(actions.is_empty());
+    }
+
+    #[test]
+    fn execute_all_dry_run_succeeds() {
+        let actions = vec![
+            Action::Click { x: 0, y: 0, button: "left".into() },
+            Action::Move { x: 10, y: 20 },
+            Action::Type { text: "test".into() },
+            Action::Key { combo: "enter".into() },
+            Action::Wait { ms: 10 },
+            Action::Screenshot { output: "s.png".into() },
+        ];
+        for action in &actions {
+            let result = execute(action, false);
+            assert!(result.is_ok(), "Dry run failed for {:?}", action);
+        }
+    }
 }
