@@ -2,6 +2,7 @@
 use rusqlite::{params, Connection, Result};
 
 use crate::models::ActionItem;
+use chrono;
 
 // ---------------------------------------------------------------------------
 // Database path
@@ -132,6 +133,56 @@ pub fn complete(conn: &Connection, id: i64) -> Result<bool> {
 pub fn export_json(conn: &Connection) -> Result<String> {
     let items = list(conn, None)?;
     Ok(serde_json::to_string_pretty(&items).unwrap_or_default())
+}
+
+/// Assign (or reassign) an action item to a person. Returns true if the row existed.
+pub fn assign(conn: &Connection, id: i64, assignee: &str) -> Result<bool> {
+    let n = conn.execute(
+        "UPDATE action_items SET assignee = ?1 WHERE id = ?2",
+        params![assignee, id],
+    )?;
+    Ok(n > 0)
+}
+
+/// Retrieve open items sorted by their canonical deadline date (earliest first).
+/// Items without a deadline are placed at the end.
+pub fn list_by_priority(conn: &Connection) -> Result<Vec<ActionItem>> {
+    // Pull all open items and sort in Rust after normalising deadlines.
+    let items = list(conn, Some("open"))?;
+    let mut with_date: Vec<(chrono::NaiveDate, ActionItem)> = Vec::new();
+    let mut no_date: Vec<ActionItem> = Vec::new();
+
+    for item in items {
+        if let Some(ref dl) = item.deadline {
+            if let Some(date) = crate::deadline::parse_deadline(dl) {
+                with_date.push((date, item));
+                continue;
+            }
+        }
+        no_date.push(item);
+    }
+
+    with_date.sort_by_key(|(d, _)| *d);
+    let mut result: Vec<ActionItem> = with_date.into_iter().map(|(_, i)| i).collect();
+    result.extend(no_date);
+    Ok(result)
+}
+
+/// Retrieve open items whose parsed deadline is in the past.
+pub fn list_overdue(conn: &Connection) -> Result<Vec<ActionItem>> {
+    let today = chrono::Local::now().date_naive();
+    let open = list(conn, Some("open"))?;
+    let overdue = open
+        .into_iter()
+        .filter(|item| {
+            item.deadline
+                .as_deref()
+                .and_then(crate::deadline::parse_deadline)
+                .map(|d| d < today)
+                .unwrap_or(false)
+        })
+        .collect();
+    Ok(overdue)
 }
 
 // ---------------------------------------------------------------------------

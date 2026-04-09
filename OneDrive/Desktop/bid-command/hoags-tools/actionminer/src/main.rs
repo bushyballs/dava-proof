@@ -1,3 +1,4 @@
+mod deadline;
 mod extract;
 mod models;
 mod tracker;
@@ -61,6 +62,29 @@ enum Commands {
         #[arg(long, default_value = "json")]
         format: String,
     },
+
+    /// Show open action items sorted by deadline (earliest first).
+    Priorities,
+
+    /// Assign or reassign an action item to a person.
+    Assign {
+        /// The numeric ID of the action item.
+        id: i64,
+
+        /// Person to assign the item to (e.g. "Collin" or "@alice").
+        #[arg(long)]
+        to: String,
+    },
+
+    /// Show open items whose deadline has passed.
+    Overdue,
+
+    /// Extract action items from a file and immediately save them (extract + insert).
+    Import {
+        /// Path to the meeting-notes file to import.
+        #[arg(long)]
+        file: String,
+    },
 }
 
 // ---------------------------------------------------------------------------
@@ -75,6 +99,10 @@ fn main() {
         Commands::List { status, assignee } => cmd_list(status, assignee),
         Commands::Complete { id } => cmd_complete(id),
         Commands::Export { format } => cmd_export(format),
+        Commands::Priorities => cmd_priorities(),
+        Commands::Assign { id, to } => cmd_assign(id, to),
+        Commands::Overdue => cmd_overdue(),
+        Commands::Import { file } => cmd_import(file),
     }
 }
 
@@ -159,6 +187,62 @@ fn cmd_export(format: String) {
             std::process::exit(1);
         }
     }
+}
+
+fn cmd_priorities() {
+    let conn = tracker::open().unwrap_or_else(|e| { eprintln!("DB error: {e}"); std::process::exit(1); });
+    let items = tracker::list_by_priority(&conn)
+        .unwrap_or_else(|e| { eprintln!("Query error: {e}"); std::process::exit(1); });
+
+    if items.is_empty() {
+        println!("No open action items with deadlines.");
+        return;
+    }
+
+    println!("Action items by priority (earliest deadline first):");
+    print_items(&items);
+}
+
+fn cmd_assign(id: i64, to: String) {
+    let conn = tracker::open().unwrap_or_else(|e| { eprintln!("DB error: {e}"); std::process::exit(1); });
+    match tracker::assign(&conn, id, &to) {
+        Ok(true)  => println!("Action item #{id} assigned to '{to}'."),
+        Ok(false) => { eprintln!("No action item with id {id}."); std::process::exit(1); }
+        Err(e)    => { eprintln!("DB error: {e}"); std::process::exit(1); }
+    }
+}
+
+fn cmd_overdue() {
+    let conn = tracker::open().unwrap_or_else(|e| { eprintln!("DB error: {e}"); std::process::exit(1); });
+    let items = tracker::list_overdue(&conn)
+        .unwrap_or_else(|e| { eprintln!("Query error: {e}"); std::process::exit(1); });
+
+    if items.is_empty() {
+        println!("No overdue action items.");
+        return;
+    }
+
+    println!("Overdue action items ({} total):", items.len());
+    print_items(&items);
+}
+
+fn cmd_import(file: String) {
+    let content = std::fs::read_to_string(&file)
+        .unwrap_or_else(|e| { eprintln!("Error reading {file}: {e}"); std::process::exit(1); });
+
+    let items = extract::extract(&content, &file);
+
+    if items.is_empty() {
+        println!("No action items found in '{file}'.");
+        return;
+    }
+
+    let conn = tracker::open().unwrap_or_else(|e| { eprintln!("DB error: {e}"); std::process::exit(1); });
+    let saved = tracker::insert_many(&conn, &items)
+        .unwrap_or_else(|e| { eprintln!("Insert error: {e}"); std::process::exit(1); });
+
+    println!("Imported and saved {} action item(s) from '{file}':", saved.len());
+    print_items(&saved);
 }
 
 // ---------------------------------------------------------------------------
