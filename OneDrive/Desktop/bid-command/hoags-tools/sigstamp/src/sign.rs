@@ -29,6 +29,19 @@ pub struct StampParams {
     pub x: Option<f64>,
     /// Explicit Y coordinate in PDF user-space.
     pub y: Option<f64>,
+    /// If true, stamp initials (first letter of each word) instead of full name.
+    pub initials: bool,
+    /// Optional 1-based page range (inclusive). If None, all/detected pages are used.
+    pub page_range: Option<(usize, usize)>,
+}
+
+// ── helper: compute initials from a full name ─────────────────────────────────
+
+pub fn name_initials(name: &str) -> String {
+    name.split_whitespace()
+        .filter_map(|word| word.chars().next())
+        .collect::<String>()
+        .to_uppercase()
 }
 
 // ── helper: PDF string escaping ───────────────────────────────────────────────
@@ -147,19 +160,28 @@ fn get_page_height(doc: &Document, page_id: lopdf::ObjectId) -> f64 {
 /// Build the PDF content stream operators for one signature stamp.
 ///
 /// Layout (all at the target (x, y) in PDF user-space, origin = lower-left):
-///   Line 1 (y + 2):  `/s/ {signer}`  — HelvO 10pt blue
-///   Line 2 (y + 2):  `{date}`        — Helv 8pt blue, offset right by ~120pt
-///   Line 3 (y - 8):  `{signer}`      — Helv 8pt blue
-///   Line 4 (y - 18): `{title}`       — Helv 7pt blue (if provided)
+///   Line 1 (y + 2):  `/s/ {signer}` or `/s/ {initials}` — HelvO 10pt blue
+///   Line 2 (y + 2):  `{date}`                            — Helv 8pt blue, offset right by ~120pt
+///   Line 3 (y - 8):  `{signer}` or `{initials}`          — Helv 8pt blue
+///   Line 4 (y - 18): `{title}`                           — Helv 7pt blue (if provided)
+///
+/// If `use_initials` is true, the signature token is the initials of `signer`
+/// (first letter of each word, upper-cased) instead of the full name.
 pub fn build_stamp_ops(
     signer: &str,
     title: Option<&str>,
     x: f64,
     y: f64,
     date_str: &str,
+    use_initials: bool,
 ) -> String {
-    let slash_sig = format!("/s/ {}", escape_pdf(signer));
-    let name_line = escape_pdf(signer);
+    let display_name = if use_initials {
+        name_initials(signer)
+    } else {
+        signer.to_string()
+    };
+    let slash_sig = format!("/s/ {}", escape_pdf(&display_name));
+    let name_line = escape_pdf(&display_name);
     let date_line = escape_pdf(date_str);
 
     let mut ops = String::new();
@@ -330,6 +352,13 @@ pub fn sign_pdf(
     };
 
     for (page_idx, x, y) in &placements {
+        // Apply page_range filter: page_range is 1-based inclusive
+        if let Some((range_start, range_end)) = params.page_range {
+            let one_based = page_idx + 1;
+            if one_based < range_start || one_based > range_end {
+                continue;
+            }
+        }
         // pages is 1-indexed in lopdf
         let page_num = (*page_idx as u32) + 1;
         if let Some((_, page_id)) = pages.iter().find(|(pn, _)| *pn == page_num) {
@@ -340,6 +369,7 @@ pub fn sign_pdf(
                 *x,
                 *y,
                 &date_str,
+                params.initials,
             );
             append_stream(&mut doc, *page_id, ops);
         }
@@ -348,6 +378,55 @@ pub fn sign_pdf(
     let dst = output_dir.join("signed.pdf");
     doc.save(&dst)?;
     Ok(dst)
+}
+
+// ── signature verification ────────────────────────────────────────────────────
+
+/// Verify whether a PDF already has a /s/ signature stamped in it.
+///
+/// Uses two strategies:
+///   1. Scan all stream objects via lopdf for the `/s/` byte sequence.
+///   2. Scan the raw PDF file bytes for `/s/` inside string literals.
+///
+/// Returns `Ok(true)` if found, `Ok(false)` if not, `Err(...)` on I/O failure.
+pub fn verify_pdf_has_signature(
+    pdf_path: &Path,
+) -> Result<bool, Box<dyn std::error::Error>> {
+    // Strategy 1: lopdf Document — scan all stream objects
+    if let Ok(doc) = Document::load(pdf_path) {
+        let sig_bytes = b"/s/";
+        for (_, obj) in doc.objects.iter() {
+            if let Object::Stream(stream) = obj {
+                if stream.content.windows(sig_bytes.len()).any(|w| w == sig_bytes) {
+                    return Ok(true);
+                }
+                let mut s = stream.clone();
+                if s.decompress().is_ok() && s.content.windows(sig_bytes.len()).any(|w| w == sig_bytes) {
+                    return Ok(true);
+                }
+            }
+        }
+
+        // Also try extract_text
+        let pages: Vec<(u32, lopdf::ObjectId)> = doc.get_pages().into_iter().collect();
+        for (page_num, _) in &pages {
+            if let Ok(text) = doc.extract_text(&[*page_num]) {
+                if text.contains("/s/") {
+                    return Ok(true);
+                }
+            }
+        }
+    }
+
+    // Strategy 2: raw file bytes scan — our stamp ops put `/s/` inside PDF string
+    // literals as `(/s/ Name) Tj` so the bytes appear literally in the file
+    let raw = std::fs::read(pdf_path)?;
+    let sig_bytes = b"/s/";
+    if raw.windows(sig_bytes.len()).any(|w| w == sig_bytes) {
+        return Ok(true);
+    }
+
+    Ok(false)
 }
 
 // ── batch signing ─────────────────────────────────────────────────────────────
@@ -413,32 +492,47 @@ mod tests {
 
     #[test]
     fn test_build_stamp_ops_contains_slash_s() {
-        let ops = build_stamp_ops("Collin Hoag", Some("President"), 72.0, 200.0, "04/08/2026");
+        let ops = build_stamp_ops("Collin Hoag", Some("President"), 72.0, 200.0, "04/08/2026", false);
         assert!(ops.contains("/s/ Collin Hoag"), "ops should contain /s/ signature");
     }
 
     #[test]
+    fn test_build_stamp_ops_initials() {
+        let ops = build_stamp_ops("Collin Hoag", None, 72.0, 200.0, "04/08/2026", true);
+        // Initials of "Collin Hoag" = "CH"
+        assert!(ops.contains("/s/ CH"), "ops should contain /s/ CH when initials=true");
+        assert!(!ops.contains("/s/ Collin Hoag"), "should not use full name when initials=true");
+    }
+
+    #[test]
+    fn test_name_initials() {
+        assert_eq!(name_initials("Collin Hoag"), "CH");
+        assert_eq!(name_initials("John A Smith"), "JAS");
+        assert_eq!(name_initials("Alice"), "A");
+    }
+
+    #[test]
     fn test_build_stamp_ops_contains_date() {
-        let ops = build_stamp_ops("Collin Hoag", None, 72.0, 200.0, "04/08/2026");
+        let ops = build_stamp_ops("Collin Hoag", None, 72.0, 200.0, "04/08/2026", false);
         assert!(ops.contains("04/08/2026"), "ops should contain the date");
     }
 
     #[test]
     fn test_build_stamp_ops_contains_name_below() {
-        let ops = build_stamp_ops("Collin Hoag", None, 72.0, 200.0, "04/08/2026");
+        let ops = build_stamp_ops("Collin Hoag", None, 72.0, 200.0, "04/08/2026", false);
         // Name line should appear at y - 10
         assert!(ops.contains("190"), "ops should contain printed name at y-10");
     }
 
     #[test]
     fn test_build_stamp_ops_contains_title() {
-        let ops = build_stamp_ops("Collin Hoag", Some("President"), 72.0, 200.0, "04/08/2026");
+        let ops = build_stamp_ops("Collin Hoag", Some("President"), 72.0, 200.0, "04/08/2026", false);
         assert!(ops.contains("President"), "ops should contain the title");
     }
 
     #[test]
     fn test_build_stamp_ops_no_title_when_none() {
-        let ops = build_stamp_ops("Collin Hoag", None, 72.0, 200.0, "04/08/2026");
+        let ops = build_stamp_ops("Collin Hoag", None, 72.0, 200.0, "04/08/2026", false);
         // When title is None, no title line should appear
         assert!(
             !ops.contains("President"),
@@ -448,7 +542,7 @@ mod tests {
 
     #[test]
     fn test_build_stamp_ops_blue_ink() {
-        let ops = build_stamp_ops("Collin Hoag", None, 72.0, 200.0, "04/08/2026");
+        let ops = build_stamp_ops("Collin Hoag", None, 72.0, 200.0, "04/08/2026", false);
         assert!(
             ops.contains("0 0 0.6 rg"),
             "ops should use blue ink (0 0 0.6 rg)"
@@ -457,7 +551,7 @@ mod tests {
 
     #[test]
     fn test_build_stamp_ops_italic_font() {
-        let ops = build_stamp_ops("Collin Hoag", None, 72.0, 200.0, "04/08/2026");
+        let ops = build_stamp_ops("Collin Hoag", None, 72.0, 200.0, "04/08/2026", false);
         assert!(
             ops.contains("HelvO"),
             "signature line should use Helvetica-Oblique (HelvO)"
@@ -474,6 +568,8 @@ mod tests {
             page: 0,
             x: Some(72.0),
             y: Some(200.0),
+            initials: false,
+            page_range: None,
         };
         let result = sign_pdf(
             Path::new("does_not_exist.pdf"),
@@ -561,6 +657,8 @@ mod tests {
             page: 0,
             x: Some(72.0),
             y: Some(200.0),
+            initials: false,
+            page_range: None,
         };
         let result = sign_pdf(&pdf_path, &out_dir, &params, &[]);
         assert!(result.is_ok(), "sign_pdf failed: {:?}", result.err());
@@ -578,5 +676,108 @@ mod tests {
         let result = stamp_date_only(&pdf_path, &out_dir);
         assert!(result.is_ok(), "stamp_date_only failed: {:?}", result.err());
         assert!(result.unwrap().exists());
+    }
+
+    /// Sign a PDF then verify that /s/ signature text appears in the output.
+    #[test]
+    fn test_sign_pdf_and_verify_signature_present() {
+        use tempfile::TempDir;
+        let dir = TempDir::new().unwrap();
+        let pdf_path = dir.path().join("to_sign.pdf");
+        std::fs::write(&pdf_path, minimal_pdf()).unwrap();
+
+        let out_dir = dir.path().join("signed_out");
+        let params = StampParams {
+            signer: "Collin Hoag".to_string(),
+            title: Some("President".to_string()),
+            page: 0,
+            x: Some(72.0),
+            y: Some(200.0),
+            initials: false,
+            page_range: None,
+        };
+        let signed_path = sign_pdf(&pdf_path, &out_dir, &params, &[])
+            .expect("sign_pdf should succeed");
+        assert!(signed_path.exists(), "signed PDF should exist");
+
+        // Verify the signed PDF contains a /s/ signature
+        let has_sig = verify_pdf_has_signature(&signed_path)
+            .expect("verify should succeed");
+        assert!(has_sig, "signed PDF should contain /s/ signature");
+    }
+
+    #[test]
+    fn test_debug_print_signed_pdf_streams() {
+        use tempfile::TempDir;
+        let dir = TempDir::new().unwrap();
+        let pdf_path = dir.path().join("debug.pdf");
+        std::fs::write(&pdf_path, minimal_pdf()).unwrap();
+        let out_dir = dir.path().join("debug_out");
+        let params = StampParams {
+            signer: "Collin Hoag".to_string(),
+            title: None,
+            page: 0,
+            x: Some(72.0),
+            y: Some(200.0),
+            initials: false,
+            page_range: None,
+        };
+        let signed_path = sign_pdf(&pdf_path, &out_dir, &params, &[]).unwrap();
+        let doc = lopdf::Document::load(&signed_path).unwrap();
+        println!("Total objects in loaded doc: {}", doc.objects.len());
+        for (id, obj) in &doc.objects {
+            match obj {
+                lopdf::Object::Stream(s) => {
+                    let preview = std::str::from_utf8(&s.content[..s.content.len().min(80)])
+                        .unwrap_or("(non-utf8)");
+                    println!("  Stream {:?}: {} bytes, starts with: {:?}", id, s.content.len(), preview);
+                }
+                other => {
+                    println!("  Obj {:?}: {:?}", id, format!("{:?}", other).chars().take(60).collect::<String>());
+                }
+            }
+        }
+    }
+
+    /// An unsigned PDF should have verify return false.
+    #[test]
+    fn test_verify_unsigned_pdf_returns_false() {
+        use tempfile::TempDir;
+        let dir = TempDir::new().unwrap();
+        let pdf_path = dir.path().join("unsigned.pdf");
+        std::fs::write(&pdf_path, minimal_pdf()).unwrap();
+
+        let has_sig = verify_pdf_has_signature(&pdf_path)
+            .expect("verify should succeed on a valid PDF");
+        assert!(!has_sig, "unsigned PDF should not contain /s/ signature");
+    }
+
+    /// Sign with initials flag and verify initials appear in the content.
+    #[test]
+    fn test_sign_pdf_with_initials() {
+        use tempfile::TempDir;
+        let dir = TempDir::new().unwrap();
+        let pdf_path = dir.path().join("initials.pdf");
+        std::fs::write(&pdf_path, minimal_pdf()).unwrap();
+
+        let out_dir = dir.path().join("init_out");
+        let params = StampParams {
+            signer: "Collin Hoag".to_string(),
+            title: None,
+            page: 0,
+            x: Some(72.0),
+            y: Some(200.0),
+            initials: true,
+            page_range: None,
+        };
+        let signed_path = sign_pdf(&pdf_path, &out_dir, &params, &[])
+            .expect("sign_pdf with initials should succeed");
+
+        // Scan the raw signed PDF bytes for the initials stamp.
+        // Our stamp writes: (/s/ CH) Tj — raw bytes appear literally in the file.
+        let raw_bytes = std::fs::read(&signed_path).expect("read signed pdf");
+        let sig_bytes = b"/s/ CH";
+        let found = raw_bytes.windows(sig_bytes.len()).any(|w| w == sig_bytes);
+        assert!(found, "signed PDF should contain /s/ CH (initials of Collin Hoag)");
     }
 }

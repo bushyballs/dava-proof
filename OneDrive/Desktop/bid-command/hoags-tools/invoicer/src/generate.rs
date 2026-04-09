@@ -296,6 +296,14 @@ pub fn generate_pdf(invoice: &Invoice, output_path: &str) -> Result<(), String> 
     )));
     ops.push(Operation::new("ET", vec![]));
 
+    // Page number — right-aligned in the footer band
+    ops.push(Operation::new("BT", vec![]));
+    ops.push(op_rg(0.9, 0.9, 0.9));
+    ops.push(op_font("Helv", 7.5));
+    ops.push(op_move(MARGIN_L + BODY_W - 40.0, 34.0));
+    ops.push(op_show("Page 1 of 1"));
+    ops.push(Operation::new("ET", vec![]));
+
     // Restore graphics state
     ops.push(Operation::new("Q", vec![]));
 
@@ -358,7 +366,7 @@ mod tests {
 
     fn sample_invoice() -> Invoice {
         Invoice {
-            invoice_number: "HOAGS-INV-202604-001".to_string(),
+            invoice_number: "HOAGS-INV-W9127S-202604-001".to_string(),
             contract_number: "W9127S26QA030".to_string(),
             contractor: "Hoags Inc.".to_string(),
             billing_period: "2026-04".to_string(),
@@ -415,5 +423,55 @@ mod tests {
         // Ensure it doesn't panic on multibyte chars
         let s = "abc";
         assert_eq!(truncate(s, 2), "ab");
+    }
+
+    /// Generate an invoice PDF then read it back with lopdf and verify expected
+    /// text fragments appear in the extracted page content.
+    #[test]
+    fn test_generate_pdf_text_content() {
+        use lopdf::Document;
+
+        let inv = sample_invoice();
+        let dir = tempfile::tempdir().expect("tmpdir");
+        let path = dir.path().join("text_check.pdf");
+        let path_str = path.to_str().unwrap();
+
+        generate_pdf(&inv, path_str).expect("generate_pdf should succeed");
+        assert!(path.exists(), "PDF file should be written");
+
+        // Load the PDF back and extract text from page 1
+        let doc = Document::load(&path).expect("lopdf should load the generated PDF");
+        let page_nums: Vec<u32> = doc.get_pages().keys().cloned().collect();
+        assert!(!page_nums.is_empty(), "PDF must have at least one page");
+
+        let text = doc
+            .extract_text(&[page_nums[0]])
+            .expect("should be able to extract text from page 1");
+
+        // Invoice number must appear in the document
+        assert!(
+            text.contains("HOAGS-INV-W9127S-202604-001"),
+            "invoice number not found in PDF text: {text}"
+        );
+        // Contract number must appear
+        assert!(
+            text.contains("W9127S26QA030"),
+            "contract number not found in PDF text: {text}"
+        );
+        // Total should be present
+        assert!(
+            text.contains("655.18"),
+            "invoice total not found in PDF text: {text}"
+        );
+        // At least one CLIN should be present
+        assert!(
+            text.contains("0001") || text.contains("0002"),
+            "CLIN number not found in PDF text: {text}"
+        );
+        // Page number footer
+        assert!(
+            text.contains("Page 1 of 1"),
+            "page number not found in PDF text: {text}"
+        );
     }
 }

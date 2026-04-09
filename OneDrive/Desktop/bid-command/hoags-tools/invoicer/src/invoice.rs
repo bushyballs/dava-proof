@@ -63,11 +63,20 @@ pub fn parse_contract(json: &str) -> Result<Contract, String> {
 }
 
 // ── Build invoice number ─────────────────────────────────────────────────────
-/// Format: HOAGS-INV-YYYYMM-NNN
-pub fn build_invoice_number(period: &str, sequence: u32) -> String {
+/// Format: HOAGS-INV-<CONTRACT_SHORT>-YYYYMM-NNN
+///
+/// `contract_short` is derived from the contract number by taking the first
+/// token (up to the first space or dash-separated prefix), capped at 8 chars.
+/// e.g. "W9127S26QA030" → "W9127S", "W912BV-21-C-0001" → "W912BV".
+pub fn build_invoice_number(contract_number: &str, period: &str, sequence: u32) -> String {
     // period is like "2026-04" — strip the dash for the compact form
     let compact = period.replace('-', "");
-    format!("HOAGS-INV-{}-{:03}", compact, sequence)
+    // Extract a short contract tag (up to 6 chars, alpha-numeric prefix)
+    let contract_tag: String = contract_number
+        .chars()
+        .take(6)
+        .collect();
+    format!("HOAGS-INV-{}-{}-{:03}", contract_tag, compact, sequence)
 }
 
 // ── Calculate amounts per CLIN for a billing period ─────────────────────────
@@ -149,15 +158,46 @@ pub fn calculate_invoice_lines(
     Ok((lines, grand_total))
 }
 
+// ── Build invoice lines with cumulative deduction ─────────────────────────────
+/// Same as `calculate_invoice_lines` but subtracts already-invoiced amounts
+/// per CLIN so the new invoice only bills what hasn't been invoiced yet.
+///
+/// `already_invoiced` maps clin_number → total amount already submitted/paid.
+pub fn calculate_invoice_lines_with_deduction(
+    contract: &Contract,
+    billing_period: &str,
+    already_invoiced: &std::collections::HashMap<String, f64>,
+) -> Result<(Vec<InvoiceLine>, f64), String> {
+    let (mut lines, _) = calculate_invoice_lines(contract, billing_period)?;
+    let mut grand_total = 0.0f64;
+
+    for line in &mut lines {
+        let already = already_invoiced.get(&line.clin).copied().unwrap_or(0.0);
+        // Deduct what's already been invoiced; floor at zero
+        line.amount = (line.amount - already).max(0.0);
+        line.amount = (line.amount * 100.0).round() / 100.0;
+        grand_total += line.amount;
+    }
+    grand_total = (grand_total * 100.0).round() / 100.0;
+    Ok((lines, grand_total))
+}
+
 // ── Build an Invoice struct ──────────────────────────────────────────────────
 
+/// Build an invoice, optionally subtracting already-invoiced amounts.
+/// Pass `Some(map)` from `tracker.total_invoiced_per_clin()` to enable
+/// cumulative tracking; pass `None` to bill the full period amounts.
 pub fn build_invoice(
     contract: &Contract,
     billing_period: &str,
     sequence: u32,
+    already_invoiced: Option<&std::collections::HashMap<String, f64>>,
 ) -> Result<Invoice, String> {
-    let invoice_number = build_invoice_number(billing_period, sequence);
-    let (lines, total) = calculate_invoice_lines(contract, billing_period)?;
+    let invoice_number = build_invoice_number(&contract.contract_number, billing_period, sequence);
+    let (lines, total) = match already_invoiced {
+        Some(map) => calculate_invoice_lines_with_deduction(contract, billing_period, map)?,
+        None => calculate_invoice_lines(contract, billing_period)?,
+    };
     let now = chrono::Utc::now().format("%Y-%m-%dT%H:%M:%SZ").to_string();
 
     Ok(Invoice {
@@ -169,6 +209,87 @@ pub fn build_invoice(
         total,
         generated_at: now,
     })
+}
+
+// ── Contract validation ────────────────────────────────────────────────────────
+
+/// Validation result for a contract JSON.
+#[derive(Debug)]
+pub struct ValidationResult {
+    pub ok: bool,
+    pub errors: Vec<String>,
+    pub warnings: Vec<String>,
+}
+
+/// Validate a contract for completeness and sensibility.
+pub fn validate_contract(contract: &Contract) -> ValidationResult {
+    let mut errors = Vec::new();
+    let mut warnings = Vec::new();
+
+    // Required string fields
+    if contract.contract_number.trim().is_empty() {
+        errors.push("contract_number is empty".to_string());
+    }
+    if contract.contractor.trim().is_empty() {
+        errors.push("contractor name is empty".to_string());
+    }
+
+    // Period dates
+    match NaiveDate::parse_from_str(&contract.period.start, "%Y-%m-%d") {
+        Err(e) => errors.push(format!("period.start '{}' is not a valid YYYY-MM-DD date: {e}", contract.period.start)),
+        Ok(_) => {}
+    }
+    match NaiveDate::parse_from_str(&contract.period.end, "%Y-%m-%d") {
+        Err(e) => errors.push(format!("period.end '{}' is not a valid YYYY-MM-DD date: {e}", contract.period.end)),
+        Ok(_) => {}
+    }
+    if let (Ok(s), Ok(e)) = (
+        NaiveDate::parse_from_str(&contract.period.start, "%Y-%m-%d"),
+        NaiveDate::parse_from_str(&contract.period.end, "%Y-%m-%d"),
+    ) {
+        if e <= s {
+            errors.push(format!(
+                "period.end ({}) must be after period.start ({})",
+                contract.period.end, contract.period.start
+            ));
+        }
+    }
+
+    // CLINs
+    if contract.clins.is_empty() {
+        errors.push("contract has no CLINs".to_string());
+    }
+    for (i, clin) in contract.clins.iter().enumerate() {
+        if clin.number.trim().is_empty() {
+            errors.push(format!("clins[{i}].number is empty"));
+        }
+        if clin.description.trim().is_empty() {
+            warnings.push(format!("clins[{i}] ({}) has no description", clin.number));
+        }
+        if clin.unit_price <= 0.0 {
+            errors.push(format!("clins[{i}] ({}) has non-positive unit_price {}", clin.number, clin.unit_price));
+        }
+        if clin.quantity <= 0.0 {
+            errors.push(format!("clins[{i}] ({}) has non-positive quantity {}", clin.number, clin.quantity));
+        }
+        if clin.unit.trim().is_empty() {
+            warnings.push(format!("clins[{i}] ({}) has no unit", clin.number));
+        }
+    }
+
+    // Check for duplicate CLIN numbers
+    let mut seen = std::collections::HashSet::new();
+    for clin in &contract.clins {
+        if !seen.insert(&clin.number) {
+            errors.push(format!("duplicate CLIN number '{}'", clin.number));
+        }
+    }
+
+    ValidationResult {
+        ok: errors.is_empty(),
+        errors,
+        warnings,
+    }
 }
 
 // ── Tests ────────────────────────────────────────────────────────────────────
@@ -199,8 +320,14 @@ mod tests {
 
     #[test]
     fn test_build_invoice_number() {
-        assert_eq!(build_invoice_number("2026-04", 1), "HOAGS-INV-202604-001");
-        assert_eq!(build_invoice_number("2026-12", 42), "HOAGS-INV-202612-042");
+        assert_eq!(
+            build_invoice_number("W9127S26QA030", "2026-04", 1),
+            "HOAGS-INV-W9127S-202604-001"
+        );
+        assert_eq!(
+            build_invoice_number("W9127S26QA030", "2026-12", 42),
+            "HOAGS-INV-W9127S-202612-042"
+        );
     }
 
     #[test]
@@ -227,10 +354,26 @@ mod tests {
     #[test]
     fn test_build_invoice() {
         let c = parse_contract(sample_contract_json()).unwrap();
-        let inv = build_invoice(&c, "2026-05", 1).unwrap();
-        assert_eq!(inv.invoice_number, "HOAGS-INV-202605-001");
+        let inv = build_invoice(&c, "2026-05", 1, None).unwrap();
+        assert_eq!(inv.invoice_number, "HOAGS-INV-W9127S-202605-001");
         assert_eq!(inv.contract_number, "W9127S26QA030");
         assert!(inv.total >= 0.0);
+    }
+
+    #[test]
+    fn test_build_invoice_with_cumulative_deduction() {
+        use std::collections::HashMap;
+        let c = parse_contract(sample_contract_json()).unwrap();
+        // Simulate that CLIN 0001 already had $50 invoiced
+        let mut already: HashMap<String, f64> = HashMap::new();
+        already.insert("0001".to_string(), 50.0);
+        let inv_full = build_invoice(&c, "2026-05", 1, None).unwrap();
+        let inv_deducted = build_invoice(&c, "2026-05", 2, Some(&already)).unwrap();
+        // Deducted invoice line 0001 should be $50 less (or 0 if < 50)
+        let full_0001 = inv_full.lines.iter().find(|l| l.clin == "0001").unwrap().amount;
+        let ded_0001 = inv_deducted.lines.iter().find(|l| l.clin == "0001").unwrap().amount;
+        let expected = (full_0001 - 50.0).max(0.0);
+        assert!((ded_0001 - expected).abs() < 0.02, "expected {expected} got {ded_0001}");
     }
 
     #[test]
@@ -239,5 +382,76 @@ mod tests {
         let (lines, total) = calculate_invoice_lines(&c, "2026-06").unwrap();
         let sum: f64 = lines.iter().map(|l| l.amount).sum();
         assert!((sum - total).abs() < 0.02, "line sum {sum} should match total {total}");
+    }
+
+    #[test]
+    fn test_validate_contract_valid() {
+        let c = parse_contract(sample_contract_json()).unwrap();
+        let result = validate_contract(&c);
+        assert!(result.ok, "valid contract should pass: {:?}", result.errors);
+        assert!(result.errors.is_empty());
+    }
+
+    #[test]
+    fn test_validate_contract_empty_number() {
+        let json = r#"{
+          "contract_number": "",
+          "contractor": "Hoags Inc.",
+          "clins": [
+            {"number": "0001", "description": "Service", "unit_price": 100.0, "quantity": 1.0, "unit": "EA"}
+          ],
+          "period": {"start": "2026-04-01", "end": "2026-12-31"}
+        }"#;
+        let c = parse_contract(json).unwrap();
+        let result = validate_contract(&c);
+        assert!(!result.ok);
+        assert!(result.errors.iter().any(|e| e.contains("contract_number")));
+    }
+
+    #[test]
+    fn test_validate_contract_bad_period() {
+        let json = r#"{
+          "contract_number": "W9127S26QA030",
+          "contractor": "Hoags Inc.",
+          "clins": [
+            {"number": "0001", "description": "Service", "unit_price": 100.0, "quantity": 1.0, "unit": "EA"}
+          ],
+          "period": {"start": "2026-12-31", "end": "2026-01-01"}
+        }"#;
+        let c = parse_contract(json).unwrap();
+        let result = validate_contract(&c);
+        assert!(!result.ok);
+        assert!(result.errors.iter().any(|e| e.contains("period.end")));
+    }
+
+    #[test]
+    fn test_validate_contract_no_clins() {
+        let json = r#"{
+          "contract_number": "W9127S26QA030",
+          "contractor": "Hoags Inc.",
+          "clins": [],
+          "period": {"start": "2026-04-01", "end": "2026-12-31"}
+        }"#;
+        let c = parse_contract(json).unwrap();
+        let result = validate_contract(&c);
+        assert!(!result.ok);
+        assert!(result.errors.iter().any(|e| e.contains("no CLINs")));
+    }
+
+    #[test]
+    fn test_validate_contract_duplicate_clins() {
+        let json = r#"{
+          "contract_number": "W9127S26QA030",
+          "contractor": "Hoags Inc.",
+          "clins": [
+            {"number": "0001", "description": "Service A", "unit_price": 100.0, "quantity": 1.0, "unit": "EA"},
+            {"number": "0001", "description": "Service B", "unit_price": 50.0, "quantity": 2.0, "unit": "EA"}
+          ],
+          "period": {"start": "2026-04-01", "end": "2026-12-31"}
+        }"#;
+        let c = parse_contract(json).unwrap();
+        let result = validate_contract(&c);
+        assert!(!result.ok);
+        assert!(result.errors.iter().any(|e| e.contains("duplicate CLIN")));
     }
 }

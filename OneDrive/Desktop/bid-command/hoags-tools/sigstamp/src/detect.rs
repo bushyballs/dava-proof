@@ -234,6 +234,10 @@ pub fn is_sig_label(label: &str) -> bool {
     if lower.contains("contracting officer") && lower.contains("sign") {
         return true;
     }
+    // "Contracting Officer's Representative" — always a sig field
+    if lower.contains("contracting officer") && lower.contains("representative") {
+        return true;
+    }
     false
 }
 
@@ -384,6 +388,8 @@ fn detect_keyword_scan(doc: &Document) -> Vec<SigLocation> {
         "Block 30",
         "Block 31",
         "Contracting Officer Signature",
+        "Contracting Officer's Representative",
+        "Contracting Officers Representative",
     ];
 
     for (page_num, _page_id) in &pages {
@@ -460,6 +466,13 @@ mod tests {
     fn test_is_sig_label_authorized() {
         assert!(is_sig_label("Authorized Representative"));
         assert!(is_sig_label("Authorized by"));
+    }
+
+    #[test]
+    fn test_is_sig_label_cor() {
+        assert!(is_sig_label("Contracting Officer's Representative"));
+        assert!(is_sig_label("Contracting Officers Representative"));
+        assert!(is_sig_label("CONTRACTING OFFICER'S REPRESENTATIVE"));
     }
 
     #[test]

@@ -211,6 +211,31 @@ impl Tracker {
         Ok(total)
     }
 
+    /// Total amount already invoiced for each CLIN of a contract (submitted + paid).
+    /// Returns a map of clin_number → total_invoiced.
+    pub fn total_invoiced_per_clin(
+        &self,
+        contract_number: &str,
+    ) -> Result<std::collections::HashMap<String, f64>> {
+        let mut stmt = self.conn.prepare(
+            "SELECT il.clin, COALESCE(SUM(il.amount), 0.0)
+             FROM invoice_lines il
+             JOIN invoices i ON i.id = il.invoice_id
+             WHERE i.contract_number = ?1
+               AND i.status IN ('submitted', 'paid')
+             GROUP BY il.clin"
+        )?;
+        let rows = stmt.query_map(params![contract_number], |row| {
+            Ok((row.get::<_, String>(0)?, row.get::<_, f64>(1)?))
+        })?;
+        let mut map = std::collections::HashMap::new();
+        for row in rows {
+            let (clin, amount) = row?;
+            map.insert(clin, amount);
+        }
+        Ok(map)
+    }
+
     /// Lines for a specific invoice.
     pub fn lines_for_invoice(&self, invoice_id: i64) -> Result<Vec<InvoiceLine>> {
         let mut stmt = self.conn.prepare(

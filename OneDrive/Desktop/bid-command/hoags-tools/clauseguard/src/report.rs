@@ -2,6 +2,7 @@
 
 use crate::analyzer::{ClauseCheckResult, ContractAnalysis, ContractDiff};
 use crate::clauses::RiskLevel;
+use serde_json::json;
 
 // ANSI color codes
 const RED: &str = "\x1b[31;1m";
@@ -27,12 +28,26 @@ fn risk_badge(risk: &RiskLevel) -> String {
 
 // ── Analysis terminal report ─────────────────────────────────────────────────
 
-pub fn print_analysis(analysis: &ContractAnalysis) {
+/// Returns true if `risk` passes the optional minimum threshold filter.
+/// `None` = no filter (show all).
+fn passes_threshold(risk: &RiskLevel, min: Option<&RiskLevel>) -> bool {
+    match min {
+        None => true,
+        Some(RiskLevel::Red) => *risk == RiskLevel::Red,
+        Some(RiskLevel::Yellow) => matches!(risk, RiskLevel::Red | RiskLevel::Yellow),
+        Some(RiskLevel::Green) => true,
+    }
+}
+
+pub fn print_analysis(analysis: &ContractAnalysis, threshold: Option<&RiskLevel>) {
     let border = "═".repeat(70);
     println!("\n{BOLD}{CYAN}{border}{RESET}");
     println!(
         "{BOLD}  CLAUSEGUARD — Contract Risk Analysis{RESET}"
     );
+    if let Some(t) = threshold {
+        println!("{BOLD}  Filter: {} and above{RESET}", t.as_str());
+    }
     println!("{BOLD}{CYAN}{border}{RESET}");
 
     println!("\n{BOLD}File:{RESET}    {}", analysis.file_path);
@@ -45,9 +60,15 @@ pub fn print_analysis(analysis: &ContractAnalysis) {
     println!("{BOLD}Summary:{RESET} {}", analysis.summary);
 
     // ── Known clauses ────────────────────────────────────────────────────────
-    if !analysis.known_clauses.is_empty() {
+    let visible_clauses: Vec<_> = analysis
+        .known_clauses
+        .iter()
+        .filter(|ci| passes_threshold(&ci.risk, threshold))
+        .collect();
+
+    if !visible_clauses.is_empty() {
         println!("\n{BOLD}{CYAN}── Identified FAR/DFARS Clauses ─────────────────────────────────{RESET}");
-        for ci in &analysis.known_clauses {
+        for ci in &visible_clauses {
             let badge = risk_badge(&ci.risk);
             println!("  {} {BOLD}{}{RESET}  {}", badge, ci.number, ci.title);
             println!("     {DIM}{}{RESET}", ci.description);
@@ -56,42 +77,46 @@ pub fn print_analysis(analysis: &ContractAnalysis) {
         }
     }
 
-    // ── Unrecognised clause refs ─────────────────────────────────────────────
-    let unknown: Vec<&str> = analysis
-        .all_clause_refs
-        .iter()
-        .filter(|r| !analysis.known_clauses.iter().any(|k| &k.number == *r))
-        .map(|s| s.as_str())
-        .collect();
-    if !unknown.is_empty() {
-        println!("{BOLD}{CYAN}── Unrecognised Clause References ───────────────────────────────{RESET}");
-        for u in &unknown {
-            println!("  {DIM}{u}{RESET}");
+    // ── Unrecognised clause refs (only when no threshold filter, to avoid noise) ─
+    if threshold.is_none() {
+        let unknown: Vec<&str> = analysis
+            .all_clause_refs
+            .iter()
+            .filter(|r| !analysis.known_clauses.iter().any(|k| &k.number == *r))
+            .map(|s| s.as_str())
+            .collect();
+        if !unknown.is_empty() {
+            println!("{BOLD}{CYAN}── Unrecognised Clause References ───────────────────────────────{RESET}");
+            for u in &unknown {
+                println!("  {DIM}{u}{RESET}");
+            }
+            println!();
+        }
+    }
+
+    // ── Risk phrase summary ──────────────────────────────────────────────────
+    if threshold.is_none() || passes_threshold(&RiskLevel::Red, threshold) {
+        println!("{BOLD}{CYAN}── Risk Phrase Hits ──────────────────────────────────────────────{RESET}");
+        if passes_threshold(&RiskLevel::Red, threshold) {
+            println!("  {RED}RED{RESET}    phrases: {}", analysis.red_phrase_total);
+        }
+        if passes_threshold(&RiskLevel::Yellow, threshold) {
+            println!("  {YELLOW}YELLOW{RESET} phrases: {}", analysis.yellow_phrase_total);
+        }
+        if passes_threshold(&RiskLevel::Green, threshold) {
+            println!("  {GREEN}GREEN{RESET}  phrases: {}", analysis.green_phrase_total);
         }
         println!();
     }
 
-    // ── Risk phrase summary ──────────────────────────────────────────────────
-    println!("{BOLD}{CYAN}── Risk Phrase Hits ──────────────────────────────────────────────{RESET}");
-    println!(
-        "  {RED}RED{RESET}    phrases: {}",
-        analysis.red_phrase_total
-    );
-    println!(
-        "  {YELLOW}YELLOW{RESET} phrases: {}",
-        analysis.yellow_phrase_total
-    );
-    println!(
-        "  {GREEN}GREEN{RESET}  phrases: {}",
-        analysis.green_phrase_total
-    );
-    println!();
-
-    // ── Per-page breakdown (only non-green pages) ────────────────────────────
+    // ── Per-page breakdown ───────────────────────────────────────────────────
     let flagged: Vec<_> = analysis
         .pages
         .iter()
-        .filter(|p| p.risk_level != RiskLevel::Green || !p.clause_refs.is_empty())
+        .filter(|p| {
+            passes_threshold(&p.risk_level, threshold)
+                && (p.risk_level != RiskLevel::Green || !p.clause_refs.is_empty())
+        })
         .collect();
 
     if !flagged.is_empty() {
@@ -118,6 +143,99 @@ pub fn print_analysis(analysis: &ContractAnalysis) {
     }
 
     println!("{BOLD}{CYAN}{border}{RESET}\n");
+}
+
+// ── Summary report ────────────────────────────────────────────────────────────
+
+/// Produce a one-paragraph plain-English risk summary.
+pub fn build_risk_paragraph(analysis: &ContractAnalysis) -> String {
+    let risk_word = match analysis.overall_risk {
+        RiskLevel::Red => "HIGH",
+        RiskLevel::Yellow => "MODERATE",
+        RiskLevel::Green => "LOW",
+    };
+
+    let red_clauses: Vec<String> = analysis
+        .known_clauses
+        .iter()
+        .filter(|c| c.risk == RiskLevel::Red)
+        .map(|c| format!("{} ({})", c.number, c.title))
+        .collect();
+
+    let yellow_clauses: Vec<String> = analysis
+        .known_clauses
+        .iter()
+        .filter(|c| c.risk == RiskLevel::Yellow)
+        .map(|c| c.number.clone())
+        .collect();
+
+    let mut para = format!(
+        "This contract presents a {} overall risk (score {}). ",
+        risk_word, analysis.overall_score
+    );
+
+    para.push_str(&format!(
+        "The document spans {} page(s) and references {} FAR/DFARS clause(s), of which {} are known to this database. ",
+        analysis.total_pages,
+        analysis.all_clause_refs.len(),
+        analysis.known_clauses.len()
+    ));
+
+    if !red_clauses.is_empty() {
+        para.push_str(&format!(
+            "Critical (RED) clauses found: {}. ",
+            red_clauses.join("; ")
+        ));
+    }
+
+    if !yellow_clauses.is_empty() {
+        para.push_str(&format!(
+            "Moderate (YELLOW) clauses found: {}. ",
+            yellow_clauses.join(", ")
+        ));
+    }
+
+    if analysis.red_phrase_total > 0 {
+        para.push_str(&format!(
+            "High-risk language appeared {} time(s) across the document (e.g., indemnification, liquidated damages, sole discretion). ",
+            analysis.red_phrase_total
+        ));
+    }
+
+    if analysis.overall_risk == RiskLevel::Red {
+        para.push_str("Recommend legal review before execution.");
+    } else if analysis.overall_risk == RiskLevel::Yellow {
+        para.push_str("Recommend careful review of flagged clauses before signing.");
+    } else {
+        para.push_str("No critical risk factors detected; standard review recommended.");
+    }
+
+    para
+}
+
+pub fn print_summary(analysis: &ContractAnalysis) {
+    let border = "─".repeat(70);
+    println!("\n{BOLD}{CYAN}CLAUSEGUARD — Risk Summary{RESET}");
+    println!("{CYAN}{border}{RESET}");
+    println!("{BOLD}File:{RESET} {}", analysis.file_path);
+    println!(
+        "{BOLD}Overall Risk:{RESET} {} (score {})\n",
+        risk_badge(&analysis.overall_risk),
+        analysis.overall_score
+    );
+    println!("{}", build_risk_paragraph(analysis));
+    println!("\n{CYAN}{border}{RESET}\n");
+}
+
+pub fn to_json_summary(analysis: &ContractAnalysis) -> Result<String, String> {
+    let paragraph = build_risk_paragraph(analysis);
+    let val = json!({
+        "file": analysis.file_path,
+        "overall_risk": analysis.overall_risk.as_str(),
+        "overall_score": analysis.overall_score,
+        "summary_paragraph": paragraph,
+    });
+    serde_json::to_string_pretty(&val).map_err(|e| e.to_string())
 }
 
 // ── Clause check terminal report ─────────────────────────────────────────────

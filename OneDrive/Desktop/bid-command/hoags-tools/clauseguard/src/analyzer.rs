@@ -22,6 +22,16 @@ pub const RED_PHRASES: &[&str] = &[
     "debarment",
     "criminal penalty",
     "fraud",
+    // Additional high-risk phrases
+    "indemnify",
+    "hold harmless",
+    "waive all claims",
+    "sole discretion",
+    "at contractor's expense",
+    "no additional cost to the government",
+    "consequential damages",
+    "unlimited liability",
+    "unconditional guarantee",
 ];
 
 /// Phrases that contribute YELLOW risk.
@@ -36,6 +46,14 @@ pub const YELLOW_PHRASES: &[&str] = &[
     "prevailing wage",
     "wage determination",
     "subcontracting limitation",
+    // Additional moderate-risk phrases
+    "at no additional charge",
+    "at the government's option",
+    "as directed by the contracting officer",
+    "contractor shall bear",
+    "without additional compensation",
+    "time is of the essence",
+    "at contractor's risk",
 ];
 
 /// Phrases that are GREEN (favorable to contractor) — lower overall score.
@@ -474,5 +492,161 @@ mod tests {
         let text = "52.222-41 and again 52.222-41 here.";
         let clauses = a.find_clauses(text);
         assert_eq!(clauses.len(), 1, "should deduplicate");
+    }
+
+    // ── New phrase-based risk detection tests ─────────────────────────────────
+
+    #[test]
+    fn new_red_phrase_indemnify_detected() {
+        let a = Analyzer::new();
+        let text = "The contractor shall indemnify the Government against all third-party claims.";
+        let hits = a.find_hits(text, &a.red_res, RED_PHRASES);
+        assert!(hits.contains(&"indemnify".to_string()), "got: {hits:?}");
+    }
+
+    #[test]
+    fn new_red_phrase_hold_harmless_detected() {
+        let a = Analyzer::new();
+        let text = "Contractor agrees to hold harmless the United States from any liability.";
+        let hits = a.find_hits(text, &a.red_res, RED_PHRASES);
+        assert!(hits.contains(&"hold harmless".to_string()), "got: {hits:?}");
+    }
+
+    #[test]
+    fn new_red_phrase_sole_discretion_detected() {
+        let a = Analyzer::new();
+        let text = "The Contracting Officer may, at sole discretion, require additional work.";
+        let hits = a.find_hits(text, &a.red_res, RED_PHRASES);
+        assert!(hits.contains(&"sole discretion".to_string()), "got: {hits:?}");
+    }
+
+    #[test]
+    fn new_red_phrase_at_contractors_expense_detected() {
+        let a = Analyzer::new();
+        let text = "Any re-performance shall be done at contractor's expense.";
+        let hits = a.find_hits(text, &a.red_res, RED_PHRASES);
+        assert!(hits.contains(&"at contractor's expense".to_string()), "got: {hits:?}");
+    }
+
+    #[test]
+    fn new_red_phrase_no_additional_cost_detected() {
+        let a = Analyzer::new();
+        let text = "Repairs must be completed at no additional cost to the government.";
+        let hits = a.find_hits(text, &a.red_res, RED_PHRASES);
+        assert!(hits.contains(&"no additional cost to the government".to_string()), "got: {hits:?}");
+    }
+
+    #[test]
+    fn new_yellow_phrase_time_is_of_essence_detected() {
+        let a = Analyzer::new();
+        let text = "Time is of the essence for all deliverables under this contract.";
+        let hits = a.find_hits(text, &a.yellow_res, YELLOW_PHRASES);
+        assert!(hits.contains(&"time is of the essence".to_string()), "got: {hits:?}");
+    }
+
+    // ── Integration test: realistic contract text → risk detection ─────────────
+
+    /// Simulate analysis of contract text containing multiple risk indicators
+    /// by exercising the phrase and clause detection on inline text.
+    #[test]
+    fn integration_realistic_contract_text_risk_detection() {
+        let a = Analyzer::new();
+
+        let contract_text = "\
+            CONTRACT NO. W912HN-26-C-0042 \
+            This contract incorporates FAR clauses 52.249-8 (Default), 52.211-11 (Liquidated Damages), \
+            52.222-41 (Service Contract Labor Standards), and DFARS 252.204-7012. \
+            \
+            SECTION H — SPECIAL CONTRACT REQUIREMENTS \
+            H.1 The contractor shall indemnify and hold harmless the Government from all claims \
+            arising out of contractor negligence. \
+            H.2 Time is of the essence for all deliverables. Failure to deliver on schedule will \
+            trigger liquidated damages of $500 per calendar day. \
+            H.3 Any re-performance required due to defective work shall be at contractor's expense \
+            and at no additional cost to the government. \
+            H.4 The Contracting Officer, at sole discretion, may direct contractor to perform \
+            additional cleanup tasks without additional compensation. \
+            H.5 Termination for default may be issued with 10 days notice. Excess reprocurement \
+            costs shall be charged to the defaulting contractor. \
+            H.6 Option to extend services may be exercised by the Government with 30-day notice. \
+            H.7 Prevailing wage rates per current wage determination apply to all service employees. \
+        ";
+
+        // Clause detection
+        let clauses = a.find_clauses(contract_text);
+        assert!(clauses.contains(&"52.249-8".to_string()), "should find 52.249-8");
+        assert!(clauses.contains(&"52.211-11".to_string()), "should find 52.211-11");
+        assert!(clauses.contains(&"52.222-41".to_string()), "should find 52.222-41");
+        assert!(clauses.contains(&"252.204-7012".to_string()), "should find 252.204-7012");
+
+        // Red phrase detection
+        let red_hits = a.find_hits(contract_text, &a.red_res, RED_PHRASES);
+        assert!(red_hits.contains(&"indemnify".to_string()), "should detect indemnify");
+        assert!(red_hits.contains(&"hold harmless".to_string()), "should detect hold harmless");
+        assert!(red_hits.contains(&"liquidated damages".to_string()), "should detect liquidated damages");
+        assert!(red_hits.contains(&"sole discretion".to_string()), "should detect sole discretion");
+        assert!(red_hits.contains(&"at contractor's expense".to_string()), "should detect at contractor's expense");
+        assert!(red_hits.contains(&"no additional cost to the government".to_string()), "should detect no additional cost");
+        assert!(red_hits.contains(&"excess reprocurement".to_string()), "should detect excess reprocurement");
+        assert!(red_hits.contains(&"termination for default".to_string()), "should detect termination for default");
+
+        // Yellow phrase detection
+        let yellow_hits = a.find_hits(contract_text, &a.yellow_res, YELLOW_PHRASES);
+        assert!(yellow_hits.contains(&"option to extend".to_string()), "should detect option to extend");
+        assert!(yellow_hits.contains(&"prevailing wage".to_string()), "should detect prevailing wage");
+        assert!(yellow_hits.contains(&"without additional compensation".to_string()), "should detect without additional compensation");
+        assert!(yellow_hits.contains(&"time is of the essence".to_string()), "should detect time is of the essence");
+
+        // Score should be RED-level
+        let score = PageRisk::compute_score(red_hits.len(), yellow_hits.len(), 0);
+        assert_eq!(
+            PageRisk::score_to_level(score),
+            RiskLevel::Red,
+            "realistic high-risk contract should score RED, score={}",
+            score
+        );
+    }
+
+    // ── Summary paragraph test ─────────────────────────────────────────────────
+
+    #[test]
+    fn summary_paragraph_contains_risk_level() {
+        use crate::report::build_risk_paragraph;
+        use crate::clauses::ClauseInfo;
+
+        let analysis = crate::analyzer::ContractAnalysis {
+            file_path: "test.pdf".to_string(),
+            total_pages: 5,
+            pages: vec![],
+            all_clause_refs: vec!["52.249-8".to_string(), "52.222-41".to_string()],
+            known_clauses: vec![
+                ClauseInfo {
+                    number: "52.249-8".to_string(),
+                    title: "Default".to_string(),
+                    risk: RiskLevel::Red,
+                    description: "desc".to_string(),
+                    recommendation: "rec".to_string(),
+                },
+                ClauseInfo {
+                    number: "52.222-41".to_string(),
+                    title: "Service Contract Labor Standards".to_string(),
+                    risk: RiskLevel::Yellow,
+                    description: "desc".to_string(),
+                    recommendation: "rec".to_string(),
+                },
+            ],
+            red_phrase_total: 3,
+            yellow_phrase_total: 2,
+            green_phrase_total: 1,
+            overall_score: 55,
+            overall_risk: RiskLevel::Red,
+            summary: "test summary".to_string(),
+        };
+
+        let para = build_risk_paragraph(&analysis);
+        assert!(para.contains("HIGH"), "should mention HIGH risk: {para}");
+        assert!(para.contains("52.249-8"), "should mention red clause: {para}");
+        assert!(para.contains("52.222-41"), "should mention yellow clause: {para}");
+        assert!(para.contains("legal review"), "should recommend legal review: {para}");
     }
 }

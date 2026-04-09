@@ -1,10 +1,11 @@
 /// sigstamp — PDF digital signature stamper for Hoags Inc.
 ///
 /// Usage:
-///   sigstamp sign <pdf> --signer "Collin Hoag" [--title "President"]
+///   sigstamp sign <pdf> --signer "Collin Hoag" [--title "President"] [--initials] [--pages 1-3]
 ///   sigstamp sign <pdf> --signer "Collin Hoag" --page 1 --x 200 --y 700
 ///   sigstamp date <pdf>
 ///   sigstamp batch <dir> --signer "Collin Hoag" [--title "President"]
+///   sigstamp verify <pdf>
 
 mod detect;
 mod sign;
@@ -13,7 +14,7 @@ use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 
 use detect::detect_sig_locations;
-use sign::{sign_batch, sign_pdf, stamp_date_only, StampParams};
+use sign::{sign_batch, sign_pdf, stamp_date_only, verify_pdf_has_signature, StampParams};
 
 #[derive(Parser)]
 #[command(
@@ -24,6 +25,28 @@ use sign::{sign_batch, sign_pdf, stamp_date_only, StampParams};
 struct Cli {
     #[command(subcommand)]
     command: Commands,
+}
+
+/// Parse a page range string like "1-3" or "2" into an inclusive (start, end) tuple (1-based).
+fn parse_page_range(s: &str) -> Result<(usize, usize), String> {
+    let s = s.trim();
+    if let Some((a, b)) = s.split_once('-') {
+        let start: usize = a.trim().parse().map_err(|_| format!("Invalid page range start: '{}'", a))?;
+        let end: usize = b.trim().parse().map_err(|_| format!("Invalid page range end: '{}'", b))?;
+        if start == 0 || end == 0 {
+            return Err("Page numbers are 1-based; 0 is not valid".to_string());
+        }
+        if start > end {
+            return Err(format!("Page range start ({start}) must be <= end ({end})"));
+        }
+        Ok((start, end))
+    } else {
+        let n: usize = s.parse().map_err(|_| format!("Invalid page number: '{s}'"))?;
+        if n == 0 {
+            return Err("Page numbers are 1-based; 0 is not valid".to_string());
+        }
+        Ok((n, n))
+    }
 }
 
 #[derive(Subcommand)]
@@ -57,6 +80,14 @@ enum Commands {
         /// Output directory. Defaults to `<pdf_stem>_signed/` beside the input.
         #[arg(long)]
         output: Option<PathBuf>,
+
+        /// Place initials (first letter of each name word) instead of full signature.
+        #[arg(long)]
+        initials: bool,
+
+        /// Only sign specific pages (e.g. "1-3" or "2"). Pages are 1-based.
+        #[arg(long)]
+        pages: Option<String>,
     },
 
     /// Stamp today's date on the date field of a PDF.
@@ -86,6 +117,12 @@ enum Commands {
         #[arg(long)]
         output: Option<PathBuf>,
     },
+
+    /// Check whether a PDF already has a /s/ signature stamped in it.
+    Verify {
+        /// Path to the PDF to check.
+        pdf: PathBuf,
+    },
 }
 
 fn main() {
@@ -100,11 +137,25 @@ fn main() {
             x,
             y,
             output,
+            initials,
+            pages,
         } => {
             if !pdf.exists() {
                 eprintln!("Error: PDF not found: {}", pdf.display());
                 std::process::exit(1);
             }
+
+            // Parse --pages range if provided
+            let page_range = match pages {
+                Some(ref s) => match parse_page_range(s) {
+                    Ok(r) => Some(r),
+                    Err(e) => {
+                        eprintln!("Error: invalid --pages value '{}': {e}", s);
+                        std::process::exit(1);
+                    }
+                },
+                None => None,
+            };
 
             let output_dir = output.unwrap_or_else(|| {
                 let stem = pdf
@@ -122,6 +173,8 @@ fn main() {
                 page,
                 x,
                 y,
+                initials,
+                page_range,
             };
 
             // Auto-detect signature locations unless explicit coords supplied
@@ -201,6 +254,8 @@ fn main() {
                 page: 0,
                 x: None,
                 y: None,
+                initials: false,
+                page_range: None,
             };
 
             let results = sign_batch(&dir, &output_dir, &params);
@@ -224,5 +279,54 @@ fn main() {
                 std::process::exit(1);
             }
         }
+
+        Commands::Verify { pdf } => {
+            if !pdf.exists() {
+                eprintln!("Error: PDF not found: {}", pdf.display());
+                std::process::exit(1);
+            }
+
+            match verify_pdf_has_signature(&pdf) {
+                Ok(true) => {
+                    println!("SIGNED: /s/ signature found in '{}'.", pdf.display());
+                }
+                Ok(false) => {
+                    println!("UNSIGNED: No /s/ signature found in '{}'.", pdf.display());
+                    std::process::exit(2);
+                }
+                Err(e) => {
+                    eprintln!("Error reading PDF: {e}");
+                    std::process::exit(1);
+                }
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_page_range_single() {
+        assert_eq!(parse_page_range("3").unwrap(), (3, 3));
+    }
+
+    #[test]
+    fn test_parse_page_range_range() {
+        assert_eq!(parse_page_range("1-3").unwrap(), (1, 3));
+        assert_eq!(parse_page_range("2-5").unwrap(), (2, 5));
+    }
+
+    #[test]
+    fn test_parse_page_range_invalid() {
+        assert!(parse_page_range("0").is_err());
+        assert!(parse_page_range("3-1").is_err());
+        assert!(parse_page_range("abc").is_err());
+    }
+
+    #[test]
+    fn test_parse_page_range_whitespace() {
+        assert_eq!(parse_page_range(" 2 - 4 ").unwrap(), (2, 4));
     }
 }

@@ -1,4 +1,4 @@
-//! FAR/DFARS clause database — risk levels and descriptions for ~50 common clauses.
+//! FAR/DFARS clause database — risk levels and descriptions for 60+ common clauses.
 
 use std::collections::HashMap;
 
@@ -324,6 +324,184 @@ pub fn build_clause_db() -> HashMap<String, ClauseInfo> {
             "Government may terminate contract if contractor offered gratuities to influence award or oversight.",
             "CRITICAL: Document all government employee contacts. No gifts, meals, or entertainment.",
         ),
+        // ── Additional GREEN clauses ──────────────────────────────────────────
+        (
+            "52.222-21",
+            "Prohibition of Segregated Facilities",
+            RiskLevel::Green,
+            "Contractor must not maintain segregated facilities. Standard EEO compliance.",
+            "Standard compliance. Ensure posted notices are current.",
+        ),
+        (
+            "52.204-7",
+            "System for Award Management",
+            RiskLevel::Green,
+            "Contractor must be registered in SAM.gov and maintain active registration.",
+            "Verify SAM registration is active before and throughout performance.",
+        ),
+        (
+            "52.232-33",
+            "Payment by Electronic Funds Transfer — System for Award Management",
+            RiskLevel::Green,
+            "Payment made via EFT to the bank account registered in SAM.gov.",
+            "Keep SAM.gov banking information current to avoid payment delays.",
+        ),
+        (
+            "52.203-17",
+            "Contractor Employee Whistleblower Rights and Requirement to Inform Employees of Whistleblower Rights",
+            RiskLevel::Green,
+            "Requires contractor to inform employees of whistleblower protections under 41 U.S.C. § 4712.",
+            "Post notice and include in employee onboarding materials.",
+        ),
+        (
+            "52.222-36",
+            "Equal Opportunity for Workers with Disabilities",
+            RiskLevel::Green,
+            "Affirmative action obligations for contractors with contracts over $15K.",
+            "Standard compliance. Ensure ADAAA-compliant hiring practices.",
+        ),
+        (
+            "52.204-13",
+            "System for Award Management Maintenance",
+            RiskLevel::Green,
+            "Requires maintaining accurate SAM.gov registration throughout contract performance.",
+            "Set a calendar reminder to renew SAM registration 60 days before expiration.",
+        ),
+        (
+            "52.232-40",
+            "Providing Accelerated Payments to Small Business Subcontractors",
+            RiskLevel::Green,
+            "Prime must accelerate payments to small business subcontractors to the extent practicable.",
+            "Favorable for small business subs. Track subcontractor payment dates.",
+        ),
+        // ── Additional YELLOW clauses ─────────────────────────────────────────
+        (
+            "52.219-8",
+            "Utilization of Small Business Concerns",
+            RiskLevel::Yellow,
+            "Prime must use small business concerns to the maximum practicable extent.",
+            "Document outreach to small business subs. Maintain contact records.",
+        ),
+        (
+            "52.222-35",
+            "Equal Opportunity for Veterans",
+            RiskLevel::Yellow,
+            "Affirmative action and reporting obligations for veterans under VEVRAA for contracts over $150K.",
+            "File VETS-4212 report annually. Maintain written VEVRAA AAP.",
+        ),
+        (
+            "52.222-37",
+            "Employment Reports on Veterans",
+            RiskLevel::Yellow,
+            "Annual VETS-4212 filing required for contracts over $150K.",
+            "File by September 30 each year. Track hiring of protected veterans.",
+        ),
+        (
+            "52.204-4",
+            "Printed or Copied Double-Sided on Postconsumer Fiber Content Paper",
+            RiskLevel::Yellow,
+            "Requires use of recycled-content paper for documents delivered under the contract.",
+            "Minor but enforceable. Source compliant paper before performance.",
+        ),
+        (
+            "52.227-2",
+            "Notice and Assistance Regarding Patent and Copyright Infringement",
+            RiskLevel::Yellow,
+            "Contractor must report and assist with any patent/copyright infringement claims.",
+            "Review software licenses and third-party IP in deliverables.",
+        ),
+        (
+            "52.247-64",
+            "Preference for Privately Owned U.S.-Flag Commercial Vessels",
+            RiskLevel::Yellow,
+            "Ocean shipments of at least 50% of cargo must use privately-owned US-flag vessels.",
+            "Coordinate with logistics team. Obtain waiver if US-flag vessel unavailable.",
+        ),
+        (
+            "52.219-28",
+            "Post-Award Small Business Program Rerepresentation",
+            RiskLevel::Yellow,
+            "Contractor must rerepresent size status upon contract modifications, options, or mergers.",
+            "Track size recertification triggers — especially after acquisitions or novations.",
+        ),
+        (
+            "52.215-15",
+            "Pension Adjustments and Asset Reversions",
+            RiskLevel::Yellow,
+            "Government may recover pension fund assets or adjustments in cost-type contracts.",
+            "Relevant for cost-type contracts. Consult DCAA before structuring pension plans.",
+        ),
+        // ── Additional RED / DFARS clauses ────────────────────────────────────
+        (
+            "252.204-7000",
+            "Disclosure of Information",
+            RiskLevel::Red,
+            "DFARS: Contractor must not release unclassified DoD information without prior approval.",
+            "HIGH RISK: Establish information disclosure review process before press releases or publications.",
+        ),
+        (
+            "252.204-7008",
+            "Compliance with Safeguarding Covered Defense Information Controls",
+            RiskLevel::Red,
+            "DFARS: Contractor must comply with NIST SP 800-171 safeguards for covered defense information.",
+            "CRITICAL: Same as 7012 — conduct 800-171 gap assessment immediately.",
+        ),
+        (
+            "252.204-7020",
+            "NIST SP 800-171 DoD Assessment Requirements",
+            RiskLevel::Red,
+            "DFARS: Contractor must have a current NIST SP 800-171 DoD Assessment on record in SPRS.",
+            "CRITICAL: Complete self-assessment and upload to SPRS before contract award.",
+        ),
+        (
+            "252.211-7003",
+            "Item Unique Identification and Valuation",
+            RiskLevel::Red,
+            "DFARS: Requires marking and reporting of Government-furnished property and deliverables with IUID.",
+            "HIGH RISK: IUID non-compliance can block payment. Plan marking requirements in contract schedule.",
+        ),
+        (
+            "252.223-7008",
+            "Prohibition of Hexavalent Chromium",
+            RiskLevel::Red,
+            "DFARS: Prohibits hexavalent chromium in coatings, platings, or other applications in deliverables.",
+            "HIGH RISK: Conduct materials review before fabrication. Document any exemption requests.",
+        ),
+        (
+            "252.245-7001",
+            "Tagging, Labeling, and Marking of Government-Furnished Property",
+            RiskLevel::Red,
+            "DFARS: Contractor responsible for proper tagging and tracking of all GFP.",
+            "HIGH RISK: Establish GFP accountability system on day 1. Missing GFP triggers financial liability.",
+        ),
+        (
+            "252.203-7001",
+            "Prohibition on Persons Convicted of Fraud or Other Defense Contract-Related Felonies",
+            RiskLevel::Red,
+            "DFARS: Prohibits employment of persons convicted of defense-contract fraud on covered contracts.",
+            "CRITICAL: Screen all employees with access to covered contracts against conviction records.",
+        ),
+        (
+            "252.232-7010",
+            "Levies on Contract Payments",
+            RiskLevel::Red,
+            "DFARS: IRS or other government liens may be levied directly against contract payments.",
+            "HIGH RISK: Resolve any outstanding federal tax liens before contract performance.",
+        ),
+        (
+            "52.212-5",
+            "Contract Terms and Conditions Required to Implement Statutes or Executive Orders — Commercial Products",
+            RiskLevel::Red,
+            "Incorporates a long list of statutory clauses by reference. Each has its own compliance burden.",
+            "CRITICAL: Review the full clause list in the contract — subparagraph checkboxes determine which apply.",
+        ),
+        (
+            "52.230-2",
+            "Cost Accounting Standards",
+            RiskLevel::Red,
+            "Full CAS coverage required for contracts over $2M (or $50M for modified coverage). Non-compliance triggers price adjustments.",
+            "CRITICAL: Determine CAS coverage level before bid. Disclose CAS practices in CASB Disclosure Statement.",
+        ),
     ];
 
     let mut db = HashMap::with_capacity(entries.len());
@@ -349,7 +527,7 @@ mod tests {
     #[test]
     fn db_has_expected_size() {
         let db = build_clause_db();
-        assert!(db.len() >= 40, "expected >= 40 clauses, got {}", db.len());
+        assert!(db.len() >= 60, "expected >= 60 clauses, got {}", db.len());
     }
 
     #[test]

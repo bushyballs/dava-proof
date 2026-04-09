@@ -2,6 +2,7 @@
 //!
 //! Commands:
 //!   generate  --contract <json_path> --period <YYYY-MM>
+//!   validate  --contract <json_path>
 //!   status    --contract <json_path>
 //!   list
 
@@ -13,7 +14,7 @@ use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 
 use generate::generate_pdf;
-use invoice::{build_invoice, parse_contract};
+use invoice::{build_invoice, parse_contract, validate_contract};
 use tracker::Tracker;
 
 // ── CLI definition ────────────────────────────────────────────────────────────
@@ -52,6 +53,13 @@ enum Commands {
         /// Emit invoice JSON to stdout instead of writing a PDF
         #[arg(long)]
         json: bool,
+    },
+
+    /// Validate a contract JSON for completeness before generating invoices
+    Validate {
+        /// Path to contract JSON file (or inline JSON string)
+        #[arg(long)]
+        contract: String,
     },
 
     /// Show invoiced vs. outstanding amounts for a contract
@@ -106,7 +114,12 @@ fn cmd_generate(
         .next_sequence(&contract.contract_number, period)
         .map_err(|e| format!("Sequence error: {e}"))?;
 
-    let inv = build_invoice(&contract, period, seq)?;
+    // Load cumulative per-CLIN totals so we only bill the remaining balance
+    let already_invoiced = tracker
+        .total_invoiced_per_clin(&contract.contract_number)
+        .map_err(|e| format!("Cumulative tracking error: {e}"))?;
+
+    let inv = build_invoice(&contract, period, seq, Some(&already_invoiced))?;
 
     if emit_json {
         println!("{}", serde_json::to_string_pretty(&inv).unwrap());
@@ -150,6 +163,33 @@ fn cmd_generate(
     println!("Total: ${:.2}", inv.total);
 
     Ok(())
+}
+
+fn cmd_validate(contract_arg: &str) -> Result<(), String> {
+    let json = load_contract_json(contract_arg)?;
+    let contract = parse_contract(&json)?;
+    let result = validate_contract(&contract);
+
+    if result.errors.is_empty() && result.warnings.is_empty() {
+        println!("Contract {} is valid.", contract.contract_number);
+    } else {
+        for w in &result.warnings {
+            println!("WARNING: {w}");
+        }
+        for e in &result.errors {
+            println!("ERROR:   {e}");
+        }
+    }
+
+    if result.ok {
+        println!("Validation passed ({} CLINs, period {} to {}).",
+            contract.clins.len(),
+            contract.period.start,
+            contract.period.end);
+        Ok(())
+    } else {
+        Err(format!("{} validation error(s) found.", result.errors.len()))
+    }
 }
 
 fn cmd_status(db_path: &str, contract_arg: &str) -> Result<(), String> {
@@ -246,6 +286,7 @@ fn main() {
         Commands::Generate { contract, period, out, json } => {
             cmd_generate(&cli.db, contract, period, out.as_deref(), *json)
         }
+        Commands::Validate { contract } => cmd_validate(contract),
         Commands::Status { contract } => cmd_status(&cli.db, contract),
         Commands::List { contract, json } => cmd_list(&cli.db, contract.as_deref(), *json),
     };

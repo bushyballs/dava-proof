@@ -2,23 +2,44 @@
 //!
 //! Usage:
 //!   clauseguard analyze <pdf>
+//!   clauseguard analyze <pdf> --threshold red
 //!   clauseguard check <pdf> --clause "52.222-41"
 //!   clauseguard compare <pdf1> <pdf2>
+//!   clauseguard summary <pdf>
 
 mod analyzer;
 mod clauses;
 mod report;
 
-use clap::{Parser, Subcommand};
+use clap::{Parser, Subcommand, ValueEnum};
 use std::path::PathBuf;
 
 use analyzer::Analyzer;
+use clauses::RiskLevel;
 use report::{
-    print_analysis, print_clause_check, print_diff, to_json_analysis, to_json_clause_check,
-    to_json_diff,
+    print_analysis, print_clause_check, print_diff, print_summary, to_json_analysis,
+    to_json_clause_check, to_json_diff, to_json_summary,
 };
 
 // ── CLI definition ────────────────────────────────────────────────────────────
+
+/// Risk threshold filter — only show items at or above this level.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
+enum ThresholdArg {
+    Red,
+    Yellow,
+    Green,
+}
+
+impl ThresholdArg {
+    fn to_risk_level(self) -> RiskLevel {
+        match self {
+            ThresholdArg::Red => RiskLevel::Red,
+            ThresholdArg::Yellow => RiskLevel::Yellow,
+            ThresholdArg::Green => RiskLevel::Green,
+        }
+    }
+}
 
 #[derive(Parser, Debug)]
 #[command(
@@ -41,6 +62,10 @@ enum Command {
     Analyze {
         /// Path to the contract PDF file.
         pdf: PathBuf,
+
+        /// Only show clauses and phrases at or above this risk level.
+        #[arg(long, value_enum)]
+        threshold: Option<ThresholdArg>,
     },
 
     /// Check whether a specific FAR/DFARS clause number appears in the contract.
@@ -60,6 +85,12 @@ enum Command {
         /// Second contract PDF.
         pdf2: PathBuf,
     },
+
+    /// Print a one-paragraph plain-English risk summary of a contract PDF.
+    Summary {
+        /// Path to the contract PDF file.
+        pdf: PathBuf,
+    },
 }
 
 // ── Entry point ───────────────────────────────────────────────────────────────
@@ -69,9 +100,10 @@ fn main() {
     let analyzer = Analyzer::new();
 
     match cli.command {
-        Command::Analyze { pdf } => {
+        Command::Analyze { pdf, threshold } => {
             match analyzer.analyze(&pdf) {
                 Ok(analysis) => {
+                    let min_risk = threshold.map(|t| t.to_risk_level());
                     if cli.json {
                         match to_json_analysis(&analysis) {
                             Ok(j) => println!("{j}"),
@@ -81,12 +113,12 @@ fn main() {
                             }
                         }
                     } else {
-                        print_analysis(&analysis);
+                        print_analysis(&analysis, min_risk.as_ref());
                         // Exit code reflects overall risk: 0=green, 1=yellow, 2=red
                         let code = match analysis.overall_risk {
-                            clauses::RiskLevel::Green => 0,
-                            clauses::RiskLevel::Yellow => 1,
-                            clauses::RiskLevel::Red => 2,
+                            RiskLevel::Green => 0,
+                            RiskLevel::Yellow => 1,
+                            RiskLevel::Red => 2,
                         };
                         std::process::exit(code);
                     }
@@ -136,6 +168,34 @@ fn main() {
                         print_diff(&diff);
                         // Exit code: 0 = same or safer, 1 = riskier
                         std::process::exit(if diff.risk_delta > 0 { 1 } else { 0 });
+                    }
+                }
+                Err(e) => {
+                    eprintln!("Error: {e}");
+                    std::process::exit(3);
+                }
+            }
+        }
+
+        Command::Summary { pdf } => {
+            match analyzer.analyze(&pdf) {
+                Ok(analysis) => {
+                    if cli.json {
+                        match to_json_summary(&analysis) {
+                            Ok(j) => println!("{j}"),
+                            Err(e) => {
+                                eprintln!("JSON error: {e}");
+                                std::process::exit(1);
+                            }
+                        }
+                    } else {
+                        print_summary(&analysis);
+                        let code = match analysis.overall_risk {
+                            RiskLevel::Green => 0,
+                            RiskLevel::Yellow => 1,
+                            RiskLevel::Red => 2,
+                        };
+                        std::process::exit(code);
                     }
                 }
                 Err(e) => {

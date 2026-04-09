@@ -1,14 +1,19 @@
 /// docconv — universal document format converter.
 ///
 /// Commands:
-///   convert <input> --to <format>   Convert a file to the target format
-///   info <file>                     Show file type, page count, text preview
-///   extract-text <pdf>              Extract all text from a PDF
-///   extract-tables <pdf>            Extract table-like rows from a PDF as CSV
+///   convert <input> --to <format>     Convert a file to the target format
+///   info <file>                       Show file type, page count, text preview
+///   extract-text <pdf>                Extract all text from a PDF
+///   extract-tables <pdf>              Extract table-like rows from a PDF as CSV
+///   merge <pdf1> <pdf2> --output out  Merge multiple PDFs into one
+///   split <pdf> --pages 1-5 --output  Extract a page range
+///   metadata <pdf>                    Show PDF metadata
+///   text <pdf> --page N               Extract text from a specific page
 
 mod convert;
 mod extract;
 mod formats;
+mod pdf_ops;
 
 use anyhow::Context;
 use clap::{Parser, Subcommand};
@@ -63,6 +68,46 @@ enum Commands {
         #[arg(short, long)]
         output: Option<PathBuf>,
     },
+    /// Merge two or more PDF files into a single output PDF.
+    Merge {
+        /// First PDF file.
+        pdf1: PathBuf,
+        /// Second PDF file.
+        pdf2: PathBuf,
+        /// Additional PDF files to append.
+        #[arg(last = true)]
+        extra: Vec<PathBuf>,
+        /// Output file path.
+        #[arg(short, long)]
+        output: PathBuf,
+    },
+    /// Extract a page range from a PDF into a new file.
+    Split {
+        /// Source PDF file.
+        pdf: PathBuf,
+        /// Page range, e.g. "1-5" or "3" (1-indexed, inclusive).
+        #[arg(long)]
+        pages: String,
+        /// Output file path.
+        #[arg(short, long)]
+        output: PathBuf,
+    },
+    /// Show PDF metadata (title, author, creator, page count, file size).
+    Metadata {
+        /// PDF file path.
+        pdf: PathBuf,
+    },
+    /// Extract text from a specific page of a PDF.
+    Text {
+        /// PDF file path.
+        pdf: PathBuf,
+        /// Page number to extract (1-indexed).
+        #[arg(long)]
+        page: u32,
+        /// Output file (default: print to stdout).
+        #[arg(short, long)]
+        output: Option<PathBuf>,
+    },
 }
 
 // ─── Entry point ─────────────────────────────────────────────────────────────
@@ -82,6 +127,14 @@ fn run() -> anyhow::Result<()> {
         Commands::Info { file } => cmd_info(&file),
         Commands::ExtractText { pdf, output } => cmd_extract_text(&pdf, output.as_deref()),
         Commands::ExtractTables { pdf, output } => cmd_extract_tables(&pdf, output.as_deref()),
+        Commands::Merge { pdf1, pdf2, extra, output } => {
+            let mut inputs = vec![pdf1, pdf2];
+            inputs.extend(extra);
+            cmd_merge(&inputs, &output)
+        }
+        Commands::Split { pdf, pages, output } => cmd_split(&pdf, &pages, &output),
+        Commands::Metadata { pdf } => cmd_metadata(&pdf),
+        Commands::Text { pdf, page, output } => cmd_text_page(&pdf, page, output.as_deref()),
     }
 }
 
@@ -170,6 +223,48 @@ fn cmd_extract_tables(pdf: &Path, output: Option<&Path>) -> anyhow::Result<()> {
     }
 
     emit(&csv, output)
+}
+
+fn cmd_merge(inputs: &[PathBuf], output: &Path) -> anyhow::Result<()> {
+    let refs: Vec<&Path> = inputs.iter().map(|p| p.as_path()).collect();
+    pdf_ops::merge_pdfs(&refs, output)
+        .with_context(|| format!("Merging PDFs into {}", output.display()))?;
+    println!("Merged {} PDFs → {}", inputs.len(), output.display());
+    Ok(())
+}
+
+fn cmd_split(pdf: &Path, pages: &str, output: &Path) -> anyhow::Result<()> {
+    let (start, end) = pdf_ops::parse_page_range(pages)
+        .with_context(|| format!("Invalid page range: {pages}"))?;
+    pdf_ops::split_pdf(pdf, start, end, output)
+        .with_context(|| format!("Splitting {} pages {pages}", pdf.display()))?;
+    println!(
+        "Split pages {pages} from {} → {}",
+        pdf.display(),
+        output.display()
+    );
+    Ok(())
+}
+
+fn cmd_metadata(pdf: &Path) -> anyhow::Result<()> {
+    let meta = pdf_ops::read_metadata(pdf)
+        .with_context(|| format!("Reading metadata from {}", pdf.display()))?;
+    println!("File       : {}", pdf.display());
+    println!("Pages      : {}", meta.page_count);
+    println!("File size  : {} bytes", meta.file_size);
+    if let Some(v) = &meta.title    { println!("Title      : {v}"); }
+    if let Some(v) = &meta.author   { println!("Author     : {v}"); }
+    if let Some(v) = &meta.creator  { println!("Creator    : {v}"); }
+    if let Some(v) = &meta.producer { println!("Producer   : {v}"); }
+    if let Some(v) = &meta.creation_date { println!("Created    : {v}"); }
+    if let Some(v) = &meta.mod_date { println!("Modified   : {v}"); }
+    Ok(())
+}
+
+fn cmd_text_page(pdf: &Path, page: u32, output: Option<&Path>) -> anyhow::Result<()> {
+    let text = pdf_ops::extract_page_text(pdf, page)
+        .with_context(|| format!("Extracting page {} from {}", page, pdf.display()))?;
+    emit(&text, output)
 }
 
 /// Print `content` to stdout or write to `output` if provided.
