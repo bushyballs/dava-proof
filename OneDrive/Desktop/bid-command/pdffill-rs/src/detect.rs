@@ -533,11 +533,7 @@ pub fn detect_all_fields(pdf_path: &Path) -> Vec<DetectedField> {
     let doc = match Document::load(pdf_path) {
         Ok(d) => d,
         Err(e) => {
-            eprintln!(
-                "Failed to load PDF {}: {}",
-                pdf_path.display(),
-                e
-            );
+            eprintln!("Failed to load PDF {}: {}", pdf_path.display(), e);
             return Vec::new();
         }
     };
@@ -551,6 +547,20 @@ pub fn detect_all_fields(pdf_path: &Path) -> Vec<DetectedField> {
     // Tier 2: Structural text analysis
     let raw = detect_structural(&doc);
     dedup_fields(raw)
+}
+
+/// Compute a SHA256 hash of the first page content for template identification.
+pub fn pdf_first_page_hash(pdf_path: &Path) -> Option<String> {
+    use sha2::{Sha256, Digest};
+    let doc = Document::load(pdf_path).ok()?;
+    let pages: Vec<(u32, lopdf::ObjectId)> = doc.get_pages().into_iter().collect();
+    if pages.is_empty() { return None; }
+    let (_, page_id) = pages[0];
+    let content = get_page_content(&doc, page_id);
+    if content.is_empty() { return None; }
+    let mut hasher = Sha256::new();
+    hasher.update(&content);
+    Some(format!("{:x}", hasher.finalize()))
 }
 
 /// Remove duplicate fields that overlap spatially (same page, bbox within 5pt).
