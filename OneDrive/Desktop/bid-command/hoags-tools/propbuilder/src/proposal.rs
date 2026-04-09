@@ -258,7 +258,7 @@ pub fn build_cover_letter(ctx: &ProposalContext, co_name_override: Option<&str>)
     let page_id = templates::add_page(&mut doc, stream_id);
     pages_kids.push(Object::Reference(page_id));
 
-    attach_pages(&mut doc, pages_kids)
+    attach_pages(doc, pages_kids)
 }
 
 // ─── Past Performance volume ──────────────────────────────────────────────────
@@ -391,7 +391,7 @@ pub fn build_past_performance(ctx: &ProposalContext) -> Document {
     let page_id = templates::add_page(&mut doc, stream_id);
     pages_kids.push(Object::Reference(page_id));
 
-    attach_pages(&mut doc, pages_kids)
+    attach_pages(doc, pages_kids)
 }
 
 // ─── Price schedule PDF ───────────────────────────────────────────────────────
@@ -558,7 +558,7 @@ pub fn build_price_schedule(ctx: &ProposalContext) -> Document {
     let page_id = templates::add_page(&mut doc, stream_id);
     pages_kids.push(Object::Reference(page_id));
 
-    attach_pages(&mut doc, pages_kids)
+    attach_pages(doc, pages_kids)
 }
 
 // ─── Technical Approach volume ────────────────────────────────────────────────
@@ -655,7 +655,7 @@ pub fn build_technical_approach(ctx: &ProposalContext) -> Document {
     let page_id = templates::add_page(&mut doc, stream_id);
     pages_kids.push(Object::Reference(page_id));
 
-    attach_pages(&mut doc, pages_kids)
+    attach_pages(doc, pages_kids)
 }
 
 // ─── Full package generator ───────────────────────────────────────────────────
