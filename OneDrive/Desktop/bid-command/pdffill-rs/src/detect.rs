@@ -223,11 +223,25 @@ fn is_likely_field_label(label: &str) -> bool {
         if has_zip || has_state { return false; }
     }
 
-    // Skip single-word generic terms
+    // Skip single-word generic terms and column headers
     if label.split_whitespace().count() == 1 {
         let generics = ["code", "ac", "continued", "n/a", "accepted", "stock",
-            "deliver", "administered", "facility"];
+            "deliver", "administered", "facility", "solicitation", "amendment",
+            "item", "supplies/services", "quantity", "unit", "amount"];
         if generics.contains(&lower.as_str()) { return false; }
+    }
+
+    // Skip SF1449/OF336 column headers
+    if lower == "(a)" || lower == "(b)" || lower == "(c)" || lower == "(d)"
+        || lower == "(e)" || lower == "(f)" || lower == "is checked"
+        || lower.starts_with("s20") // PSC codes like S201
+    {
+        return false;
+    }
+
+    // Skip if it contains "product/service" (column header text)
+    if lower.contains("product/service") || lower.contains("supplies/services") {
+        return false;
     }
 
     true
