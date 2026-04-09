@@ -26,7 +26,7 @@ static RULES: LazyLock<Vec<Rule>> = LazyLock::new(|| vec![
             confidence: 0.95,
         },
         Rule {
-            pattern: Regex::new(r"(?i)\b(tin|ein|tax.?id)\b").unwrap(),
+            pattern: Regex::new(r"(?i)\b(tin|ein|tax.?id|tax\s+identification)\b").unwrap(),
             classification: "identity.code",
             confidence: 0.95,
         },
@@ -151,6 +151,136 @@ static RULES: LazyLock<Vec<Rule>> = LazyLock::new(|| vec![
             classification: "socioeconomic.setaside",
             confidence: 0.85,
         },
+        // ── Contracting Officer / Administrative ──────────────────────────────
+        Rule {
+            pattern: Regex::new(r"(?i)\b(contracting\s+officer|co\s+name|co\s+sign|admin\s+officer|administrative\s+officer)\b").unwrap(),
+            classification: "admin.officer",
+            confidence: 0.90,
+        },
+        Rule {
+            pattern: Regex::new(r"(?i)\b(remittance|payment\s+office|paying\s+office|pay\s+office)\b").unwrap(),
+            classification: "admin.payment",
+            confidence: 0.85,
+        },
+        // ── References / Numbers ──────────────────────────────────────────────
+        Rule {
+            pattern: Regex::new(r"(?i)\b(requisition|pr\s+no|pr\s+number|purchase\s+request)\b").unwrap(),
+            classification: "reference.requisition",
+            confidence: 0.85,
+        },
+        Rule {
+            pattern: Regex::new(r"(?i)\b(scope|statement\s+of\s+work|sow|pws|performance\s+work\s+statement)\b").unwrap(),
+            classification: "reference.scope",
+            confidence: 0.85,
+        },
+        Rule {
+            pattern: Regex::new(r"(?i)\b(past\s+performance|performance\s+history|performance\s+record)\b").unwrap(),
+            classification: "reference.performance",
+            confidence: 0.85,
+        },
+        Rule {
+            pattern: Regex::new(r"(?i)\b(technical\s+approach|technical\s+proposal|technical\s+volume|technical\s+factor)\b").unwrap(),
+            classification: "reference.technical",
+            confidence: 0.85,
+        },
+        Rule {
+            pattern: Regex::new(r"(?i)\b(key\s+personnel|key\s+staff|key\s+person)\b").unwrap(),
+            classification: "reference.personnel",
+            confidence: 0.85,
+        },
+        Rule {
+            pattern: Regex::new(r"(?i)\b(quality\s+control|quality\s+assurance|qc\s+plan|qa\s+plan|qcp|qap)\b").unwrap(),
+            classification: "reference.quality",
+            confidence: 0.85,
+        },
+        Rule {
+            pattern: Regex::new(r"(?i)\b(safety\s+plan|osha|em\s*385|safety\s+officer|accident\s+prevention)\b").unwrap(),
+            classification: "reference.safety",
+            confidence: 0.85,
+        },
+        Rule {
+            pattern: Regex::new(r"(?i)\b(security\s+clearance|background\s+check|background\s+investigation|clearance\s+level|secret|top\s+secret)\b").unwrap(),
+            classification: "reference.security",
+            confidence: 0.85,
+        },
+        Rule {
+            pattern: Regex::new(r"(?i)\b(government.?furnished\s+property|gfp|gfe|government.?furnished\s+equipment|government.?furnished\s+material|gfm)\b").unwrap(),
+            classification: "terms.gfe",
+            confidence: 0.85,
+        },
+        Rule {
+            pattern: Regex::new(r"(?i)\b(property\s+list|equipment\s+list|contractor.?owned|government.?owned)\b").unwrap(),
+            classification: "reference.property",
+            confidence: 0.80,
+        },
+        Rule {
+            pattern: Regex::new(r"(?i)\b(report\s+format|reporting\s+requirement|monthly\s+report|status\s+report|progress\s+report)\b").unwrap(),
+            classification: "reference.reporting",
+            confidence: 0.85,
+        },
+        Rule {
+            pattern: Regex::new(r"(?i)\b(closeout|contract\s+closeout|final\s+invoice|final\s+report|final\s+payment|contract\s+completion)\b").unwrap(),
+            classification: "reference.closeout",
+            confidence: 0.85,
+        },
+        // ── Finance / Accounting ──────────────────────────────────────────────
+        Rule {
+            pattern: Regex::new(r"(?i)\b(accounting|fund\s+cite|appropriation|acrn|line\s+of\s+accounting|loa|treasury|fiscal\s+year|fy\s*\d{2})\b").unwrap(),
+            classification: "finance.accounting",
+            confidence: 0.85,
+        },
+        // ── Terms / Conditions ────────────────────────────────────────────────
+        Rule {
+            pattern: Regex::new(r"(?i)\b(inspection|acceptance|inspect\s+and\s+accept|inspection\s+site|place\s+of\s+inspection)\b").unwrap(),
+            classification: "terms.inspection",
+            confidence: 0.85,
+        },
+        Rule {
+            pattern: Regex::new(r"(?i)\b(warrant(y|ee)|guarantee|guaranty)\b").unwrap(),
+            classification: "terms.warranty",
+            confidence: 0.85,
+        },
+        Rule {
+            pattern: Regex::new(r"(?i)\b(subcontract|subcontractor|sub.?contractor|teaming|team\s+member|subcontracting\s+plan)\b").unwrap(),
+            classification: "terms.subcontract",
+            confidence: 0.85,
+        },
+        Rule {
+            pattern: Regex::new(r"(?i)\b(evaluation\s+factor|evaluation\s+criteria|selection\s+criteria|award\s+criteria|best\s+value)\b").unwrap(),
+            classification: "terms.evaluation",
+            confidence: 0.85,
+        },
+        Rule {
+            pattern: Regex::new(r"(?i)\b(compliance|conform(ance)?|certification|certif(y|ied)|represent)\b").unwrap(),
+            classification: "terms.compliance",
+            confidence: 0.80,
+        },
+        Rule {
+            pattern: Regex::new(r"(?i)\b(liquidated\s+damages|ld\s+rate|delay\s+damages)\b").unwrap(),
+            classification: "terms.damages",
+            confidence: 0.90,
+        },
+        Rule {
+            pattern: Regex::new(r"(?i)\b(travel|per\s+diem|per\s+diem\s+rate|trip\s+cost|travel\s+cost)\b").unwrap(),
+            classification: "terms.travel",
+            confidence: 0.85,
+        },
+        // ── Temporal ─────────────────────────────────────────────────────────
+        Rule {
+            pattern: Regex::new(r"(?i)\b(option\s+year|option\s+period|option\s+to\s+extend|exercis(e|ing)\s+option)\b").unwrap(),
+            classification: "temporal.option",
+            confidence: 0.90,
+        },
+        Rule {
+            pattern: Regex::new(r"(?i)\b(base\s+year|base\s+period|base\s+term|initial\s+period|initial\s+term)\b").unwrap(),
+            classification: "temporal.base",
+            confidence: 0.90,
+        },
+        Rule {
+            pattern: Regex::new(r"(?i)\b(delivery\s+schedule|schedule\s+of\s+delivery|required\s+delivery\s+date|rdd)\b").unwrap(),
+            classification: "location.delivery",
+            confidence: 0.85,
+        },
     ]);
 
 /// Classify a single detected field using memory lookup then rule-based matching.
@@ -272,5 +402,45 @@ mod tests {
         let c = classify_field(&f, &mem);
         // Memory overrides the regex rule that would say identity.phone
         assert_eq!(c.classification, "identity.fax");
+    }
+
+    #[test]
+    fn test_classify_email() {
+        let mem = tmp_memory();
+        let f = DetectedField::new(0, (0.0, 0.0, 100.0, 20.0), "Offeror Email Address");
+        let c = classify_field(&f, &mem);
+        assert_eq!(c.classification, "identity.email");
+    }
+
+    #[test]
+    fn test_classify_address() {
+        let mem = tmp_memory();
+        let f = DetectedField::new(0, (0.0, 0.0, 100.0, 20.0), "Offeror Address");
+        let c = classify_field(&f, &mem);
+        assert_eq!(c.classification, "identity.address");
+    }
+
+    #[test]
+    fn test_classify_uei() {
+        let mem = tmp_memory();
+        let f = DetectedField::new(0, (0.0, 0.0, 100.0, 20.0), "UEI");
+        let c = classify_field(&f, &mem);
+        assert_eq!(c.classification, "identity.code");
+    }
+
+    #[test]
+    fn test_classify_tin() {
+        let mem = tmp_memory();
+        let f = DetectedField::new(0, (0.0, 0.0, 100.0, 20.0), "Tax Identification Number");
+        let c = classify_field(&f, &mem);
+        assert_eq!(c.classification, "identity.code");
+    }
+
+    #[test]
+    fn test_classify_currency() {
+        let mem = tmp_memory();
+        let f = DetectedField::new(0, (0.0, 0.0, 100.0, 20.0), "Unit Price");
+        let c = classify_field(&f, &mem);
+        assert_eq!(c.classification, "currency");
     }
 }

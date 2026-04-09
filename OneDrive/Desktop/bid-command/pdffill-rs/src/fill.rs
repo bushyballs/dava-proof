@@ -234,4 +234,31 @@ mod tests {
         assert_eq!(result.value, "Hoags Inc.");
         assert_eq!(result.source_level, "context");
     }
+
+    #[test]
+    fn test_signature_with_signer_name() {
+        let mem = tmp_memory();
+        // Use flat "signer_name" key (not nested under identity)
+        let ctx = json!({"signer_name": "Jane Doe"});
+        let f = classified("Authorized Signature", "signature");
+        let result = fill_field(&f, &ctx, &mem, true);
+        assert_eq!(result.value, "/s/ Jane Doe");
+        assert_eq!(result.source_level, "context");
+    }
+
+    #[test]
+    fn test_fill_fields_batch() {
+        let mem = tmp_memory();
+        let ctx = json!({"identity": {"name": "Hoags Inc.", "phone": "555-1234"}});
+        let fields = vec![
+            classified("Offeror Name", "identity.name"),
+            classified("Offeror Phone", "identity.phone"),
+            classified("Mystery Field", "unknown"),
+        ];
+        let results = fill_fields(&fields, &ctx, &mem, true);
+        assert_eq!(results.len(), 3);
+        assert_eq!(results[0].value, "Hoags Inc.");
+        assert_eq!(results[1].value, "555-1234");
+        assert!(results[2].value.is_empty());
+    }
 }

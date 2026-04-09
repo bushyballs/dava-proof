@@ -360,7 +360,10 @@ fn is_likely_field_label(label: &str) -> bool {
     if wc == 2 && label.chars().all(|c| c.is_alphabetic() || c.is_whitespace()) {
         let has_form_word = lower.contains("name") || lower.contains("date") || lower.contains("code")
             || lower.contains("total") || lower.contains("price") || lower.contains("set aside")
-            || lower.contains("size") || lower.contains("type") || lower.contains("number");
+            || lower.contains("size") || lower.contains("type") || lower.contains("number")
+            || lower.contains("signature") || lower.contains("address") || lower.contains("phone")
+            || lower.contains("email") || lower.contains("title") || lower.contains("cage")
+            || lower.contains("uei") || lower.contains("contact");
         if !has_form_word {
             return false; // "Stacey Phillips", "Jared Machgan" etc.
         }
@@ -645,5 +648,94 @@ mod tests {
         let (lines, rects, _) = parse_content_ops(content, 792.0);
         assert_eq!(lines.len(), 2);
         assert_eq!(rects.len(), 1);
+    }
+
+    // ── is_likely_field_label tests ──────────────────────────────────────────
+
+    #[test]
+    fn test_is_likely_field_label_accepts_offeror_name() {
+        assert!(is_likely_field_label("Offeror Name"));
+    }
+
+    #[test]
+    fn test_is_likely_field_label_rejects_email() {
+        // Email addresses contain '@' — should be rejected
+        assert!(!is_likely_field_label("user@example.com"));
+    }
+
+    #[test]
+    fn test_is_likely_field_label_rejects_person_name() {
+        // Two-word all-alpha with no form keywords → treated as a person name
+        assert!(!is_likely_field_label("John Smith"));
+    }
+
+    #[test]
+    fn test_is_likely_field_label_rejects_sentence() {
+        // More than 6 words → too long to be a label
+        assert!(!is_likely_field_label("The contractor shall provide all necessary services"));
+    }
+
+    #[test]
+    fn test_is_likely_field_label_accepts_date() {
+        assert!(is_likely_field_label("Date"));
+    }
+
+    #[test]
+    fn test_is_likely_field_label_accepts_signature() {
+        assert!(is_likely_field_label("Offeror Signature"));
+    }
+
+    #[test]
+    fn test_is_likely_field_label_rejects_part_heading() {
+        // "PART X" headings must be rejected
+        assert!(!is_likely_field_label("PART 1 - THE SCHEDULE"));
+    }
+
+    // ── dedup tests ──────────────────────────────────────────────────────────
+
+    #[test]
+    fn test_dedup_removes_same_bbox() {
+        use crate::models::DetectedField;
+        let f1 = DetectedField {
+            page: 0,
+            bbox: (100.0, 200.0, 300.0, 215.0),
+            label: "Name".to_string(),
+            field_type: "text".to_string(),
+            source: "structural".to_string(),
+            widget_name: String::new(),
+        };
+        let f2 = DetectedField {
+            page: 0,
+            bbox: (100.0, 200.0, 300.0, 215.0),
+            label: "Name".to_string(),
+            field_type: "text".to_string(),
+            source: "structural".to_string(),
+            widget_name: String::new(),
+        };
+        let result = dedup_fields(vec![f1, f2]);
+        assert_eq!(result.len(), 1);
+    }
+
+    #[test]
+    fn test_dedup_keeps_different_pages() {
+        use crate::models::DetectedField;
+        let f1 = DetectedField {
+            page: 0,
+            bbox: (100.0, 200.0, 300.0, 215.0),
+            label: "Name".to_string(),
+            field_type: "text".to_string(),
+            source: "structural".to_string(),
+            widget_name: String::new(),
+        };
+        let f2 = DetectedField {
+            page: 1,
+            bbox: (100.0, 200.0, 300.0, 215.0),
+            label: "Name".to_string(),
+            field_type: "text".to_string(),
+            source: "structural".to_string(),
+            widget_name: String::new(),
+        };
+        let result = dedup_fields(vec![f1, f2]);
+        assert_eq!(result.len(), 2);
     }
 }

@@ -52,4 +52,44 @@ mod tests {
         let ctx = json!({"date": "04/08/2026"});
         assert_eq!(resolve_key(&ctx, "date"), Some("04/08/2026".into()));
     }
+
+    #[test]
+    fn test_resolve_key_number_value() {
+        let ctx = json!({"quantity": 5});
+        assert_eq!(resolve_key(&ctx, "quantity"), Some("5".into()));
+    }
+
+    #[test]
+    fn test_resolve_key_bool_value() {
+        let ctx = json!({"active": true});
+        assert_eq!(resolve_key(&ctx, "active"), Some("true".into()));
+    }
+
+    #[test]
+    fn test_resolve_key_deeply_nested() {
+        let ctx = json!({"a": {"b": {"c": "deep_value"}}});
+        assert_eq!(resolve_key(&ctx, "a.b.c"), Some("deep_value".into()));
+    }
+
+    #[test]
+    fn test_resolve_key_partial_path_returns_none() {
+        let ctx = json!({"a": {"b": "val"}});
+        // "a.b.c" doesn't exist — b is a string, not an object
+        assert_eq!(resolve_key(&ctx, "a.b.c"), None);
+    }
+
+    #[test]
+    fn test_resolve_key_empty_context() {
+        let ctx = json!({});
+        assert_eq!(resolve_key(&ctx, "anything"), None);
+    }
+
+    #[test]
+    fn test_resolve_key_array_value() {
+        // Arrays are returned as their JSON representation
+        let ctx = json!({"tags": ["a", "b"]});
+        let result = resolve_key(&ctx, "tags");
+        assert!(result.is_some());
+        assert!(result.unwrap().contains("a"));
+    }
 }

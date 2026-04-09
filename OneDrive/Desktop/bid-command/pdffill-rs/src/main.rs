@@ -14,6 +14,9 @@ enum Commands {
     Detect {
         /// Path to the PDF file
         pdf: PathBuf,
+        /// Output detected fields as a JSON array instead of human-readable text
+        #[arg(long)]
+        json: bool,
     },
     /// Fill a PDF with context data
     Fill {
@@ -64,15 +67,19 @@ fn main() {
     let cli = Cli::parse();
 
     match cli.command {
-        Commands::Detect { pdf } => {
+        Commands::Detect { pdf, json } => {
             let fields = pdffill::detect::detect_all_fields(&pdf);
-            println!("Detected {} fields in {}", fields.len(), pdf.display());
-            for f in &fields {
-                println!(
-                    "  p{} [{:10}] {:10} {:30?} bbox=({:.0},{:.0},{:.0},{:.0})",
-                    f.page, f.source, f.field_type, f.label,
-                    f.bbox.0, f.bbox.1, f.bbox.2, f.bbox.3,
-                );
+            if json {
+                println!("{}", serde_json::to_string_pretty(&fields).expect("JSON serialization failed"));
+            } else {
+                println!("Detected {} fields in {}", fields.len(), pdf.display());
+                for f in &fields {
+                    println!(
+                        "  p{} [{:10}] {:10} {:30?} bbox=({:.0},{:.0},{:.0},{:.0})",
+                        f.page, f.source, f.field_type, f.label,
+                        f.bbox.0, f.bbox.1, f.bbox.2, f.bbox.3,
+                    );
+                }
             }
         }
         Commands::Fill { pdf, context, airgap } => {

@@ -177,4 +177,33 @@ mod tests {
         let c10 = mem.recall("field").unwrap().confidence;
         assert!(c10 > c1);
     }
+
+    #[test]
+    fn test_store_multiple_pdfs() {
+        let mem = tmp_memory();
+        mem.store("offeror name", "identity.name", "Hoags Inc.", "identity.name", "form_a.pdf", true);
+        mem.store("offeror name", "identity.name", "Hoags Inc.", "identity.name", "form_b.pdf", true);
+        mem.store("offeror name", "identity.name", "Hoags Inc.", "identity.name", "form_c.pdf", true);
+        // Each unique PDF should be tracked in source_pdfs
+        let row: String = mem.conn.query_row(
+            "SELECT source_pdfs FROM field_memory WHERE label_normalized = ?",
+            rusqlite::params!["offeror name"],
+            |r| r.get(0),
+        ).unwrap();
+        let pdfs: Vec<String> = serde_json::from_str(&row).unwrap();
+        assert_eq!(pdfs.len(), 3);
+    }
+
+    #[test]
+    fn test_stats_after_stores() {
+        let mem = tmp_memory();
+        assert_eq!(mem.stats().total_fields, 0);
+        mem.store("field one", "identity.name", "v1", "k", "a.pdf", true);
+        assert_eq!(mem.stats().total_fields, 1);
+        mem.store("field two", "identity.phone", "v2", "k", "b.pdf", true);
+        assert_eq!(mem.stats().total_fields, 2);
+        // Storing field one again should not increase count (it's an update)
+        mem.store("field one", "identity.name", "v1_updated", "k", "c.pdf", true);
+        assert_eq!(mem.stats().total_fields, 2);
+    }
 }

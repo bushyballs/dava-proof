@@ -430,4 +430,20 @@ mod tests {
         assert_eq!(bbox[2], 300.0);
         assert_eq!(bbox[3], 215.0);
     }
+
+    #[test]
+    fn test_auto_fontsize_fits_short_text() {
+        // Short text that easily fits in a wide bbox should return the base size unchanged
+        let size = auto_fontsize_with_base("Hi", 200.0, 9.0);
+        assert!((size - 9.0).abs() < 0.01, "expected base size 9.0, got {}", size);
+    }
+
+    #[test]
+    fn test_auto_fontsize_shrinks_long_text() {
+        // Very long text in a narrow bbox should produce a smaller font
+        let long_text = "This is an extremely long value that will not fit in the narrow field box";
+        let size = auto_fontsize_with_base(long_text, 50.0, 9.0);
+        assert!(size < 9.0, "expected shrunk size, got {}", size);
+        assert!(size >= 5.0, "should not shrink below minimum 5.0, got {}", size);
+    }
 }
