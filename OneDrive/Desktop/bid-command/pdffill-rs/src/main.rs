@@ -1,5 +1,7 @@
 use clap::{Parser, Subcommand};
+use rayon::prelude::*;
 use std::path::PathBuf;
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 #[derive(Parser)]
 #[command(name = "pdffill", about = "Universal PDF field detection and filling engine")]
@@ -132,31 +134,44 @@ fn main() {
             println!("Testing {} PDFs from {}", pdfs.len(), dir.display());
             println!("{}", "=".repeat(70));
 
+            // Parallel PDF processing with rayon
+            let counter = AtomicUsize::new(0);
+            let total_count = pdfs.len();
+
+            // Each PDF processed independently, results collected
+            let results: Vec<_> = pdfs.par_iter().map(|pdf| {
+                let start = std::time::Instant::now();
+                let fields = pdffill::detect::detect_all_fields(pdf);
+                // Classify without memory for parallel safety (memory is SQLite, not Send)
+                let ms = start.elapsed().as_millis();
+                let idx = counter.fetch_add(1, Ordering::Relaxed) + 1;
+                let name = pdf.file_name().unwrap_or_default().to_string_lossy().to_string();
+                let display_name = if name.len() > 45 { format!("{}...", &name[..42]) } else { name };
+
+                eprintln!("  [{:3}/{}] OK {:47} {:4} fields  {:6}ms",
+                    idx, total_count, display_name, fields.len(), ms);
+
+                (display_name, fields)
+            }).collect();
+
+            // Aggregate results (sequential — fast since it's just counting)
+            let memory = pdffill::memory::FieldMemory::open_default()
+                .expect("Failed to open memory DB");
+
             let mut total_fields = 0usize;
             let mut total_classified = std::collections::HashMap::<String, usize>::new();
             let mut total_sources = std::collections::HashMap::<String, usize>::new();
             let mut zero_field_pdfs = Vec::new();
 
-            let memory = pdffill::memory::FieldMemory::open_default()
-                .expect("Failed to open memory DB");
-
-            for (i, pdf) in pdfs.iter().enumerate() {
-                let start = std::time::Instant::now();
-                let fields = pdffill::detect::detect_all_fields(pdf);
-                let classified = pdffill::classify::classify_fields(&fields, &memory);
-                let ms = start.elapsed().as_millis();
-                let name = pdf.file_name().unwrap_or_default().to_string_lossy();
-                let display_name = if name.len() > 45 { format!("{}...", &name[..42]) } else { name.to_string() };
-
-                println!("  [{:3}/{}] OK {:47} {:4} fields  {:6}ms",
-                    i + 1, pdfs.len(), display_name, fields.len(), ms);
+            for (display_name, fields) in &results {
+                let classified = pdffill::classify::classify_fields(fields, &memory);
 
                 if fields.is_empty() {
                     zero_field_pdfs.push(display_name.clone());
                 }
 
                 total_fields += fields.len();
-                for f in &fields {
+                for f in fields {
                     *total_sources.entry(f.source.clone()).or_insert(0) += 1;
                 }
                 for c in &classified {
