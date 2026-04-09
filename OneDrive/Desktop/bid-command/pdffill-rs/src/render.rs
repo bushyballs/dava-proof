@@ -83,24 +83,36 @@ pub fn render_filled_pdf(
                 let page_height = get_page_height_from_doc(&doc, *page_id);
 
                 // Build content stream for text insertion
-                // Use Helvetica (built-in PDF font, no embedding needed)
+                // Blue ink for filled values (0 0 0.6 = dark blue, industry standard)
+                // Different fonts for different field types:
+                //   Signature: Helvetica-Oblique (italic, looks like handwriting)
+                //   Currency/numeric: Courier (monospaced, clean numbers)
+                //   Everything else: Helvetica
                 let mut text_ops = String::new();
                 for field in page_fields {
                     let x = field.bbox.0;
-                    // Flip Y: PDF coords are bottom-up, our bbox is top-down
                     let y = page_height - field.bbox.1 - 2.0;
-                    let fontsize = auto_fontsize(&field.value, field.bbox.2 - field.bbox.0);
+                    let bbox_width = field.bbox.2 - field.bbox.0;
 
+                    // Pick font and size based on classification
+                    let (font_name, base_size) = match field.classification.as_str() {
+                        "signature" => ("HelvO", 10.0),     // italic for signatures
+                        "currency" | "numeric" => ("Cour", 8.0),  // monospaced for numbers
+                        _ => ("Helv", 9.0),
+                    };
+                    let fontsize = auto_fontsize_with_base(&field.value, bbox_width, base_size);
+
+                    // Set blue fill color, then render text
                     text_ops.push_str(&format!(
-                        "BT /Helv {} Tf {} {} Td ({}) Tj ET\n",
-                        fontsize, x, y,
+                        "BT 0 0 0.6 rg /{} {} Tf {} {} Td ({}) Tj ET\n",
+                        font_name, fontsize, x, y,
                         escape_pdf_string(&field.value)
                     ));
                 }
 
                 if !text_ops.is_empty() {
                     // Ensure Helvetica is in the page's font resources
-                    ensure_helvetica_font(&mut doc, *page_id);
+                    ensure_fill_fonts(&mut doc, *page_id);
 
                     // Append our text as a new content stream
                     let stream = lopdf::Stream::new(
@@ -153,12 +165,13 @@ fn get_page_height_from_doc(doc: &Document, page_id: lopdf::ObjectId) -> f64 {
     792.0
 }
 
-fn auto_fontsize(value: &str, bbox_width: f64) -> f64 {
-    if value.is_empty() { return 9.0; }
-    let estimated = value.len() as f64 * 9.0 * 0.5;
-    if estimated <= bbox_width { return 9.0; }
-    let scaled = 9.0 * (bbox_width / estimated) * 0.95;
-    scaled.max(5.0)
+fn auto_fontsize_with_base(value: &str, bbox_width: f64, base: f64) -> f64 {
+    if value.is_empty() { return base; }
+    let char_width = base * 0.5; // approximate char width at base size
+    let estimated = value.len() as f64 * char_width;
+    if estimated <= bbox_width { return base; }
+    let scaled = base * (bbox_width / estimated) * 0.95;
+    scaled.max(5.0).min(base) // never exceed base size
 }
 
 fn escape_pdf_string(s: &str) -> String {
@@ -167,8 +180,17 @@ fn escape_pdf_string(s: &str) -> String {
      .replace(')', "\\)")
 }
 
-fn ensure_helvetica_font(doc: &mut Document, page_id: lopdf::ObjectId) {
-    // Add /Helv as Helvetica to the page's Resources/Font dictionary
+fn ensure_fill_fonts(doc: &mut Document, page_id: lopdf::ObjectId) {
+    // Add fill fonts to the page's Resources/Font dictionary:
+    //   /Helv  = Helvetica (regular text)
+    //   /HelvO = Helvetica-Oblique (signatures)
+    //   /Cour  = Courier (numbers/currency)
+    let font_specs: &[(&[u8], &[u8])] = &[
+        (b"Helv", b"Helvetica"),
+        (b"HelvO", b"Helvetica-Oblique"),
+        (b"Cour", b"Courier"),
+    ];
+
     if let Ok(page_dict) = doc.get_dictionary_mut(page_id) {
         let resources = page_dict.get(b"Resources")
             .ok()
@@ -180,20 +202,22 @@ fn ensure_helvetica_font(doc: &mut Document, page_id: lopdf::ObjectId) {
             .and_then(|f| if let Object::Dictionary(d) = f { Some(d.clone()) } else { None })
             .unwrap_or_default();
 
-        // Only add if /Helv not already there
-        if fonts.get(b"Helv").is_err() {
-            let mut font_dict = lopdf::Dictionary::new();
-            font_dict.set(b"Type", Object::Name(b"Font".to_vec()));
-            font_dict.set(b"Subtype", Object::Name(b"Type1".to_vec()));
-            font_dict.set(b"BaseFont", Object::Name(b"Helvetica".to_vec()));
-            let font_id = doc.add_object(Object::Dictionary(font_dict));
-            fonts.set(b"Helv", Object::Reference(font_id));
+        for (key, base_font) in font_specs {
+            if fonts.get(*key).is_err() {
+                let mut font_dict = lopdf::Dictionary::new();
+                font_dict.set(b"Type", Object::Name(b"Font".to_vec()));
+                font_dict.set(b"Subtype", Object::Name(b"Type1".to_vec()));
+                font_dict.set(b"BaseFont", Object::Name(base_font.to_vec()));
+                // WinAnsiEncoding for proper character rendering
+                font_dict.set(b"Encoding", Object::Name(b"WinAnsiEncoding".to_vec()));
+                let font_id = doc.add_object(Object::Dictionary(font_dict));
+                fonts.set(*key, Object::Reference(font_id));
+            }
         }
 
         let mut new_resources = resources.clone();
         new_resources.set(b"Font", Object::Dictionary(fonts));
 
-        // Need to get mutable ref again since we dropped it
         if let Ok(pd) = doc.get_dictionary_mut(page_id) {
             pd.set(b"Resources", Object::Dictionary(new_resources));
         }
