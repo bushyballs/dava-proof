@@ -275,23 +275,45 @@ fn get_page_height(doc: &Document, page_id: lopdf::ObjectId) -> f64 {
     792.0
 }
 
-/// Find the text span nearest to the left of a horizontal line (its label).
+/// Find the text span nearest to a horizontal line (its label).
+/// Checks three positions in priority order:
+/// 1. Text to the LEFT of the line on the same Y level (e.g. "Name: ________")
+/// 2. Text ABOVE the line, aligned to the line's left edge (e.g. column headers above fill lines)
+/// 3. Text to the LEFT-ABOVE within a reasonable range
 fn find_label_for_line(line: &LineSegment, text_spans: &[TextSpan]) -> String {
+    let line_x = line.x0.min(line.x1);
+    let line_y = line.y0;
+
+    // Strategy 1: text to the LEFT on same Y (±15pt)
     let mut best_label = String::new();
-    let mut best_dist = f64::MAX;
+    let mut best_score = f64::MAX;
 
     for span in text_spans {
-        // Label should be to the left of the line, on similar y coordinate
-        let y_diff = (span.y - line.y0).abs();
-        if y_diff < 15.0 && span.x < line.x0.min(line.x1) + 10.0 {
-            let dist = (line.x0.min(line.x1) - span.x).abs();
-            if dist < best_dist && !span.text.trim().is_empty() {
-                best_dist = dist;
-                // Clean up the label
-                let label = span.text.trim().trim_end_matches(':').trim().to_string();
-                if !label.is_empty() && label.len() < 60 {
-                    best_label = label;
-                }
+        let text = span.text.trim();
+        if text.is_empty() || text.len() > 60 { continue; }
+
+        let y_diff = (span.y - line_y).abs();
+        let x_diff = line_x - span.x;
+
+        // Left of line, same vertical band
+        if y_diff < 15.0 && x_diff > -10.0 && x_diff < 300.0 {
+            let score = y_diff + x_diff * 0.5; // prefer closer x, tolerate y
+            if score < best_score {
+                best_score = score;
+                let label = text.trim_end_matches(':').trim().to_string();
+                if !label.is_empty() { best_label = label; }
+            }
+        }
+
+        // Above line, aligned to left edge (within 30pt x, 5-40pt above)
+        if span.y < line_y && (line_y - span.y) > 2.0 && (line_y - span.y) < 40.0
+            && (span.x - line_x).abs() < 30.0
+        {
+            let score = (line_y - span.y) * 2.0 + (span.x - line_x).abs();
+            if score < best_score {
+                best_score = score;
+                let label = text.trim_end_matches(':').trim().to_string();
+                if !label.is_empty() { best_label = label; }
             }
         }
     }
