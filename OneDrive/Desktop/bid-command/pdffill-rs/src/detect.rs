@@ -14,6 +14,14 @@ struct PdfRect {
     x: f64, y: f64, w: f64, h: f64,
 }
 
+/// A positioned text span from content stream Tj/TJ operators.
+#[derive(Debug, Clone)]
+struct TextSpan {
+    text: String,
+    x: f64,
+    y: f64,  // already flipped to top-down
+}
+
 /// Detect AcroForm fields from the PDF's interactive form dictionary.
 fn detect_acroform(doc: &Document) -> Vec<DetectedField> {
     let mut fields = Vec::new();
@@ -80,18 +88,25 @@ fn detect_acroform(doc: &Document) -> Vec<DetectedField> {
     fields
 }
 
-/// Parse raw content stream bytes for line (m/l) and rectangle (re) operators.
-fn parse_drawing_ops(content: &[u8], page_height: f64) -> (Vec<LineSegment>, Vec<PdfRect>) {
+/// Parse raw content stream bytes for drawing ops (m/l/re) and text (Tj/TJ/Tm/Td).
+fn parse_content_ops(content: &[u8], page_height: f64) -> (Vec<LineSegment>, Vec<PdfRect>, Vec<TextSpan>) {
     let mut lines = Vec::new();
     let mut rects = Vec::new();
+    let mut texts = Vec::new();
     let content_str = String::from_utf8_lossy(content);
-    let tokens: Vec<&str> = content_str.split_whitespace().collect();
 
     let mut cur_x: f64 = 0.0;
     let mut cur_y: f64 = 0.0;
+    let mut tm_x: f64 = 0.0;
+    let mut tm_y: f64 = 0.0;
+
+    // Tokenize — but we need to handle parenthesized strings specially
+    // Simple approach: split by whitespace, but extract (strings) separately
+    let tokens: Vec<&str> = content_str.split_whitespace().collect();
 
     for i in 0..tokens.len() {
         match tokens[i] {
+            // Drawing operators
             "m" if i >= 2 => {
                 cur_x = tokens[i - 2].parse().unwrap_or(0.0);
                 cur_y = tokens[i - 1].parse().unwrap_or(0.0);
@@ -116,10 +131,95 @@ fn parse_drawing_ops(content: &[u8], page_height: f64) -> (Vec<LineSegment>, Vec
                     w: rw.abs(), h: rh.abs(),
                 });
             }
+            // Text position operators
+            "Tm" if i >= 6 => {
+                tm_x = tokens[i - 2].parse().unwrap_or(0.0);
+                tm_y = tokens[i - 1].parse().unwrap_or(0.0);
+            }
+            "Td" | "TD" if i >= 2 => {
+                let dx: f64 = tokens[i - 2].parse().unwrap_or(0.0);
+                let dy: f64 = tokens[i - 1].parse().unwrap_or(0.0);
+                tm_x += dx;
+                tm_y += dy;
+            }
             _ => {}
         }
     }
-    (lines, rects)
+
+    // Extract text strings from parenthesized content using regex-like scanning
+    // PDF text: (Hello World) Tj  or  [(Hello) -100 (World)] TJ
+    extract_text_spans(&content_str, page_height, &mut texts);
+
+    (lines, rects, texts)
+}
+
+/// Extract text spans with positions from a content stream string.
+/// Finds (string) Tj patterns and maps them to text matrix positions.
+fn extract_text_spans(content: &str, page_height: f64, spans: &mut Vec<TextSpan>) {
+    let mut tm_x: f64 = 0.0;
+    let mut tm_y: f64 = 0.0;
+    let bytes = content.as_bytes();
+    let len = bytes.len();
+    let mut i = 0;
+
+    while i < len {
+        // Look for text matrix: "a b c d e f Tm"
+        // We only care about e (x) and f (y) — positions 4 and 5 in the 6 operands
+        if i + 2 < len && bytes[i] == b'T' && bytes[i + 1] == b'm' && (i + 2 >= len || !bytes[i + 2].is_ascii_alphanumeric()) {
+            // Walk back to find the 6 numbers before Tm
+            let before = &content[..i];
+            let nums: Vec<f64> = before.split_whitespace().rev().take(6)
+                .filter_map(|t| t.parse::<f64>().ok()).collect();
+            if nums.len() >= 2 {
+                tm_x = nums[1]; // e = x translation
+                tm_y = nums[0]; // f = y translation
+            }
+        }
+
+        // Look for Td/TD
+        if i + 2 < len && bytes[i] == b'T' && (bytes[i + 1] == b'd' || bytes[i + 1] == b'D')
+            && (i + 2 >= len || !bytes[i + 2].is_ascii_alphanumeric()) && i > 0 && bytes[i-1] == b' '
+        {
+            let before = &content[..i];
+            let nums: Vec<f64> = before.split_whitespace().rev().take(2)
+                .filter_map(|t| t.parse::<f64>().ok()).collect();
+            if nums.len() >= 2 {
+                tm_x += nums[1]; // dx
+                tm_y += nums[0]; // dy
+            }
+        }
+
+        // Look for (string) Tj
+        if bytes[i] == b'(' {
+            // Find matching close paren (handle escaping)
+            let start = i + 1;
+            let mut j = start;
+            let mut depth = 1;
+            while j < len && depth > 0 {
+                if bytes[j] == b'(' && (j == start || bytes[j - 1] != b'\\') { depth += 1; }
+                if bytes[j] == b')' && (j == start || bytes[j - 1] != b'\\') { depth -= 1; }
+                if depth > 0 { j += 1; }
+            }
+            if depth == 0 {
+                let text = String::from_utf8_lossy(&bytes[start..j]).to_string();
+                // Check if followed by Tj
+                let after = content[j + 1..].trim_start();
+                if after.starts_with("Tj") {
+                    if !text.trim().is_empty() {
+                        spans.push(TextSpan {
+                            text: text.clone(),
+                            x: tm_x,
+                            y: page_height - tm_y,
+                        });
+                    }
+                }
+                i = j + 1;
+                continue;
+            }
+        }
+
+        i += 1;
+    }
 }
 
 /// Get page content bytes (handles Reference, Array, and inline Stream).
@@ -173,6 +273,30 @@ fn get_page_height(doc: &Document, page_id: lopdf::ObjectId) -> f64 {
         }
     }
     792.0
+}
+
+/// Find the text span nearest to the left of a horizontal line (its label).
+fn find_label_for_line(line: &LineSegment, text_spans: &[TextSpan]) -> String {
+    let mut best_label = String::new();
+    let mut best_dist = f64::MAX;
+
+    for span in text_spans {
+        // Label should be to the left of the line, on similar y coordinate
+        let y_diff = (span.y - line.y0).abs();
+        if y_diff < 15.0 && span.x < line.x0.min(line.x1) + 10.0 {
+            let dist = (line.x0.min(line.x1) - span.x).abs();
+            if dist < best_dist && !span.text.trim().is_empty() {
+                best_dist = dist;
+                // Clean up the label
+                let label = span.text.trim().trim_end_matches(':').trim().to_string();
+                if !label.is_empty() && label.len() < 60 {
+                    best_label = label;
+                }
+            }
+        }
+    }
+
+    best_label
 }
 
 /// Check if a text segment looks like a form field label (not a heading or sentence).
@@ -270,11 +394,10 @@ fn detect_structural(doc: &Document) -> Vec<DetectedField> {
         let content = get_page_content(doc, page_id);
         if content.is_empty() { continue; }
 
-        let (h_lines, rects) = parse_drawing_ops(&content, page_height);
+        let (h_lines, rects, text_spans) = parse_content_ops(&content, page_height);
 
         // Horizontal lines → potential underscore blanks
-        // Filter: must be >30pt wide, <3pt tall, not a page border (not at edges),
-        // and not full-page-width (borders are usually 0..612 or similar)
+        // Filter: must be >30pt wide, <3pt tall, not a page border
         for line in &h_lines {
             let dx = (line.x1 - line.x0).abs();
             let dy = (line.y1 - line.y0).abs();
@@ -285,10 +408,13 @@ fn detect_structural(doc: &Document) -> Vec<DetectedField> {
                 && min_x > 10.0  // not at left page edge
                 && line.y0 > 20.0 && line.y0 < (page_height - 20.0) // not at top/bottom
             {
+                // Find the nearest text span to the left of this line (the label)
+                let label = find_label_for_line(line, &text_spans);
+
                 fields.push(DetectedField {
                     page: page_idx,
                     bbox: (min_x, line.y0 - 12.0, max_x, line.y0 + 2.0),
-                    label: String::new(),
+                    label,
                     field_type: "text".to_string(),
                     source: "structural".to_string(),
                     widget_name: String::new(),
@@ -417,6 +543,7 @@ fn dedup_fields(mut fields: Vec<DetectedField>) -> Vec<DetectedField> {
                 && (e.bbox.0 - field.bbox.0).abs() < 5.0
                 && (e.bbox.1 - field.bbox.1).abs() < 5.0
                 && e.field_type == field.field_type
+                && (e.label == field.label || e.label.is_empty() || field.label.is_empty())
         });
         if !is_dup {
             deduped.push(field);
@@ -438,7 +565,7 @@ mod tests {
     #[test]
     fn test_parse_horizontal_line() {
         let content = b"100 500 m 300 500 l S";
-        let (lines, _) = parse_drawing_ops(content, 792.0);
+        let (lines, _, _) = parse_content_ops(content, 792.0);
         assert_eq!(lines.len(), 1);
         assert!((lines[0].x0 - 100.0).abs() < 0.1);
         assert!((lines[0].x1 - 300.0).abs() < 0.1);
@@ -449,7 +576,7 @@ mod tests {
     #[test]
     fn test_parse_rectangle() {
         let content = b"50 700 12 12 re S";
-        let (_, rects) = parse_drawing_ops(content, 792.0);
+        let (_, rects, _) = parse_content_ops(content, 792.0);
         assert_eq!(rects.len(), 1);
         assert!((rects[0].w - 12.0).abs() < 0.1);
         assert!((rects[0].h - 12.0).abs() < 0.1);
@@ -458,7 +585,7 @@ mod tests {
     #[test]
     fn test_checkbox_from_small_square() {
         let content = b"50 700 10 10 re S";
-        let (_, rects) = parse_drawing_ops(content, 792.0);
+        let (_, rects, _) = parse_content_ops(content, 792.0);
         assert!(!rects.is_empty());
         let r = &rects[0];
         // Should qualify as checkbox: 6 < w < 20, 6 < h < 20, roughly square
@@ -470,7 +597,7 @@ mod tests {
     #[test]
     fn test_large_rect_not_checkbox() {
         let content = b"50 700 200 50 re S";
-        let (_, rects) = parse_drawing_ops(content, 792.0);
+        let (_, rects, _) = parse_content_ops(content, 792.0);
         assert!(!rects.is_empty());
         let r = &rects[0];
         // 200x50 is NOT a checkbox
@@ -480,7 +607,7 @@ mod tests {
     #[test]
     fn test_multiple_lines_and_rects() {
         let content = b"100 500 m 300 500 l S 50 700 10 10 re S 200 400 m 400 400 l S";
-        let (lines, rects) = parse_drawing_ops(content, 792.0);
+        let (lines, rects, _) = parse_content_ops(content, 792.0);
         assert_eq!(lines.len(), 2);
         assert_eq!(rects.len(), 1);
     }
