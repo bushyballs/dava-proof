@@ -175,6 +175,45 @@ fn get_page_height(doc: &Document, page_id: lopdf::ObjectId) -> f64 {
     792.0
 }
 
+/// Check if a text segment looks like a form field label (not a heading or sentence).
+fn is_likely_field_label(label: &str) -> bool {
+    // Empty or too long
+    if label.is_empty() || label.len() > 50 || label.len() < 2 {
+        return false;
+    }
+    // Must contain letters
+    if !label.chars().any(|c| c.is_alphabetic()) {
+        return false;
+    }
+    // Skip numbered sections: "1.", "1.2", "PART 1", "Section 5"
+    if label.starts_with(|c: char| c.is_ascii_digit()) {
+        return false;
+    }
+    if label.to_uppercase().starts_with("PART ") || label.to_uppercase().starts_with("SECTION ") {
+        return false;
+    }
+    // Skip ALL CAPS headings longer than 20 chars (section titles)
+    if label.len() > 20 && label.chars().filter(|c| c.is_alphabetic()).all(|c| c.is_uppercase()) {
+        return false;
+    }
+    // Skip sentences (contain multiple spaces + lowercase → likely body text)
+    let word_count = label.split_whitespace().count();
+    if word_count > 6 {
+        return false;
+    }
+    // Skip if it looks like a sentence fragment (lowercase start, many words)
+    if word_count > 3 && label.starts_with(|c: char| c.is_lowercase()) {
+        return false;
+    }
+    // Skip common non-field patterns
+    let lower = label.to_lowercase();
+    if lower.starts_with("note") || lower.starts_with("see ") || lower.starts_with("refer to") {
+        return false;
+    }
+
+    true
+}
+
 /// Structural detection: parses content streams for lines + rects, plus text "Label:" heuristics.
 fn detect_structural(doc: &Document) -> Vec<DetectedField> {
     let mut fields = Vec::new();
@@ -251,18 +290,9 @@ fn detect_structural(doc: &Document) -> Vec<DetectedField> {
             // "Offeror Name:  Offeror Address:  Offeror Phone:" → 3 separate labels
             let segments: Vec<&str> = trimmed.split(":").collect();
 
-            for (seg_idx, segment) in segments.iter().enumerate() {
+            for (_seg_idx, segment) in segments.iter().enumerate() {
                 let label = segment.trim();
-                // Skip empty segments and the last empty one after trailing ":"
-                if label.is_empty() || label.len() > 60 {
-                    continue;
-                }
-                // Must look like a field label: not too long, contains letters
-                if !label.chars().any(|c| c.is_alphabetic()) {
-                    continue;
-                }
-                // Skip if it looks like a sentence (has periods or is very long)
-                if label.contains('.') && label.len() > 30 {
+                if !is_likely_field_label(label) {
                     continue;
                 }
 
