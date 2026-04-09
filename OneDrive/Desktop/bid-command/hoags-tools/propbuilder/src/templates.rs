@@ -1,6 +1,10 @@
 use lopdf::{Document, Object, Stream, Dictionary};
 use lopdf::content::{Content, Operation};
 
+macro_rules! real {
+    ($v:expr) => { Object::Real($v as f32) };
+}
+
 /// Page dimensions — US Letter in PDF units (72 pts/inch).
 pub const PAGE_W: f64 = 612.0;
 pub const PAGE_H: f64 = 792.0;
@@ -39,14 +43,10 @@ impl TextLine {
 
     fn ops(&self) -> Vec<Operation> {
         vec![
-            Operation::new("rg", vec![
-                Object::Real(self.color.0),
-                Object::Real(self.color.1),
-                Object::Real(self.color.2),
-            ]),
+            Operation::new("rg", vec![real!(self.color.0), real!(self.color.1), real!(self.color.2)]),
             Operation::new("BT", vec![]),
-            Operation::new("Tf", vec![Object::Name(self.font.as_bytes().to_vec()), Object::Real(self.size)]),
-            Operation::new("Td", vec![Object::Real(self.x), Object::Real(self.y)]),
+            Operation::new("Tf", vec![Object::Name(self.font.as_bytes().to_vec()), real!(self.size)]),
+            Operation::new("Td", vec![real!(self.x), real!(self.y)]),
             Operation::new("Tj", vec![Object::string_literal(safe_pdf_string(&self.text))]),
             Operation::new("ET", vec![]),
         ]
@@ -66,17 +66,8 @@ pub struct Rect {
 impl Rect {
     fn ops(&self) -> Vec<Operation> {
         vec![
-            Operation::new("rg", vec![
-                Object::Real(self.fill.0),
-                Object::Real(self.fill.1),
-                Object::Real(self.fill.2),
-            ]),
-            Operation::new("re", vec![
-                Object::Real(self.x),
-                Object::Real(self.y),
-                Object::Real(self.w),
-                Object::Real(self.h),
-            ]),
+            Operation::new("rg", vec![real!(self.fill.0), real!(self.fill.1), real!(self.fill.2)]),
+            Operation::new("re", vec![real!(self.x), real!(self.y), real!(self.w), real!(self.h)]),
             Operation::new("f", vec![]),
         ]
     }
@@ -95,14 +86,10 @@ pub struct HRule {
 impl HRule {
     fn ops(&self) -> Vec<Operation> {
         vec![
-            Operation::new("RG", vec![
-                Object::Real(self.color.0),
-                Object::Real(self.color.1),
-                Object::Real(self.color.2),
-            ]),
-            Operation::new("w", vec![Object::Real(self.width_pts)]),
-            Operation::new("m", vec![Object::Real(self.x), Object::Real(self.y)]),
-            Operation::new("l", vec![Object::Real(self.x + self.w), Object::Real(self.y)]),
+            Operation::new("RG", vec![real!(self.color.0), real!(self.color.1), real!(self.color.2)]),
+            Operation::new("w", vec![real!(self.width_pts)]),
+            Operation::new("m", vec![real!(self.x), real!(self.y)]),
+            Operation::new("l", vec![real!(self.x + self.w), real!(self.y)]),
             Operation::new("S", vec![]),
         ]
     }

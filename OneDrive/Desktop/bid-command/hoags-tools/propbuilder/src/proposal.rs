@@ -531,8 +531,9 @@ pub fn build_price_schedule(ctx: &ProposalContext) -> Document {
         h: 22.0,
         fill: (0.87, 0.91, 0.97),
     });
-    lines.push(TextLine::new(col_desc + 2.0, y + 8.0, 10.0, "F2", Color::HOAGS_BLUE, "GRAND TOTAL"));
-    lines.push(TextLine::new(col_total + 2.0, y + 8.0, 10.0, "F2", Color::HOAGS_BLUE,
+    let blue = (Color::HOAGS_BLUE.r, Color::HOAGS_BLUE.g, Color::HOAGS_BLUE.b);
+    lines.push(TextLine::new(col_desc + 2.0, y + 8.0, 10.0, "F2", blue, "GRAND TOTAL"));
+    lines.push(TextLine::new(col_total + 2.0, y + 8.0, 10.0, "F2", blue,
         &format!("${:.2}", grand_total)));
     y -= 30.0;
 
@@ -667,22 +668,22 @@ pub fn generate_full_package(
     std::fs::create_dir_all(output_dir)?;
     let mut written = Vec::new();
 
-    let cl_doc = build_cover_letter(ctx, None);
+    let mut cl_doc = build_cover_letter(ctx, None);
     let cl_path = output_dir.join("cover_letter.pdf");
     cl_doc.save(&cl_path)?;
     written.push(cl_path);
 
-    let ta_doc = build_technical_approach(ctx);
+    let mut ta_doc = build_technical_approach(ctx);
     let ta_path = output_dir.join("technical_approach.pdf");
     ta_doc.save(&ta_path)?;
     written.push(ta_path);
 
-    let pp_doc = build_past_performance(ctx);
+    let mut pp_doc = build_past_performance(ctx);
     let pp_path = output_dir.join("past_performance.pdf");
     pp_doc.save(&pp_path)?;
     written.push(pp_path);
 
-    let ps_doc = build_price_schedule(ctx);
+    let mut ps_doc = build_price_schedule(ctx);
     let ps_path = output_dir.join("price_schedule.pdf");
     ps_doc.save(&ps_path)?;
     written.push(ps_path);
@@ -758,8 +759,8 @@ fn footer_line(hrules: &mut Vec<HRule>, lines: &mut Vec<TextLine>, ctx: &Proposa
         (Color::DARK_GRAY.r, Color::DARK_GRAY.g, Color::DARK_GRAY.b), &footer));
 }
 
-/// Wire up a Pages dictionary and return the Pages object ID.
-fn attach_pages(doc: &mut Document, kids: Vec<Object>) -> Document {
+/// Wire up Pages + Catalog on an owned Document and return it.
+fn attach_pages(mut doc: Document, kids: Vec<Object>) -> Document {
     let count = kids.len() as i64;
     let mut pages_dict = lopdf::Dictionary::new();
     pages_dict.set("Type", Object::Name(b"Pages".to_vec()));
@@ -789,21 +790,7 @@ fn attach_pages(doc: &mut Document, kids: Vec<Object>) -> Document {
     doc.trailer.set("Root", Object::Reference(catalog_id));
     doc.trailer.set("Size", Object::Integer(doc.objects.len() as i64 + 1));
 
-    // Return doc by value via a quick clone trick — we already own it
-    // (the caller passes ownership in; we mutate and return the same doc)
-    // Actually Document doesn't impl Clone; we just reconstruct from doc in place.
-    // The doc is already mutated; `attach_pages` takes ownership and returns the doc.
-    doc.clone_for_return()
-}
-
-trait DocReturn {
-    fn clone_for_return(self) -> Document;
-}
-
-impl DocReturn for Document {
-    fn clone_for_return(self) -> Document {
-        self
-    }
+    doc
 }
 
 // ─── tests ────────────────────────────────────────────────────────────────────
@@ -871,7 +858,7 @@ mod tests {
     #[test]
     fn test_build_cover_letter_produces_pdf() {
         let ctx = sample_ctx();
-        let doc = build_cover_letter(&ctx, None);
+        let mut doc = build_cover_letter(&ctx, None);
         let tmp = TempDir::new().unwrap();
         let path = tmp.path().join("cover.pdf");
         doc.save(&path).unwrap();
@@ -882,7 +869,7 @@ mod tests {
     #[test]
     fn test_cover_letter_co_override() {
         let ctx = sample_ctx();
-        let doc = build_cover_letter(&ctx, Some("John Doe"));
+        let mut doc = build_cover_letter(&ctx, Some("John Doe"));
         let tmp = TempDir::new().unwrap();
         let path = tmp.path().join("cover_override.pdf");
         doc.save(&path).unwrap();
@@ -892,7 +879,7 @@ mod tests {
     #[test]
     fn test_build_past_performance_produces_pdf() {
         let ctx = sample_ctx();
-        let doc = build_past_performance(&ctx);
+        let mut doc = build_past_performance(&ctx);
         let tmp = TempDir::new().unwrap();
         let path = tmp.path().join("pp.pdf");
         doc.save(&path).unwrap();
@@ -903,7 +890,7 @@ mod tests {
     #[test]
     fn test_build_price_schedule_produces_pdf() {
         let ctx = sample_ctx();
-        let doc = build_price_schedule(&ctx);
+        let mut doc = build_price_schedule(&ctx);
         let tmp = TempDir::new().unwrap();
         let path = tmp.path().join("price.pdf");
         doc.save(&path).unwrap();
@@ -914,7 +901,7 @@ mod tests {
     #[test]
     fn test_build_technical_approach_produces_pdf() {
         let ctx = sample_ctx();
-        let doc = build_technical_approach(&ctx);
+        let mut doc = build_technical_approach(&ctx);
         let tmp = TempDir::new().unwrap();
         let path = tmp.path().join("ta.pdf");
         doc.save(&path).unwrap();
@@ -936,7 +923,7 @@ mod tests {
     fn test_price_schedule_no_clins_uses_default() {
         let mut ctx = sample_ctx();
         ctx.pricing.clins = vec![];
-        let doc = build_price_schedule(&ctx);
+        let mut doc = build_price_schedule(&ctx);
         let tmp = TempDir::new().unwrap();
         let path = tmp.path().join("price_default.pdf");
         doc.save(&path).unwrap();
