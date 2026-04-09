@@ -200,4 +200,62 @@ mod tests {
         let (x, y, w, h) = parse_region("-100,-200,400,300").unwrap();
         assert_eq!((x, y, w, h), (-100, -200, 400, 300));
     }
+
+    #[test]
+    fn parse_region_too_many_parts() {
+        assert!(parse_region("0,0,100,100,50").is_err());
+    }
+
+    #[test]
+    fn parse_region_empty_string() {
+        assert!(parse_region("").is_err());
+    }
+
+    #[test]
+    fn parse_region_negative_width_fails() {
+        assert!(parse_region("0,0,-100,100").is_err());
+    }
+
+    #[test]
+    fn parse_region_negative_height_fails() {
+        assert!(parse_region("0,0,100,-1").is_err());
+    }
+
+    #[test]
+    fn parse_region_float_values_fail() {
+        assert!(parse_region("0.5,0,100,100").is_err());
+    }
+
+    #[test]
+    fn parse_region_positive_x_y() {
+        let (x, y, w, h) = parse_region("10,20,640,480").unwrap();
+        assert_eq!(x, 10);
+        assert_eq!(y, 20);
+        assert_eq!(w, 640);
+        assert_eq!(h, 480);
+    }
+
+    #[test]
+    fn parse_region_large_values() {
+        let (x, y, w, h) = parse_region("0,0,3840,2160").unwrap();
+        assert_eq!((x, y, w, h), (0, 0, 3840, 2160));
+    }
+
+    #[test]
+    fn parse_region_minimal_1x1() {
+        let (x, y, w, h) = parse_region("0,0,1,1").unwrap();
+        assert_eq!((x, y, w, h), (0, 0, 1, 1));
+    }
+
+    #[test]
+    fn parse_region_whitespace_only_fails() {
+        // Whitespace between commas yields non-numeric tokens after trim
+        // strip happens inside the parse_region trim — this should error.
+        assert!(parse_region("  ,  ,  ,  ").is_err());
+    }
+
+    #[test]
+    fn parse_region_zero_width_fails() {
+        assert!(parse_region("0,0,0,100").is_err());
+    }
 }
