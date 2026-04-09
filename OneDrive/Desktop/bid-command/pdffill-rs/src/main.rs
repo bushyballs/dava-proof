@@ -97,6 +97,20 @@ fn main() {
                 let val = if f.value.is_empty() { "(empty)" } else { &f.value };
                 println!("  {:6} {:45} -> {}", color, f.label, val);
             }
+
+            // Render filled PDF + report
+            let out_dir = pdf.with_extension("").to_string_lossy().to_string() + "_filled";
+            let out_dir = std::path::PathBuf::from(&out_dir);
+
+            match pdffill::render::render_filled_pdf(&pdf, &filled, &out_dir) {
+                Ok(filled_path) => println!("\nFilled PDF: {}", filled_path.display()),
+                Err(e) => eprintln!("\nFailed to render filled PDF: {}", e),
+            }
+
+            match pdffill::render::write_fill_report(&filled, &out_dir) {
+                Ok(report_path) => println!("Report:     {}", report_path.display()),
+                Err(e) => eprintln!("Failed to write report: {}", e),
+            }
         }
         Commands::Batch { dir, max } => {
             let start_all = std::time::Instant::now();

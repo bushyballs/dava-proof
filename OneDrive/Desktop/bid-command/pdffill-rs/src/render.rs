@@ -61,8 +61,143 @@ pub fn render_filled_pdf(
         }
     }
 
+    // For structural fields (no AcroForm), append text to page content streams
+    let structural_fields: Vec<&FilledField> = fields.iter()
+        .filter(|f| f.source == "structural" && !f.value.is_empty())
+        .collect();
+
+    if !structural_fields.is_empty() {
+        // Group fields by page
+        let mut by_page: std::collections::HashMap<usize, Vec<&&FilledField>> = std::collections::HashMap::new();
+        for f in &structural_fields {
+            by_page.entry(f.page).or_default().push(f);
+        }
+
+        let pages: Vec<(u32, lopdf::ObjectId)> = doc.get_pages().into_iter().collect();
+
+        for (page_fields_page, page_fields) in &by_page {
+            // Find the page object ID (pages are 1-indexed in lopdf)
+            let page_num = (*page_fields_page as u32) + 1;
+            if let Some((_, page_id)) = pages.iter().find(|(pn, _)| *pn == page_num) {
+                // Get page height for Y coordinate flipping
+                let page_height = get_page_height_from_doc(&doc, *page_id);
+
+                // Build content stream for text insertion
+                // Use Helvetica (built-in PDF font, no embedding needed)
+                let mut text_ops = String::new();
+                for field in page_fields {
+                    let x = field.bbox.0;
+                    // Flip Y: PDF coords are bottom-up, our bbox is top-down
+                    let y = page_height - field.bbox.1 - 2.0;
+                    let fontsize = auto_fontsize(&field.value, field.bbox.2 - field.bbox.0);
+
+                    text_ops.push_str(&format!(
+                        "BT /Helv {} Tf {} {} Td ({}) Tj ET\n",
+                        fontsize, x, y,
+                        escape_pdf_string(&field.value)
+                    ));
+                }
+
+                if !text_ops.is_empty() {
+                    // Ensure Helvetica is in the page's font resources
+                    ensure_helvetica_font(&mut doc, *page_id);
+
+                    // Append our text as a new content stream
+                    let stream = lopdf::Stream::new(
+                        lopdf::Dictionary::new(),
+                        text_ops.into_bytes(),
+                    );
+                    let stream_id = doc.add_object(Object::Stream(stream));
+
+                    // Add to page's Contents array
+                    if let Ok(page_dict) = doc.get_dictionary_mut(*page_id) {
+                        match page_dict.get(b"Contents") {
+                            Ok(Object::Reference(existing_ref)) => {
+                                let existing = *existing_ref;
+                                page_dict.set(b"Contents", Object::Array(vec![
+                                    Object::Reference(existing),
+                                    Object::Reference(stream_id),
+                                ]));
+                            }
+                            Ok(Object::Array(arr)) => {
+                                let mut new_arr = arr.clone();
+                                new_arr.push(Object::Reference(stream_id));
+                                page_dict.set(b"Contents", Object::Array(new_arr));
+                            }
+                            _ => {
+                                page_dict.set(b"Contents", Object::Reference(stream_id));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     doc.save(&dst_path)?;
     Ok(dst_path)
+}
+
+fn get_page_height_from_doc(doc: &Document, page_id: lopdf::ObjectId) -> f64 {
+    if let Ok(d) = doc.get_dictionary(page_id) {
+        if let Ok(Object::Array(arr)) = d.get(b"MediaBox") {
+            if arr.len() == 4 {
+                match &arr[3] {
+                    Object::Real(h) => return *h as f64,
+                    Object::Integer(h) => return *h as f64,
+                    _ => {}
+                }
+            }
+        }
+    }
+    792.0
+}
+
+fn auto_fontsize(value: &str, bbox_width: f64) -> f64 {
+    if value.is_empty() { return 9.0; }
+    let estimated = value.len() as f64 * 9.0 * 0.5;
+    if estimated <= bbox_width { return 9.0; }
+    let scaled = 9.0 * (bbox_width / estimated) * 0.95;
+    scaled.max(5.0)
+}
+
+fn escape_pdf_string(s: &str) -> String {
+    s.replace('\\', "\\\\")
+     .replace('(', "\\(")
+     .replace(')', "\\)")
+}
+
+fn ensure_helvetica_font(doc: &mut Document, page_id: lopdf::ObjectId) {
+    // Add /Helv as Helvetica to the page's Resources/Font dictionary
+    if let Ok(page_dict) = doc.get_dictionary_mut(page_id) {
+        let resources = page_dict.get(b"Resources")
+            .ok()
+            .and_then(|r| if let Object::Dictionary(d) = r { Some(d.clone()) } else { None })
+            .unwrap_or_default();
+
+        let mut fonts = resources.get(b"Font")
+            .ok()
+            .and_then(|f| if let Object::Dictionary(d) = f { Some(d.clone()) } else { None })
+            .unwrap_or_default();
+
+        // Only add if /Helv not already there
+        if fonts.get(b"Helv").is_err() {
+            let mut font_dict = lopdf::Dictionary::new();
+            font_dict.set(b"Type", Object::Name(b"Font".to_vec()));
+            font_dict.set(b"Subtype", Object::Name(b"Type1".to_vec()));
+            font_dict.set(b"BaseFont", Object::Name(b"Helvetica".to_vec()));
+            let font_id = doc.add_object(Object::Dictionary(font_dict));
+            fonts.set(b"Helv", Object::Reference(font_id));
+        }
+
+        let mut new_resources = resources.clone();
+        new_resources.set(b"Font", Object::Dictionary(fonts));
+
+        // Need to get mutable ref again since we dropped it
+        if let Ok(pd) = doc.get_dictionary_mut(page_id) {
+            pd.set(b"Resources", Object::Dictionary(new_resources));
+        }
+    }
 }
 
 /// Write a JSON fill report to `output_dir/fill_report.json`.
