@@ -8,6 +8,7 @@ version = "0.1.0"
 dependencies = [
  "chrono",
  "clap",
+ "hoags_core",
  "regex",
  "rusqlite",
  "serde",
@@ -969,6 +970,7 @@ dependencies = [
  "chrono",
  "clap",
  "csv",
+ "hoags_core",
  "rusqlite",
  "serde",
  "serde_json",

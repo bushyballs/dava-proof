@@ -23,6 +23,10 @@ use clap::{Parser, Subcommand};
     version = "0.1.0"
 )]
 struct Cli {
+    /// Output as JSON
+    #[arg(long, global = true)]
+    json: bool,
+
     #[command(subcommand)]
     command: Commands,
 }
@@ -43,13 +47,14 @@ enum Commands {
 
 fn main() {
     let cli = Cli::parse();
+    let json_output = cli.json;
 
     match cli.command {
         Commands::Start => cmd_start(),
         Commands::Status => cmd_status(),
         Commands::Pulse => cmd_pulse(),
-        Commands::Health => cmd_health(),
-        Commands::Stats => cmd_stats(),
+        Commands::Health => cmd_health(json_output),
+        Commands::Stats => cmd_stats(json_output),
     }
 }
 
@@ -84,36 +89,63 @@ fn cmd_pulse() {
     );
 }
 
-fn cmd_health() {
-    println!("DAVA LIVE — Tool health check");
-    println!("{:-<50}", "");
-
+fn cmd_health(json_output: bool) {
     let tools = health::check_all_tools();
     let healthy = health::healthy_count(&tools);
 
-    for t in &tools {
-        println!(
-            "  {:<16} [{}]  {}",
-            t.name,
-            t.status_str(),
-            if t.binary_exists {
-                t.binary_path.clone()
-            } else {
-                format!("not found: {}", t.binary_path)
-            }
-        );
-    }
+    if json_output {
+        let tools_json: Vec<_> = tools.iter().map(|t| {
+            serde_json::json!({
+                "name": t.name,
+                "status": t.status_str(),
+                "binary_exists": t.binary_exists,
+                "binary_path": t.binary_path
+            })
+        }).collect();
+        let json_value = serde_json::json!({
+            "tools": tools_json,
+            "healthy": healthy,
+            "total": tools.len()
+        });
+        println!("{}", serde_json::to_string_pretty(&json_value).unwrap());
+    } else {
+        println!("DAVA LIVE — Tool health check");
+        println!("{:-<50}", "");
 
-    println!("{:-<50}", "");
-    println!("{}/{} tools built", healthy, tools.len());
+        for t in &tools {
+            println!(
+                "  {:<16} [{}]  {}",
+                t.name,
+                t.status_str(),
+                if t.binary_exists {
+                    t.binary_path.clone()
+                } else {
+                    format!("not found: {}", t.binary_path)
+                }
+            );
+        }
+
+        println!("{:-<50}", "");
+        println!("{}/{} tools built", healthy, tools.len());
+    }
 }
 
-fn cmd_stats() {
-    println!("DAVA LIVE — Cumulative system stats");
-    println!("{:-<50}", "");
+fn cmd_stats(json_output: bool) {
     let s = stats::collect();
-    println!("{}", s.display());
-    println!("{:-<50}", "");
+
+    if json_output {
+        let json_value = serde_json::json!({
+            "stats": serde_json::from_str::<serde_json::Value>(&s.display()).unwrap_or_else(|_| {
+                serde_json::json!({"display": s.display()})
+            })
+        });
+        println!("{}", serde_json::to_string_pretty(&json_value).unwrap());
+    } else {
+        println!("DAVA LIVE — Cumulative system stats");
+        println!("{:-<50}", "");
+        println!("{}", s.display());
+        println!("{:-<50}", "");
+    }
 }
 
 fn cmd_status() {

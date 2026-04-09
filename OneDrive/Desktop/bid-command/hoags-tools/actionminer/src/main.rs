@@ -20,6 +20,10 @@ use hoags_core::bus::EventBus;
     long_about = None,
 )]
 struct Cli {
+    /// Output as JSON
+    #[arg(long, global = true)]
+    json: bool,
+
     #[command(subcommand)]
     command: Commands,
 }
@@ -94,15 +98,16 @@ enum Commands {
 
 fn main() {
     let cli = Cli::parse();
+    let json_output = cli.json;
 
     match cli.command {
-        Commands::Extract { file, stdin, dry_run } => cmd_extract(file, stdin, dry_run),
-        Commands::List { status, assignee } => cmd_list(status, assignee),
+        Commands::Extract { file, stdin, dry_run } => cmd_extract(file, stdin, dry_run, json_output),
+        Commands::List { status, assignee } => cmd_list(status, assignee, json_output),
         Commands::Complete { id } => cmd_complete(id),
         Commands::Export { format } => cmd_export(format),
-        Commands::Priorities => cmd_priorities(),
+        Commands::Priorities => cmd_priorities(json_output),
         Commands::Assign { id, to } => cmd_assign(id, to),
-        Commands::Overdue => cmd_overdue(),
+        Commands::Overdue => cmd_overdue(json_output),
         Commands::Import { file } => cmd_import(file),
     }
 }
@@ -111,7 +116,7 @@ fn main() {
 // Command implementations
 // ---------------------------------------------------------------------------
 
-fn cmd_extract(file: Option<String>, use_stdin: bool, dry_run: bool) {
+fn cmd_extract(file: Option<String>, use_stdin: bool, dry_run: bool, json_output: bool) {
     let (text, source) = if use_stdin || file.is_none() {
         let mut buf = String::new();
         std::io::stdin()
@@ -133,8 +138,17 @@ fn cmd_extract(file: Option<String>, use_stdin: bool, dry_run: bool) {
     }
 
     if dry_run {
-        println!("Found {} action item(s) (dry run — not saved):", items.len());
-        print_items(&items);
+        if json_output {
+            let json_value = serde_json::json!({
+                "items": items,
+                "count": items.len(),
+                "dry_run": true
+            });
+            println!("{}", serde_json::to_string_pretty(&json_value).unwrap());
+        } else {
+            println!("Found {} action item(s) (dry run — not saved):", items.len());
+            print_items(&items);
+        }
         return;
     }
 
@@ -142,8 +156,17 @@ fn cmd_extract(file: Option<String>, use_stdin: bool, dry_run: bool) {
     let saved = tracker::insert_many(&conn, &items)
         .unwrap_or_else(|e| { eprintln!("Insert error: {e}"); std::process::exit(1); });
 
-    println!("Extracted and saved {} action item(s):", saved.len());
-    print_items(&saved);
+    if json_output {
+        let json_value = serde_json::json!({
+            "items": saved,
+            "count": saved.len(),
+            "source": source
+        });
+        println!("{}", serde_json::to_string_pretty(&json_value).unwrap());
+    } else {
+        println!("Extracted and saved {} action item(s):", saved.len());
+        print_items(&saved);
+    }
 
     // Publish bus event
     if let Ok(bus) = EventBus::open_default() {
@@ -153,7 +176,7 @@ fn cmd_extract(file: Option<String>, use_stdin: bool, dry_run: bool) {
     }
 }
 
-fn cmd_list(status: Option<String>, assignee: Option<String>) {
+fn cmd_list(status: Option<String>, assignee: Option<String>, json_output: bool) {
     let conn = tracker::open().unwrap_or_else(|e| { eprintln!("DB error: {e}"); std::process::exit(1); });
 
     let items = if let Some(ref who) = assignee {
@@ -169,7 +192,15 @@ fn cmd_list(status: Option<String>, assignee: Option<String>) {
         return;
     }
 
-    print_items(&items);
+    if json_output {
+        let json_value = serde_json::json!({
+            "items": items,
+            "count": items.len()
+        });
+        println!("{}", serde_json::to_string_pretty(&json_value).unwrap());
+    } else {
+        print_items(&items);
+    }
 }
 
 fn cmd_complete(id: i64) {
@@ -197,7 +228,7 @@ fn cmd_export(format: String) {
     }
 }
 
-fn cmd_priorities() {
+fn cmd_priorities(json_output: bool) {
     let conn = tracker::open().unwrap_or_else(|e| { eprintln!("DB error: {e}"); std::process::exit(1); });
     let items = tracker::list_by_priority(&conn)
         .unwrap_or_else(|e| { eprintln!("Query error: {e}"); std::process::exit(1); });
@@ -207,8 +238,16 @@ fn cmd_priorities() {
         return;
     }
 
-    println!("Action items by priority (earliest deadline first):");
-    print_items(&items);
+    if json_output {
+        let json_value = serde_json::json!({
+            "items": items,
+            "count": items.len()
+        });
+        println!("{}", serde_json::to_string_pretty(&json_value).unwrap());
+    } else {
+        println!("Action items by priority (earliest deadline first):");
+        print_items(&items);
+    }
 }
 
 fn cmd_assign(id: i64, to: String) {
@@ -220,7 +259,7 @@ fn cmd_assign(id: i64, to: String) {
     }
 }
 
-fn cmd_overdue() {
+fn cmd_overdue(json_output: bool) {
     let conn = tracker::open().unwrap_or_else(|e| { eprintln!("DB error: {e}"); std::process::exit(1); });
     let items = tracker::list_overdue(&conn)
         .unwrap_or_else(|e| { eprintln!("Query error: {e}"); std::process::exit(1); });
@@ -230,8 +269,16 @@ fn cmd_overdue() {
         return;
     }
 
-    println!("Overdue action items ({} total):", items.len());
-    print_items(&items);
+    if json_output {
+        let json_value = serde_json::json!({
+            "items": items,
+            "count": items.len()
+        });
+        println!("{}", serde_json::to_string_pretty(&json_value).unwrap());
+    } else {
+        println!("Overdue action items ({} total):", items.len());
+        print_items(&items);
+    }
 }
 
 fn cmd_import(file: String) {

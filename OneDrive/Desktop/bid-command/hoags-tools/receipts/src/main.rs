@@ -43,6 +43,10 @@ struct Cli {
     #[arg(long)]
     db: Option<String>,
 
+    /// Output as JSON
+    #[arg(long, global = true)]
+    json: bool,
+
     #[command(subcommand)]
     command: Commands,
 }
@@ -150,6 +154,7 @@ fn main() {
     let cli = Cli::parse();
     let db_path = cli.db.unwrap_or_else(default_db_path);
     let conn = open_db(&db_path);
+    let json_output = cli.json;
 
     match cli.command {
         Commands::Add {
@@ -243,22 +248,31 @@ fn main() {
                 std::process::exit(1);
             });
 
-            if expenses.is_empty() {
-                println!("No expenses found.");
+            if json_output {
+                let json_value = serde_json::json!({
+                    "expenses": expenses,
+                    "total": expenses.iter().map(|e| e.amount).sum::<f64>(),
+                    "count": expenses.len()
+                });
+                println!("{}", serde_json::to_string_pretty(&json_value).unwrap());
             } else {
-                println!("{}", Expense::header());
-                println!("{}", "-".repeat(80));
-                for e in &expenses {
-                    println!("{}", e.to_row());
+                if expenses.is_empty() {
+                    println!("No expenses found.");
+                } else {
+                    println!("{}", Expense::header());
+                    println!("{}", "-".repeat(80));
+                    for e in &expenses {
+                        println!("{}", e.to_row());
+                    }
+                    println!("{}", "-".repeat(80));
+                    let total: f64 = expenses.iter().map(|e| e.amount).sum();
+                    println!(
+                        "Total: ${:.2}  ({} expense{})",
+                        total,
+                        expenses.len(),
+                        if expenses.len() == 1 { "" } else { "s" }
+                    );
                 }
-                println!("{}", "-".repeat(80));
-                let total: f64 = expenses.iter().map(|e| e.amount).sum();
-                println!(
-                    "Total: ${:.2}  ({} expense{})",
-                    total,
-                    expenses.len(),
-                    if expenses.len() == 1 { "" } else { "s" }
-                );
             }
         }
 
