@@ -341,4 +341,45 @@ mod tests {
         assert_eq!(fetched[0].clin, "0001");
         assert!((fetched[1].unit_price - 307.61).abs() < 0.001);
     }
+
+    #[test]
+    fn test_list_for_contract() {
+        let t = make_tracker();
+        t.insert_invoice("CTR-A", "INV-001", "2026-04", 100.0, &[]).unwrap();
+        t.insert_invoice("CTR-B", "INV-002", "2026-04", 200.0, &[]).unwrap();
+        t.insert_invoice("CTR-A", "INV-003", "2026-05", 150.0, &[]).unwrap();
+        let a_invoices = t.list_for_contract("CTR-A").unwrap();
+        assert_eq!(a_invoices.len(), 2);
+    }
+
+    #[test]
+    fn test_empty_tracker_list() {
+        let t = make_tracker();
+        let all = t.list_all().unwrap();
+        assert!(all.is_empty());
+    }
+
+    #[test]
+    fn test_next_sequence_increments() {
+        let t = make_tracker();
+        t.insert_invoice("CTR-1", "INV-001", "2026-04", 100.0, &[]).unwrap();
+        t.insert_invoice("CTR-1", "INV-002", "2026-04", 200.0, &[]).unwrap();
+        let seq = t.next_sequence("CTR-1", "2026-04").unwrap();
+        assert_eq!(seq, 3); // 2 existing + 1
+    }
+
+    #[test]
+    fn test_next_sequence_new_contract() {
+        let t = make_tracker();
+        let seq = t.next_sequence("BRAND-NEW", "2026-04").unwrap();
+        assert_eq!(seq, 1);
+    }
+
+    #[test]
+    fn test_invoice_status_values() {
+        // Verify the enum variants exist and can be compared
+        assert_ne!(InvoiceStatus::Draft, InvoiceStatus::Submitted);
+        assert_ne!(InvoiceStatus::Submitted, InvoiceStatus::Paid);
+        assert_eq!(InvoiceStatus::Draft, InvoiceStatus::Draft);
+    }
 }
