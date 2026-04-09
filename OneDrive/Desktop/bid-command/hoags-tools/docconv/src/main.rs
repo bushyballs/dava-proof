@@ -17,6 +17,7 @@ mod pdf_ops;
 
 use anyhow::Context;
 use clap::{Parser, Subcommand};
+use rayon::prelude::*;
 use std::path::{Path, PathBuf};
 
 use crate::formats::{detect_format, Format};
@@ -26,8 +27,23 @@ use crate::formats::{detect_format, Format};
 #[derive(Parser)]
 #[command(
     name = "docconv",
-    version = "0.1.0",
-    about = "Universal document format converter — PDF / CSV / JSON / Text"
+    version = env!("CARGO_PKG_VERSION"),
+    about = "Universal document format converter — PDF / CSV / JSON / Text",
+    long_about = "Universal document format converter for bidding workflows.\n\n\
+                  Supported formats:\n\
+                  - PDF: Portable Document Format\n\
+                  - TXT: Plain text files\n\
+                  - CSV: Comma-separated values (tabular data)\n\
+                  - JSON: JSON objects and arrays\n\n\
+                  Usage examples:\n\
+                  docconv convert solicitation.pdf --to txt\n\
+                  docconv extract-text file.pdf --output text.txt\n\
+                  docconv extract-tables file.pdf --output tables.csv\n\
+                  docconv merge file1.pdf file2.pdf --output merged.pdf\n\
+                  docconv split file.pdf --pages 1-5 --output excerpt.pdf\n\
+                  docconv metadata file.pdf\n\
+                  docconv info file.pdf\n\
+                  docconv text file.pdf --page 3"
 )]
 struct Cli {
     #[command(subcommand)]
@@ -44,6 +60,17 @@ enum Commands {
         #[arg(long)]
         to: String,
         /// Output file path (default: <input-stem>.<target-ext>)
+        #[arg(short, long)]
+        output: Option<PathBuf>,
+    },
+    /// Convert all files in a directory to the target format (parallel via rayon).
+    Batch {
+        /// Directory containing documents to convert.
+        dir: PathBuf,
+        /// Target format: pdf | txt | json | csv
+        #[arg(long)]
+        to: String,
+        /// Output directory (default: <dir>_converted/).
         #[arg(short, long)]
         output: Option<PathBuf>,
     },
@@ -124,6 +151,7 @@ fn run() -> anyhow::Result<()> {
 
     match cli.command {
         Commands::Convert { input, to, output } => cmd_convert(&input, &to, output.as_deref()),
+        Commands::Batch { dir, to, output } => cmd_batch(&dir, &to, output.as_deref()),
         Commands::Info { file } => cmd_info(&file),
         Commands::ExtractText { pdf, output } => cmd_extract_text(&pdf, output.as_deref()),
         Commands::ExtractTables { pdf, output } => cmd_extract_tables(&pdf, output.as_deref()),
@@ -163,6 +191,91 @@ fn cmd_convert(input: &Path, to: &str, output: Option<&Path>) -> anyhow::Result<
         .with_context(|| format!("Writing output to {}", out_path.display()))?;
 
     println!("Converted → {}", out_path.display());
+    Ok(())
+}
+
+fn cmd_batch(dir: &Path, to: &str, output: Option<&Path>) -> anyhow::Result<()> {
+    if !dir.exists() || !dir.is_dir() {
+        anyhow::bail!("Directory not found: {}", dir.display());
+    }
+
+    let target = Format::from_str(to);
+    let output_dir = output
+        .map(|p| p.to_path_buf())
+        .unwrap_or_else(|| {
+            let dir_name = dir
+                .file_name()
+                .and_then(|s| s.to_str())
+                .unwrap_or("batch");
+            dir.parent()
+                .unwrap_or(Path::new("."))
+                .join(format!("{}_converted", dir_name))
+        });
+
+    // Create output directory
+    std::fs::create_dir_all(&output_dir)
+        .with_context(|| format!("Creating output directory {}", output_dir.display()))?;
+
+    // Collect files in the directory
+    let files: Vec<PathBuf> = std::fs::read_dir(dir)
+        .with_context(|| format!("Reading directory {}", dir.display()))?
+        .filter_map(|e| e.ok())
+        .map(|e| e.path())
+        .filter(|p| p.is_file())
+        .collect();
+
+    if files.is_empty() {
+        anyhow::bail!("No files found in {}", dir.display());
+    }
+
+    // Process files in parallel using rayon
+    let results: Vec<_> = files
+        .par_iter()
+        .map(|input_file| {
+            let stem = input_file
+                .file_stem()
+                .and_then(|s| s.to_str())
+                .unwrap_or("output");
+            let out_path = output_dir.join(format!("{}.{}", stem, target.extension()));
+
+            // Convert the file
+            match convert::convert(input_file, &target) {
+                Ok(result) => {
+                    match std::fs::write(&out_path, result.output.as_bytes()) {
+                        Ok(_) => Ok((input_file.clone(), out_path)),
+                        Err(e) => Err((input_file.clone(), e.to_string())),
+                    }
+                }
+                Err(e) => Err((input_file.clone(), e.to_string())),
+            }
+        })
+        .collect();
+
+    // Report results
+    let mut ok = 0usize;
+    let mut fail = 0usize;
+    for result in &results {
+        match result {
+            Ok((src, dst)) => {
+                println!("  OK  {} → {}", src.display(), dst.display());
+                ok += 1;
+            }
+            Err((src, e)) => {
+                eprintln!("  ERR {} : {}", src.display(), e);
+                fail += 1;
+            }
+        }
+    }
+
+    println!(
+        "\nBatch complete: {} converted, {} failed.",
+        ok, fail
+    );
+
+    if fail > 0 {
+        std::process::exit(1);
+    }
+
     Ok(())
 }
 

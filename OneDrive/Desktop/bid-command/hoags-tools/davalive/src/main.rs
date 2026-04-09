@@ -20,7 +20,7 @@ use clap::{Parser, Subcommand};
 #[command(
     name = "davalive",
     about = "DAVA's heartbeat daemon — orchestrates all Hoags tools",
-    version = "0.1.0"
+    version = env!("CARGO_PKG_VERSION")
 )]
 struct Cli {
     /// Output as JSON
@@ -99,23 +99,27 @@ fn cmd_health(json_output: bool) {
                 "name": t.name,
                 "status": t.status_str(),
                 "binary_exists": t.binary_exists,
+                "version": t.version,
                 "binary_path": t.binary_path
             })
         }).collect();
         let json_value = serde_json::json!({
+            "workspace_version": env!("CARGO_PKG_VERSION"),
             "tools": tools_json,
             "healthy": healthy,
             "total": tools.len()
         });
         println!("{}", serde_json::to_string_pretty(&json_value).unwrap());
     } else {
-        println!("DAVA LIVE — Tool health check");
+        println!("DAVA LIVE — Tool health check (workspace v{})", env!("CARGO_PKG_VERSION"));
         println!("{:-<50}", "");
 
         for t in &tools {
+            let version_str = t.version.as_deref().unwrap_or("-");
             println!(
-                "  {:<16} [{}]  {}",
+                "  {:<16} v{}  [{}]  {}",
                 t.name,
+                version_str,
                 t.status_str(),
                 if t.binary_exists {
                     t.binary_path.clone()

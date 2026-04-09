@@ -17,8 +17,27 @@ use std::path::PathBuf;
 #[derive(Parser)]
 #[command(
     name = "sheetwise",
-    version = "0.1.0",
-    about = "Spreadsheet / CSV intelligence CLI"
+    version = env!("CARGO_PKG_VERSION"),
+    about = "Spreadsheet / CSV intelligence CLI",
+    long_about = "Spreadsheet and CSV analysis tool for exploring and manipulating tabular data.\n\n\
+                  Subcommands:\n\
+                  - info: Detect file type, row/column count, column names, data types\n\
+                  - stats: Min/max/avg/sum for numeric columns, missing/distinct counts\n\
+                  - filter: Filter rows by column value (eq, ne, gt, lt, gte, lte, contains, starts_with)\n\
+                  - sort: Sort rows by a column, ascending or descending\n\
+                  - convert: Convert file to another format (json, csv, table)\n\
+                  - pivot: Group by one column and sum another (create pivot table)\n\
+                  - merge: Merge two CSV files by appending rows (columns matched by name)\n\
+                  - unique: Show unique values in a column\n\
+                  - sample: Show a random sample of N rows\n\
+                  - describe: Show statistical summary (count, mean, std, min, quartiles, max)\n\n\
+                  Usage examples:\n\
+                  sheetwise info data.csv\n\
+                  sheetwise filter data.csv --column amount --gt 100 --format json\n\
+                  sheetwise sort data.csv --by date --desc\n\
+                  sheetwise pivot data.csv --group_by category --sum amount\n\
+                  sheetwise merge sales.csv totals.csv --format table\n\
+                  sheetwise describe data.csv"
 )]
 struct Cli {
     #[command(subcommand)]

@@ -10,7 +10,7 @@ use clap::{Parser, Subcommand};
 /// Pass --live to actually execute the action.
 #[derive(Parser, Debug)]
 #[command(name = "mousecontrol", about = "DAVA's hands — mouse/keyboard control")]
-#[command(version = "0.1.0")]
+#[command(version = env!("CARGO_PKG_VERSION"))]
 struct Cli {
     /// Execute for real (default is dry-run — prints what would happen)
     #[arg(long, global = true)]

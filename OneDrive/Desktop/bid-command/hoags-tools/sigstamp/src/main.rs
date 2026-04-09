@@ -19,7 +19,7 @@ use sign::{sign_batch, sign_pdf, stamp_date_only, verify_pdf_has_signature, Stam
 #[derive(Parser)]
 #[command(
     name = "sigstamp",
-    version = "0.1.0",
+    version = env!("CARGO_PKG_VERSION"),
     about = "Stamp PDF signature fields with /s/ signatures — Hoags Inc."
 )]
 struct Cli {

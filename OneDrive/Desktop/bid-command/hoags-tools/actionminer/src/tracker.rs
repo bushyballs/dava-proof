@@ -135,6 +135,34 @@ pub fn export_json(conn: &Connection) -> Result<String> {
     Ok(serde_json::to_string_pretty(&items).unwrap_or_default())
 }
 
+/// Export all items as a CSV string.
+pub fn export_csv(conn: &Connection) -> Result<String> {
+    let items = list(conn, None)?;
+    let mut csv = String::from("id,description,assignee,deadline,source_file,status,created_at\n");
+    for item in items {
+        csv.push_str(&format!(
+            "{},{},{},{},{},{},{}\n",
+            item.id,
+            csv_escape(&item.description),
+            csv_escape(item.assignee.as_deref().unwrap_or("")),
+            csv_escape(item.deadline.as_deref().unwrap_or("")),
+            csv_escape(&item.source_file),
+            item.status,
+            csv_escape(&item.created_at)
+        ));
+    }
+    Ok(csv)
+}
+
+/// Escape CSV field values: wrap in quotes if contains comma, quote, or newline.
+fn csv_escape(s: &str) -> String {
+    if s.contains(',') || s.contains('"') || s.contains('\n') {
+        format!("\"{}\"", s.replace('"', "\"\""))
+    } else {
+        s.to_string()
+    }
+}
+
 /// Assign (or reassign) an action item to a person. Returns true if the row existed.
 pub fn assign(conn: &Connection, id: i64, assignee: &str) -> Result<bool> {
     let n = conn.execute(

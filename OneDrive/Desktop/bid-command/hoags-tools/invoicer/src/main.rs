@@ -23,7 +23,7 @@ use tracker::Tracker;
 #[command(
     name = "invoicer",
     about = "Hoags Inc. government invoice generator",
-    version = "0.1.0"
+    version = env!("CARGO_PKG_VERSION")
 )]
 struct Cli {
     /// Path to SQLite tracker database (default: invoices.db)
@@ -78,6 +78,17 @@ enum Commands {
         /// Output as JSON
         #[arg(long)]
         json: bool,
+    },
+
+    /// Export all invoices in a given format
+    Export {
+        /// Output format: json or csv
+        #[arg(long, default_value = "json")]
+        format: String,
+
+        /// Filter by contract number
+        #[arg(long)]
+        contract: Option<String>,
     },
 }
 
@@ -279,6 +290,55 @@ fn cmd_list(db_path: &str, contract_filter: Option<&str>, emit_json: bool) -> Re
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 
+fn cmd_export(db_path: &str, format: &str, contract_filter: Option<&str>) -> Result<(), String> {
+    let tracker = Tracker::open(db_path).map_err(|e| format!("DB error: {e}"))?;
+
+    let invoices = match contract_filter {
+        Some(c) => tracker
+            .list_for_contract(c)
+            .map_err(|e| format!("DB error: {e}"))?,
+        None => tracker.list_all().map_err(|e| format!("DB error: {e}"))?,
+    };
+
+    match format {
+        "json" => {
+            println!("{}", serde_json::to_string_pretty(&invoices).unwrap());
+        }
+        "csv" => {
+            // CSV header
+            println!("id,contract_number,invoice_number,period,total_amount,status,created_at");
+            for inv in &invoices {
+                let status_str = inv.status.as_str();
+                // Escape quotes in fields if needed, but these fields typically don't have them
+                println!(
+                    "{},{},{},{},{:.2},{},{}",
+                    inv.id,
+                    csv_escape(&inv.contract_number),
+                    csv_escape(&inv.invoice_number),
+                    csv_escape(&inv.period),
+                    inv.total_amount,
+                    status_str,
+                    csv_escape(&inv.created_at)
+                );
+            }
+        }
+        other => {
+            return Err(format!("Unsupported format '{}'. Supported: json, csv", other));
+        }
+    }
+
+    Ok(())
+}
+
+/// Escape CSV field values: wrap in quotes if contains comma, quote, or newline.
+fn csv_escape(s: &str) -> String {
+    if s.contains(',') || s.contains('"') || s.contains('\n') {
+        format!("\"{}\"", s.replace('"', "\"\""))
+    } else {
+        s.to_string()
+    }
+}
+
 fn main() {
     let cli = Cli::parse();
 
@@ -289,6 +349,7 @@ fn main() {
         Commands::Validate { contract } => cmd_validate(contract),
         Commands::Status { contract } => cmd_status(&cli.db, contract),
         Commands::List { contract, json } => cmd_list(&cli.db, contract.as_deref(), *json),
+        Commands::Export { format, contract } => cmd_export(&cli.db, format, contract.as_deref()),
     };
 
     if let Err(e) = result {

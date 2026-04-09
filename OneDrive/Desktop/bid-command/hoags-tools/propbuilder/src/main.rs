@@ -17,11 +17,31 @@ use proposal::{
 #[derive(Parser)]
 #[command(
     name = "propbuilder",
-    version = "0.1.0",
+    version = env!("CARGO_PKG_VERSION"),
     about = "Proposal package generator for Hoags Inc. federal bids",
-    long_about = "Generates complete proposal packages from a context JSON and optional\n\
-                  solicitation PDF. Outputs cover letter, technical approach, past\n\
-                  performance, and price schedule as individual PDF files."
+    long_about = "Generates complete federal proposal packages from a context JSON and optional\n\
+                  solicitation PDF. Outputs cover letter, technical approach, past performance,\n\
+                  and price schedule as individual PDF files.\n\n\
+                  Proposal generation workflow:\n\
+                  1. prepare context.json with company details, experience, pricing\n\
+                  2. generate --context context.json --output proposal_output/  [all documents]\n\
+                  3. OR build individual documents (cover-letter, past-performance, etc.)\n\
+                  4. optional: extract checklist from solicitation PDF\n\
+                  5. review all outputs and submit to contracting officer\n\n\
+                  Subcommands:\n\
+                  - generate: Build all 4 proposal documents (full package)\n\
+                  - cover-letter: Generate proposal cover letter only\n\
+                  - past-performance: Generate past performance volume only\n\
+                  - price-schedule: Generate price schedule only\n\
+                  - technical-approach: Generate technical approach volume only\n\
+                  - checklist: Extract submission requirements from solicitation\n\
+                  - capability: Generate one-page capability statement\n\n\
+                  Usage examples:\n\
+                  propbuilder generate --context context.json --output proposal_out/\n\
+                  propbuilder generate --context context.json --solicitation sol.pdf --output out/\n\
+                  propbuilder cover-letter --context context.json --output cover.pdf\n\
+                  propbuilder checklist --solicitation solicitation.pdf --output checklist.pdf\n\
+                  propbuilder capability --context context.json --output cap_stmt.pdf"
 )]
 struct Cli {
     #[command(subcommand)]

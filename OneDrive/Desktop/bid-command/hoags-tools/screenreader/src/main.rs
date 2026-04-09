@@ -20,7 +20,7 @@ use clap::{Parser, Subcommand};
 #[derive(Parser)]
 #[command(
     name = "screenreader",
-    version = "0.1.0",
+    version = env!("CARGO_PKG_VERSION"),
     about = "DAVA's eyes — screen capture, text extraction, window listing, change detection",
     long_about = None
 )]

@@ -15,7 +15,7 @@ use hoags_core::bus::EventBus;
 #[derive(Parser)]
 #[command(
     name = "actionminer",
-    version = "0.1.0",
+    version = env!("CARGO_PKG_VERSION"),
     about = "Extract and track action items from meeting notes",
     long_about = None,
 )]
@@ -221,8 +221,13 @@ fn cmd_export(format: String) {
                 .unwrap_or_else(|e| { eprintln!("Export error: {e}"); std::process::exit(1); });
             println!("{json}");
         }
+        "csv" => {
+            let csv = tracker::export_csv(&conn)
+                .unwrap_or_else(|e| { eprintln!("Export error: {e}"); std::process::exit(1); });
+            println!("{csv}");
+        }
         other => {
-            eprintln!("Unsupported format '{other}'. Supported: json");
+            eprintln!("Unsupported format '{other}'. Supported: json, csv");
             std::process::exit(1);
         }
     }

@@ -36,7 +36,20 @@ fn open_db(db: &str) -> rusqlite::Connection {
 #[command(
     name = "receipts",
     about = "Hoags Inc — expense & receipt tracker for federal contracting",
-    version
+    long_about = "Hoags Inc expense and receipt tracker for federal contracting.\n\
+                  Manages expenses by category, vendor, and contract number. Supports\n\
+                  budget tracking, tax-year reporting, and CSV bulk import/export.\n\n\
+                  Usage examples:\n\
+                  receipts add --amount 45.99 --vendor 'Office Depot' --category supplies\n\
+                  receipts import --csv expenses.csv\n\
+                  receipts list --contract 12444626P0025\n\
+                  receipts summary\n\
+                  receipts report --tax_year 2026\n\
+                  receipts budget --contract 12444626P0025 --limit 50000\n\
+                  receipts export --format csv --contract 12444626P0025\n\n\
+                  Categories: supplies, fuel, labor, equipment, travel, office, other\n\
+                  Database location: $RECEIPTS_DB env var or ~/.hoags/receipts.db",
+    version = env!("CARGO_PKG_VERSION")
 )]
 struct Cli {
     /// Path to the SQLite database file (overrides $RECEIPTS_DB env var)
@@ -134,8 +147,8 @@ enum Commands {
 
     /// Export expenses
     Export {
-        /// Output format: csv (default)
-        #[arg(long, default_value = "csv")]
+        /// Output format: json or csv (default: json)
+        #[arg(long, default_value = "json")]
         format: String,
 
         /// Filter by month: YYYY-MM
@@ -302,10 +315,6 @@ fn main() {
             month,
             contract,
         } => {
-            if format != "csv" {
-                eprintln!("Unsupported format '{}'. Currently supported: csv", format);
-                std::process::exit(1);
-            }
             let expenses = match (&month, &contract) {
                 (Some(m), None) => tracker::list_by_month(&conn, m),
                 (None, Some(c)) => tracker::list_by_contract(&conn, c),
@@ -315,7 +324,24 @@ fn main() {
                 eprintln!("Query error: {}", e);
                 std::process::exit(1);
             });
-            report::export_csv(&expenses);
+
+            match format.as_str() {
+                "json" => {
+                    let json_value = serde_json::json!({
+                        "expenses": expenses,
+                        "total": expenses.iter().map(|e| e.amount).sum::<f64>(),
+                        "count": expenses.len()
+                    });
+                    println!("{}", serde_json::to_string_pretty(&json_value).unwrap());
+                }
+                "csv" => {
+                    report::export_csv(&expenses);
+                }
+                other => {
+                    eprintln!("Unsupported format '{}'. Supported: json, csv", other);
+                    std::process::exit(1);
+                }
+            }
         }
     }
 }
@@ -350,9 +376,16 @@ fn check_budget_warning(conn: &rusqlite::Connection, contract: &str) {
 /// Bulk-import expenses from a CSV file.
 ///
 /// Expected header: amount,vendor,category,date,contract_number,description
+/// Categories: supplies, fuel, labor, equipment, travel, office, other
 fn import_csv(conn: &rusqlite::Connection, csv_path: &str) {
     let mut rdr = csv::Reader::from_path(csv_path).unwrap_or_else(|e| {
-        eprintln!("Error opening CSV '{}': {}", csv_path, e);
+        eprintln!("ERROR: Cannot open CSV file '{}': {}", csv_path, e);
+        eprintln!("\nExpected CSV format:");
+        eprintln!("  amount,vendor,category,date,contract_number,description");
+        eprintln!("\nExample:");
+        eprintln!("  45.99,Office Depot,supplies,2026-03-15,12444626P0025,Printer paper");
+        eprintln!("\nCategories: supplies, fuel, labor, equipment, travel, office, other");
+        eprintln!("\nDate format: YYYY-MM-DD (defaults to today if empty)");
         std::process::exit(1);
     });
 
@@ -390,14 +423,14 @@ fn import_csv(conn: &rusqlite::Connection, csv_path: &str) {
         let amount: f64 = match amount_str.parse() {
             Ok(v) => v,
             Err(_) => {
-                eprintln!("Line {}: invalid amount '{}', skipping.", line_num + 2, amount_str);
+                eprintln!("Line {}: invalid amount '{}' — expected a number (e.g. 45.99)", line_num + 2, amount_str);
                 errors += 1;
                 continue;
             }
         };
 
         if vendor.is_empty() {
-            eprintln!("Line {}: vendor is empty, skipping.", line_num + 2);
+            eprintln!("Line {}: vendor is empty — vendor name is required (column 2)", line_num + 2);
             errors += 1;
             continue;
         }

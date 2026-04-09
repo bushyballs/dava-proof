@@ -18,9 +18,23 @@ use clap::{Parser, Subcommand};
 #[derive(Parser, Debug)]
 #[command(
     name = "mailcraft",
-    version = "0.1.0",
+    version = env!("CARGO_PKG_VERSION"),
     author = "Hoags Inc.",
-    about = "Government contractor email drafter — output only, never sends"
+    about = "Government contractor email drafter — output only, never sends",
+    long_about = "mailcraft drafts professional emails for federal contracting scenarios.\n\
+                  All output is plain-text only — this tool NEVER sends email.\n\n\
+                  Email types:\n\
+                  - quote-submit: Submit a bid in response to a solicitation\n\
+                  - amendment-ack: Acknowledge receipt of a solicitation amendment\n\
+                  - debrief-request: Request a post-award debrief (FAR 15.506)\n\
+                  - award-response: Respond to a contract award notification\n\
+                  - status-update: Send a monthly contract status update\n\
+                  - question: Ask the contracting officer about the solicitation\n\
+                  - invoice-submit: Submit an invoice for payment\n\n\
+                  Usage examples:\n\
+                  mailcraft quote-submit --sol W9127S26QA030 --co 'Jane Smith' --co_email jane@mail.mil\n\
+                  mailcraft amendment-ack --sol W9127S26QA030 --amendment 2 --co_email jane@mail.mil\n\
+                  mailcraft invoice-submit --invoice_number HOAGS-INV-001 --amount 10645.63 --co_email finance@mail.mil"
 )]
 struct Cli {
     /// Directory where draft files are saved (default: current directory)
