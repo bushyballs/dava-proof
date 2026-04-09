@@ -11,6 +11,7 @@ mod detect;
 mod sign;
 
 use clap::{Parser, Subcommand};
+use hoags_core::bus::EventBus;
 use std::path::PathBuf;
 
 use detect::detect_sig_locations;

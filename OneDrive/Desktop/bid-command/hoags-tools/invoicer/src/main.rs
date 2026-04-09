@@ -11,6 +11,7 @@ mod invoice;
 mod tracker;
 
 use clap::{Parser, Subcommand};
+use hoags_core::bus::EventBus;
 use std::path::PathBuf;
 
 use generate::generate_pdf;
@@ -143,6 +144,15 @@ fn cmd_generate(
 
         generate_pdf(&inv, &pdf_path)?;
         println!("PDF written: {pdf_path}");
+
+        if let Ok(bus) = EventBus::open_default() {
+            bus.publish("invoicer", "invoicer.invoice_generated", &serde_json::json!({
+                "invoice_number": inv.invoice_number,
+                "contract": contract.contract_number,
+                "total": inv.total,
+                "period": period
+            }).to_string());
+        }
     }
 
     // Persist to tracker
