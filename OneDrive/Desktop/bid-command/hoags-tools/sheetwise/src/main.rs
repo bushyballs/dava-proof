@@ -1,14 +1,17 @@
 mod filter;
 mod output;
+mod pivot;
 mod reader;
 mod stats;
 
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use filter::{Filter, FilterOp, apply_filter};
-use output::{print_csv, print_info, print_json, print_stats, print_table};
-use reader::read_sheet;
-use stats::compute_stats;
+use output::{print_csv, print_describe, print_info, print_json, print_pivot, print_stats, print_table};
+use pivot::pivot as do_pivot;
+use reader::{read_sheet, Sheet};
+use stats::{compute_describe, compute_stats};
+use std::collections::HashSet;
 use std::path::PathBuf;
 
 #[derive(Parser)]
@@ -91,6 +94,56 @@ enum Commands {
         /// Target format: json, csv, table.
         #[arg(long)]
         to: String,
+    },
+
+    /// Generate a pivot table: group by one column and sum another.
+    Pivot {
+        file: PathBuf,
+
+        /// Column to group by.
+        #[arg(long)]
+        group_by: String,
+
+        /// Numeric column to sum.
+        #[arg(long)]
+        sum: String,
+    },
+
+    /// Merge two CSV files by appending rows (columns matched by name).
+    Merge {
+        file1: PathBuf,
+        file2: PathBuf,
+
+        /// Output format: table (default), json, csv.
+        #[arg(long, default_value = "table")]
+        format: String,
+    },
+
+    /// Show unique values in a column.
+    Unique {
+        file: PathBuf,
+
+        /// Column name to inspect.
+        #[arg(long)]
+        column: String,
+    },
+
+    /// Show a random sample of N rows.
+    Sample {
+        file: PathBuf,
+
+        /// Number of rows to sample.
+        #[arg(long, default_value = "10")]
+        n: usize,
+
+        /// Output format: table (default), json, csv.
+        #[arg(long, default_value = "table")]
+        format: String,
+    },
+
+    /// Describe numeric columns: count, mean, std, min, 25%, 50%, 75%, max.
+    Describe {
+        file: PathBuf,
     },
 }
 
@@ -187,6 +240,104 @@ fn main() -> Result<()> {
             let sheet = read_sheet(&file)?;
             let col_names: Vec<String> = sheet.columns.iter().map(|c| c.name.clone()).collect();
             render_output(&to, &col_names, &sheet.rows);
+        }
+
+        Commands::Pivot { file, group_by, sum } => {
+            let sheet = read_sheet(&file)?;
+            let result = do_pivot(&sheet, &group_by, &sum)?;
+            print_pivot(&result);
+        }
+
+        Commands::Merge { file1, file2, format } => {
+            let sheet1 = read_sheet(&file1)?;
+            let sheet2 = read_sheet(&file2)?;
+
+            // Build unified column list (union of both, preserving sheet1 order)
+            let mut col_names: Vec<String> = sheet1.columns.iter().map(|c| c.name.clone()).collect();
+            for col in &sheet2.columns {
+                if !col_names.iter().any(|n| n.eq_ignore_ascii_case(&col.name)) {
+                    col_names.push(col.name.clone());
+                }
+            }
+
+            // Map sheet column names to unified index
+            let align = |sheet: &Sheet| -> Vec<Vec<String>> {
+                let idx_map: Vec<Option<usize>> = col_names
+                    .iter()
+                    .map(|cname| {
+                        sheet
+                            .columns
+                            .iter()
+                            .position(|sc| sc.name.eq_ignore_ascii_case(cname))
+                    })
+                    .collect();
+                sheet
+                    .rows
+                    .iter()
+                    .map(|row| {
+                        idx_map
+                            .iter()
+                            .map(|opt_i| {
+                                opt_i.map(|i| row[i].clone()).unwrap_or_default()
+                            })
+                            .collect()
+                    })
+                    .collect()
+            };
+
+            let mut merged: Vec<Vec<String>> = align(&sheet1);
+            merged.extend(align(&sheet2));
+
+            println!("Merged {} + {} = {} rows", sheet1.row_count(), sheet2.row_count(), merged.len());
+            render_output(&format, &col_names, &merged);
+        }
+
+        Commands::Unique { file, column } => {
+            let sheet = read_sheet(&file)?;
+            let col_idx = sheet
+                .columns
+                .iter()
+                .position(|c| c.name.eq_ignore_ascii_case(&column))
+                .ok_or_else(|| anyhow::anyhow!("Column not found: {column}"))?;
+
+            let mut seen: HashSet<String> = HashSet::new();
+            let mut unique_vals: Vec<String> = Vec::new();
+            for row in &sheet.rows {
+                let v = row[col_idx].clone();
+                if seen.insert(v.clone()) {
+                    unique_vals.push(v);
+                }
+            }
+            unique_vals.sort();
+
+            println!("Unique values in '{}' ({} total):", column, unique_vals.len());
+            for v in &unique_vals {
+                println!("  {v}");
+            }
+        }
+
+        Commands::Sample { file, n, format } => {
+            let sheet = read_sheet(&file)?;
+            let total = sheet.rows.len();
+            let col_names: Vec<String> = sheet.columns.iter().map(|c| c.name.clone()).collect();
+
+            let sampled: Vec<Vec<String>> = if n >= total {
+                sheet.rows.clone()
+            } else {
+                // Reservoir sampling (deterministic stride for reproducibility without rand dep)
+                let step = total / n;
+                (0..n).map(|i| sheet.rows[i * step].clone()).collect()
+            };
+
+            println!("Sample of {} / {} rows:", sampled.len(), total);
+            render_output(&format, &col_names, &sampled);
+        }
+
+        Commands::Describe { file } => {
+            let sheet = read_sheet(&file)?;
+            let stats = compute_stats(&sheet);
+            let describe_stats = compute_describe(&sheet, &stats);
+            print_describe(&describe_stats);
         }
     }
 

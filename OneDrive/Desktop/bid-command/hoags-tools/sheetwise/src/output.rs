@@ -1,5 +1,6 @@
+use crate::pivot::PivotResult;
 use crate::reader::Sheet;
-use crate::stats::ColStats;
+use crate::stats::{ColStats, DescribeColStats};
 use serde_json::{json, Value};
 use tabled::{
     builder::Builder,
@@ -102,6 +103,57 @@ pub fn print_stats(stats: &[ColStats]) {
             fmt_num(s.sum),
             fmt_num(s.avg),
             s.distinct,
+        );
+    }
+}
+
+/// Print a pivot table result.
+pub fn print_pivot(result: &PivotResult) {
+    let mut builder = Builder::default();
+    builder.push_record([result.group_col.as_str(), &format!("sum({})", result.sum_col)]);
+    for (group, total) in &result.rows {
+        let fmt = if total.fract() == 0.0 && total.abs() < 1e12 {
+            format!("{:.0}", total)
+        } else {
+            format!("{:.2}", total)
+        };
+        builder.push_record([group.as_str(), fmt.as_str()]);
+    }
+    let mut table = builder.build();
+    table.with(Style::modern()).with(Alignment::left());
+    println!("{table}");
+}
+
+/// Print pandas-style describe() output for numeric columns.
+pub fn print_describe(stats: &[DescribeColStats]) {
+    if stats.is_empty() {
+        println!("No numeric columns found.");
+        return;
+    }
+    let fmt = |v: f64| -> String {
+        if v.fract() == 0.0 && v.abs() < 1e12 {
+            format!("{:.0}", v)
+        } else {
+            format!("{:.4}", v)
+        }
+    };
+    println!(
+        "{:<25} {:>8} {:>12} {:>12} {:>12} {:>12} {:>12} {:>12} {:>12}",
+        "Column", "count", "mean", "std", "min", "25%", "50%", "75%", "max"
+    );
+    println!("{}", "-".repeat(125));
+    for s in stats {
+        println!(
+            "{:<25} {:>8} {:>12} {:>12} {:>12} {:>12} {:>12} {:>12} {:>12}",
+            truncate(&s.name, 24),
+            s.count,
+            fmt(s.mean),
+            fmt(s.std),
+            fmt(s.min),
+            fmt(s.p25),
+            fmt(s.p50),
+            fmt(s.p75),
+            fmt(s.max),
         );
     }
 }

@@ -1,6 +1,93 @@
 use crate::reader::{ColType, Sheet};
 use std::collections::HashSet;
 
+/// Extended describe()-style statistics for a numeric column.
+#[derive(Debug, Clone)]
+pub struct DescribeColStats {
+    pub name: String,
+    pub count: usize,
+    pub mean: f64,
+    pub std: f64,
+    pub min: f64,
+    pub p25: f64,
+    pub p50: f64,
+    pub p75: f64,
+    pub max: f64,
+}
+
+/// Compute pandas-style describe() for all numeric columns.
+pub fn compute_describe(sheet: &Sheet, stats: &[ColStats]) -> Vec<DescribeColStats> {
+    stats
+        .iter()
+        .filter(|s| s.min.is_some()) // only numeric columns
+        .map(|s| {
+            let col_idx = sheet
+                .columns
+                .iter()
+                .position(|c| c.name == s.name)
+                .unwrap();
+            let mut nums: Vec<f64> = sheet
+                .rows
+                .iter()
+                .filter_map(|row| {
+                    let v = &row[col_idx];
+                    if v.is_empty() {
+                        return None;
+                    }
+                    let cleaned: String = v
+                        .chars()
+                        .filter(|c| c.is_ascii_digit() || *c == '.' || *c == '-')
+                        .collect();
+                    cleaned.parse::<f64>().ok()
+                })
+                .collect();
+
+            nums.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+            let n = nums.len();
+            let mean = if n > 0 { nums.iter().sum::<f64>() / n as f64 } else { 0.0 };
+            let variance = if n > 1 {
+                nums.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / (n - 1) as f64
+            } else {
+                0.0
+            };
+            let std = variance.sqrt();
+            let min = nums.first().copied().unwrap_or(0.0);
+            let max = nums.last().copied().unwrap_or(0.0);
+            let p25 = percentile(&nums, 25.0);
+            let p50 = percentile(&nums, 50.0);
+            let p75 = percentile(&nums, 75.0);
+
+            DescribeColStats {
+                name: s.name.clone(),
+                count: n,
+                mean,
+                std,
+                min,
+                p25,
+                p50,
+                p75,
+                max,
+            }
+        })
+        .collect()
+}
+
+/// Linear interpolation percentile on a sorted Vec<f64>.
+fn percentile(sorted: &[f64], p: f64) -> f64 {
+    if sorted.is_empty() {
+        return 0.0;
+    }
+    let n = sorted.len();
+    if n == 1 {
+        return sorted[0];
+    }
+    let pos = (p / 100.0) * (n - 1) as f64;
+    let lo = pos.floor() as usize;
+    let hi = pos.ceil() as usize;
+    let frac = pos - lo as f64;
+    sorted[lo] + frac * (sorted[hi] - sorted[lo])
+}
+
 /// Statistics for a single column.
 #[derive(Debug, Clone)]
 pub struct ColStats {
