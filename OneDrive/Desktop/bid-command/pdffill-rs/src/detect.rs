@@ -179,15 +179,20 @@ fn get_page_height(doc: &Document, page_id: lopdf::ObjectId) -> f64 {
 fn detect_structural(doc: &Document) -> Vec<DetectedField> {
     let mut fields = Vec::new();
 
-    // Collect text per page for label matching
+    // Only extract text from first 15 pages (form fields are almost never later).
+    // This is the expensive operation — lopdf decodes content streams for text.
+    let max_text_pages = 15;
     let mut page_texts: Vec<(usize, String)> = Vec::new();
     for (page_num, _) in doc.get_pages() {
+        if page_num as usize > max_text_pages { break; }
         let text = doc.extract_text(&[page_num]).unwrap_or_default();
         page_texts.push(((page_num as usize).saturating_sub(1), text));
     }
 
-    // Parse content streams for drawing operators
+    // Parse content streams for drawing operators (first 20 pages only for speed)
+    let max_draw_pages = 20;
     for (page_num, page_id) in doc.get_pages() {
+        if page_num as usize > max_draw_pages { break; }
         let page_idx = (page_num as usize).saturating_sub(1);
         let page_height = get_page_height(doc, page_id);
         let content = get_page_content(doc, page_id);

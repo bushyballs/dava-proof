@@ -1,0 +1,11 @@
+C:\Users\colli\OneDrive\Desktop\bid-command\pdffill-rs\target\debug\deps\bitflags-fa0d1e3f373d38fc.d: C:\Users\colli\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bitflags-2.11.0\src\lib.rs C:\Users\colli\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bitflags-2.11.0\src\iter.rs C:\Users\colli\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bitflags-2.11.0\src\parser.rs C:\Users\colli\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bitflags-2.11.0\src\traits.rs C:\Users\colli\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bitflags-2.11.0\src\public.rs C:\Users\colli\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bitflags-2.11.0\src\internal.rs C:\Users\colli\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bitflags-2.11.0\src\external.rs
+
+C:\Users\colli\OneDrive\Desktop\bid-command\pdffill-rs\target\debug\deps\libbitflags-fa0d1e3f373d38fc.rmeta: C:\Users\colli\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bitflags-2.11.0\src\lib.rs C:\Users\colli\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bitflags-2.11.0\src\iter.rs C:\Users\colli\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bitflags-2.11.0\src\parser.rs C:\Users\colli\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bitflags-2.11.0\src\traits.rs C:\Users\colli\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bitflags-2.11.0\src\public.rs C:\Users\colli\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bitflags-2.11.0\src\internal.rs C:\Users\colli\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bitflags-2.11.0\src\external.rs
+
+C:\Users\colli\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bitflags-2.11.0\src\lib.rs:
+C:\Users\colli\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bitflags-2.11.0\src\iter.rs:
+C:\Users\colli\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bitflags-2.11.0\src\parser.rs:
+C:\Users\colli\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bitflags-2.11.0\src\traits.rs:
+C:\Users\colli\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bitflags-2.11.0\src\public.rs:
+C:\Users\colli\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bitflags-2.11.0\src\internal.rs:
+C:\Users\colli\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bitflags-2.11.0\src\external.rs:

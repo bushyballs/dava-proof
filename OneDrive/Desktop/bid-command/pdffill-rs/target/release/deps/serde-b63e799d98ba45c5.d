@@ -1,0 +1,14 @@
+C:\Users\colli\OneDrive\Desktop\bid-command\pdffill-rs\target\release\deps\serde-b63e799d98ba45c5.d: C:\Users\colli\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\lib.rs C:\Users\colli\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\integer128.rs C:\Users\colli\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\mod.rs C:\Users\colli\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\de.rs C:\Users\colli\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\ser.rs C:\Users\colli\OneDrive\Desktop\bid-command\pdffill-rs\target\release\build\serde-001601be539d932e\out/private.rs
+
+C:\Users\colli\OneDrive\Desktop\bid-command\pdffill-rs\target\release\deps\libserde-b63e799d98ba45c5.rlib: C:\Users\colli\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\lib.rs C:\Users\colli\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\integer128.rs C:\Users\colli\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\mod.rs C:\Users\colli\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\de.rs C:\Users\colli\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\ser.rs C:\Users\colli\OneDrive\Desktop\bid-command\pdffill-rs\target\release\build\serde-001601be539d932e\out/private.rs
+
+C:\Users\colli\OneDrive\Desktop\bid-command\pdffill-rs\target\release\deps\libserde-b63e799d98ba45c5.rmeta: C:\Users\colli\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\lib.rs C:\Users\colli\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\integer128.rs C:\Users\colli\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\mod.rs C:\Users\colli\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\de.rs C:\Users\colli\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\ser.rs C:\Users\colli\OneDrive\Desktop\bid-command\pdffill-rs\target\release\build\serde-001601be539d932e\out/private.rs
+
+C:\Users\colli\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\lib.rs:
+C:\Users\colli\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\integer128.rs:
+C:\Users\colli\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\mod.rs:
+C:\Users\colli\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\de.rs:
+C:\Users\colli\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\ser.rs:
+C:\Users\colli\OneDrive\Desktop\bid-command\pdffill-rs\target\release\build\serde-001601be539d932e\out/private.rs:
+
+# env-dep:OUT_DIR=C:\\Users\\colli\\OneDrive\\Desktop\\bid-command\\pdffill-rs\\target\\release\\build\\serde-001601be539d932e\\out
